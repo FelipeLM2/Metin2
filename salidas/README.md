@@ -27,3 +27,10 @@ Mismo nombre que el paso que las generó (`pasos/2026-11-07-b01-recon-eterpack.m
 - Binarios, `.epk`/`.eix`, capturas de pantalla del cliente.
 
 El `.gitignore` de la raíz ya bloquea esos formatos; no forzar con `git add -f`.
+
+## Excepción: extractos de estudio
+
+Un volcado de código fuente ajeno para que el agente lo lea (por ejemplo
+`b02-fuente-eterpack.txt`) sí puede vivir aquí **temporalmente**, marcado como
+estudio en su cabecera y borrado cuando deje de ser necesario. No se
+redistribuye como parte del proyecto.

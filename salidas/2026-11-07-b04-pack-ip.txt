@@ -1,0 +1,109 @@
+== 0. host: preparacion y parche ==
+== 0. pack de origen ==
+/home/deadivine/metin2lab/tmp4/Client/Client/pack
+-rw-r--r-- 1 deadivine deadivine   2968 ago  5  2023 /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.eix
+-rw-r--r-- 1 deadivine deadivine 520704 ago  5  2023 /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.epk
+61f06d272ce8077038e3f0c02ce23640718bfa9a392dd22bd0ccfbfd7c43f692  /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.eix
+0c2a037e0b31742a8e9711775e552c4c35dc7065c95e9a188986ae1c8eb6763c  /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.epk
+
+== 1. copia de trabajo ==
+61f06d272ce8077038e3f0c02ce23640718bfa9a392dd22bd0ccfbfd7c43f692  /home/deadivine/metin2lab/work/b04/root.eix
+0c2a037e0b31742a8e9711775e552c4c35dc7065c95e9a188986ae1c8eb6763c  /home/deadivine/metin2lab/work/b04/root.epk
+
+== 2. verify de la copia (antes de tocar) ==
+== cabeceras ==
+
+== solapes ==
+
+RESULTADO: OK
+
+== 3. serverinfo.py original ==
+escrito /home/deadivine/metin2lab/work/b04/serverinfo.orig.py (1694 bytes)
+3:SERVER_IP			= "192.168.0.122"
+4:SERVER_IP_TEST		= "127.0.0.1"
+9:PORT_1				= 13000
+10:PORT_2				= 13010
+11:PORT_3				= 13020
+12:PORT_4				= 13030
+13:PORT_AUTH			= 11000
+14:PORT_MARK			= 13000
+26:	1:{"key":11,"name":CH1_NAME,"ip":SERVER_IP,"tcp_port":PORT_1,"udp_port":PORT_1,"state":STATE_NONE,},
+27:	2:{"key":12,"name":CH2_NAME,"ip":SERVER_IP,"tcp_port":PORT_2,"udp_port":PORT_2,"state":STATE_NONE,},
+28:	3:{"key":13,"name":CH3_NAME,"ip":SERVER_IP,"tcp_port":PORT_3,"udp_port":PORT_3,"state":STATE_NONE,},
+29:	4:{"key":14,"name":CH4_NAME,"ip":SERVER_IP,"tcp_port":PORT_4,"udp_port":PORT_4,"state":STATE_NONE,},
+33:	1:{"key":21,"name":CH1_NAME,"ip":SERVER_IP_TEST,"tcp_port":PORT_1,"udp_port":PORT_1,"state":STATE_NONE,},
+34:	2:{"key":22,"name":CH2_NAME,"ip":SERVER_IP_TEST,"tcp_port":PORT_2,"udp_port":PORT_2,"state":STATE_NONE,},
+43:		1 : { "ip":SERVER_IP, "port":PORT_AUTH, },
+44:		2 : { "ip":SERVER_IP_TEST, "port":PORT_AUTH, },
+57:	10 : { "ip" : SERVER_IP, "tcp_port" : PORT_MARK, "mark" : "10.tga", "symbol_path" : "10", },
+58:	20 : { "ip" : SERVER_IP_TEST, "tcp_port" : PORT_MARK, "mark" : "20.tga", "symbol_path" : "20", },
+1694 /home/deadivine/metin2lab/work/b04/serverinfo.orig.py
+
+== 4. parche de SERVER_IP ==
+3:SERVER_IP = "10.10.10.10"
+4:SERVER_IP_TEST		= "127.0.0.1"
+--- /home/deadivine/metin2lab/work/b04/serverinfo.orig.py	2026-11-08 13:02:52.817866187 -0500
++++ /home/deadivine/metin2lab/work/b04/serverinfo.py	2026-11-08 13:02:52.831707341 -0500
+@@ -1,6 +1,6 @@
+ SERVER_NAME			= "Metin2"
+ SERVER_NAME_TEST	= "Test"
+-SERVER_IP			= "192.168.0.122"
++SERVER_IP = "10.10.10.10"
+ SERVER_IP_TEST		= "127.0.0.1"
+ CH1_NAME			= "CH1"
+ CH2_NAME			= "CH2"
+
+== 5. m2pack set (tipo 1, LZO) ==
+serverinfo.py: 1689 bytes -> blob de 701 (tipo 1), en su hueco (283136, 768 bytes)
+índice reescrito plano: /home/deadivine/metin2lab/work/b04/root.eix (17292 bytes)
+backups: root.eix.bak, root.epk.bak
+
+== 6. releer serverinfo.py del pack ==
+escrito /home/deadivine/metin2lab/work/b04/serverinfo.new.py (1689 bytes)
+--- /home/deadivine/metin2lab/work/b04/serverinfo.orig.py	2026-11-08 13:02:52.817866187 -0500
++++ /home/deadivine/metin2lab/work/b04/serverinfo.new.py	2026-11-08 13:02:52.984088600 -0500
+@@ -1,6 +1,6 @@
+ SERVER_NAME			= "Metin2"
+ SERVER_NAME_TEST	= "Test"
+-SERVER_IP			= "192.168.0.122"
++SERVER_IP = "10.10.10.10"
+ SERVER_IP_TEST		= "127.0.0.1"
+ CH1_NAME			= "CH1"
+ CH2_NAME			= "CH2"
+
+== 7. entrada en el indice ==
+ 33  compress       283136      701      768  serverinfo.py
+-rw-r--r-- 1 deadivine deadivine  17292 nov  8 13:02 /home/deadivine/metin2lab/work/b04/root.eix
+-rw-r--r-- 1 deadivine deadivine 520704 nov  8 13:02 /home/deadivine/metin2lab/work/b04/root.epk
+
+== 8. verify de la copia parcheada ==
+== cabeceras ==
+
+== solapes ==
+
+RESULTADO: OK
+
+== 9. ISO para el cliente ==
+a3d02f6caf8c0073f3448124f8645ca0c43d853826fb7e5cc84f4d07164d58e3  /home/deadivine/metin2lab/work/b04/root.eix
+0396d0be9f2f702b7f0198542dfb1cbcaebaf93acb62728c7df77a7ca18e1053  /home/deadivine/metin2lab/work/b04/root.epk
+xorriso 1.5.8.pl02 : RockRidge filesystem manipulator, libburnia project.
+
+Drive current: -outdev 'stdio:/home/deadivine/metin2lab/work/b04/b04-pack.iso'
+Media current: stdio file, overwriteable
+Media status : is blank
+Media summary: 0 sessions, 0 data blocks, 0 data, 88.3g free
+Added to ISO image: directory '/'='/home/deadivine/metin2lab/work/b04/iso'
+xorriso : UPDATE :       3 files added in 1 seconds
+xorriso : UPDATE :       3 files added in 1 seconds
+ISO image produced: 448 sectors
+Written to medium : 448 sectors at LBA 0
+Writing to 'stdio:/home/deadivine/metin2lab/work/b04/b04-pack.iso' completed successfully.
+
+-rw-r--r-- 1 deadivine deadivine 917504 nov  8 13:02 /home/deadivine/metin2lab/work/b04/b04-pack.iso
+
+== 10. disco de retorno FAT16 ==
+mkfs.fat 4.2 (2021-01-31)
+-rw-r--r-- 1 deadivine deadivine 16777216 nov  8 13:02 /home/deadivine/metin2lab/work/b04/retorno.img
+/home/deadivine/metin2lab/work/b04/retorno.img: DOS/MBR boot sector, code offset 0x3c+2, OEM-ID "mkfs.fat", sectors/cluster 4, reserved sectors 4, root entries 512, sectors 32768 (volumes <=32 MB), Media descriptor 0xf8, sectors/FAT 32, sectors/track 32, serial number 0x94d44008, label: "B04RET     ", FAT (16 bit)
+
+== 11. cliente Windows: transcripcion ==

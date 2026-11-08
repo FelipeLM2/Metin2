@@ -1,0 +1,381 @@
+== 0. pack localizado ==
+/home/deadivine/metin2lab/tmp4/Client/Client/pack
+
+== 1. inventario ==
+-rw-r--r-- 1 deadivine deadivine   2968 ago  5  2023 /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.eix
+-rw-r--r-- 1 deadivine deadivine 520704 ago  5  2023 /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.epk
+61f06d272ce8077038e3f0c02ce23640718bfa9a392dd22bd0ccfbfd7c43f692  /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.eix
+0c2a037e0b31742a8e9711775e552c4c35dc7065c95e9a188986ae1c8eb6763c  /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.epk
+
+== 2. primeros 64 bytes de root.eix ==
+0000000 4d 43 4f 5a 88 0b 00 00 7d 0b 00 00 8c 43 00 00
+0000016 02 e1 fc 7e fd 86 9f 6b 8e 28 89 1e 42 90 c5 0b
+0000032 74 ef 85 fd db 9c 47 51 b9 50 d1 b9 0c a8 e2 e4
+0000048 20 59 41 0c e7 90 98 5d f0 f7 ae c8 a6 af d2 fc
+0000064
+
+== 3. primeros 64 bytes de root.epk ==
+0000000 4d 43 4f 5a 00 00 00 00 c9 00 02 00 08 42 02 00
+0000016 4d 43 4f 5a 1a 4d 49 50 58 01 00 00 00 98 4e 00
+0000032 6b 14 0c 00 06 f4 41 02 00 4d 43 4f 5a e0 5d 00
+0000048 c8 4c 00 00 00 00 cc 88 1f 0c 00 d4 43 2a 56 db
+0000064
+
+== 4. m2pack info ==
+índice : /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.eix
+datos  : /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.epk
+formato: ref (2968 bytes en disco, 17292 bytes de índice plano)
+  CLZO : encrypt_size=2952 compressed_size=2941 real_size=17292
+epk    : 520704 bytes
+entradas: 90
+  con datos: 90
+  libres   : 0
+  bytes usados en blobs: 520704
+
+== 5. m2pack ls (con entradas libres) ==
+ id  tipo         posición     real     blob  nombre
+------------------------------------------------------------------------------
+  0  compress            0   131293   131328  20110915_ymir_item_proto
+  1  compress       131328    15092    15104  936mob_proto
+  2  compress       146432     7007     7168  936skilldesc.txt
+  3  compress       153600     3051     3072  936skilltable.txt
+  4  compress       156672     4142     4352  assassin_m.msm
+  5  compress       161024     4413     4608  assassin_w.msm
+  6  compress       165632     1367     1536  atlasinfo.txt
+  7  compress       167168      470      512  colorinfo.py
+  8  compress       167680     7727     7936  consolemodule.py
+  9  compress       175616     2455     2560  constinfo.py
+ 10  compress       178176      102      256  debuginfo.py
+ 11  compress       178432      699      768  dragon_soul_refine_settings.py
+ 12  compress       179200     1749     1792  emotion.py
+ 13  compress       180992      374      512  exception.py
+ 14  compress       181504    17771    17920  game.py
+ 15  compress       199424      168      256  grpblk.txt
+ 16  compress       199680    11797    12032  interfacemodule.py
+ 17  compress       211712     5601     5632  introcreate.py
+ 18  compress       217344     2475     2560  introempire.py
+ 19  compress       219904     3729     3840  introloading.py
+ 20  compress       223744    10640    10752  intrologin.py
+ 21  compress       234496      940     1024  intrologo.py
+ 22  compress       235520     6225     6400  introselect.py
+ 23  compress       241920     9869     9984  localeinfo.py
+ 24  compress       251904      549      768  makepackscript_onlyrootnopython.txt
+ 25  compress       252672     3020     3072  mousemodule.py
+ 26  compress       255744      274      512  musicinfo.py
+ 27  compress       256256     2116     2304  networkmodule.py
+ 28  compress       258560     9260     9472  npclist.txt
+ 29  compress       268032    12433    12544  playersettingmodule.py
+ 30  compress       280576      868     1024  prototype.py
+ 31  compress       281600      680      768  rootlibcythonizer.py
+ 32  compress       282368      718      768  servercommandparser.py
+ 33  compress       283136      636      768  serverinfo.py
+ 34  compress       283904     4143     4352  shaman_m.msm
+ 35  compress       288256     4373     4608  shaman_w.msm
+ 36  compress       292864      620      768  stringcommander.py
+ 37  compress       293632     4279     4352  sura_m.msm
+ 38  compress       297984     4385     4608  sura_w.msm
+ 39  compress       302592     2701     2816  system.py
+ 40  compress       305408      604      768  test_affect.py
+ 41  compress       306176    20582    20736  ui.py
+ 42  compress       326912     5779     5888  uiaffectshower.py
+ 43  compress       332800     1441     1536  uiattachmetin.py
+ 44  compress       334336     1440     1536  uiauction.py
+ 45  compress       335872     1664     1792  uiautoban.py
+ 46  compress       337664     1362     1536  uicandidate.py
+ 47  compress       339200     9692     9728  uicharacter.py
+ 48  compress       348928     7540     7680  uichat.py
+ 49  compress       356608     2070     2304  uicommon.py
+ 50  compress       358912     5090     5120  uicube.py
+ 51  compress       364032    11317    11520  uidragonsoul.py
+ 52  compress       375552     1211     1280  uiequipmentdialog.py
+ 53  compress       376832      753      768  uiex.py
+ 54  compress       377600     2150     2304  uiexchange.py
+ 55  compress       379904      995     1024  uigamebutton.py
+ 56  compress       380928     3633     3840  uigameoption.py
+ 57  compress       384768    20003    20224  uiguild.py
+ 58  compress       404992     1198     1280  uihelp.py
+ 59  compress       406272     8814     8960  uiinventory.py
+ 60  compress       415232     2377     2560  uimapnameshower.py
+ 61  compress       417792     5347     5376  uimessenger.py
+ 62  compress       423168     3627     3840  uiminimap.py
+ 63  compress       427008     3570     3584  uioption.py
+ 64  compress       430592     5580     5632  uiparty.py
+ 65  compress       436224      731      768  uiphasecurtain.py
+ 66  compress       436992     1081     1280  uipickmoney.py
+ 67  compress       438272      584      768  uiplayergauge.py
+ 68  compress       439040      868     1024  uipointreset.py
+ 69  compress       440064     3043     3072  uiprivateshopbuilder.py
+ 70  compress       443136     7073     7168  uiquest.py
+ 71  compress       450304     3182     3328  uirefine.py
+ 72  compress       453632      618      768  uirestart.py
+ 73  compress       454400     4358     4608  uisafebox.py
+ 74  compress       459008     1194     1280  uiscriptlocale.py
+ 75  compress       460288     1356     1536  uiselectitem.py
+ 76  compress       461824     1655     1792  uiselectmusic.py
+ 77  compress       463616     4056     4096  uishop.py
+ 78  compress       467712     1525     1536  uisystem.py
+ 79  compress       469248     2240     2304  uisystemoption.py
+ 80  compress       471552     3752     3840  uitarget.py
+ 81  compress       475392     8556     8704  uitaskbar.py
+ 82  compress       484096     2253     2304  uitip.py
+ 83  compress       486400    17738    17920  uitooltip.py
+ 84  compress       504320     2014     2048  uiuploadmark.py
+ 85  compress       506368     1230     1280  uiweb.py
+ 86  compress       507648     2958     3072  uiwhisper.py
+ 87  compress       510720     1027     1280  utils.py
+ 88  compress       512000     4231     4352  warrior_m.msm
+ 89  compress       516352     4331     4352  warrior_w.msm
+
+== 6. serverinfo.py ==
+SERVER_NAME			= "Metin2"
+SERVER_NAME_TEST	= "Test"
+SERVER_IP			= "192.168.0.122"
+SERVER_IP_TEST		= "127.0.0.1"
+CH1_NAME			= "CH1"
+CH2_NAME			= "CH2"
+CH3_NAME			= "CH3"
+CH4_NAME			= "CH4"
+PORT_1				= 13000
+PORT_2				= 13010
+PORT_3				= 13020
+PORT_4				= 13030
+PORT_AUTH			= 11000
+PORT_MARK			= 13000
+
+STATE_NONE = "..."
+
+STATE_DICT = {
+	0 : "....",
+	1 : "NORM",
+	2 : "BUSY",
+	3 : "FULL"
+}
+
+SERVER01_CHANNEL_DICT = {
+	1:{"key":11,"name":CH1_NAME,"ip":SERVER_IP,"tcp_port":PORT_1,"udp_port":PORT_1,"state":STATE_NONE,},
+	2:{"key":12,"name":CH2_NAME,"ip":SERVER_IP,"tcp_port":PORT_2,"udp_port":PORT_2,"state":STATE_NONE,},
+	3:{"key":13,"name":CH3_NAME,"ip":SERVER_IP,"tcp_port":PORT_3,"udp_port":PORT_3,"state":STATE_NONE,},
+	4:{"key":14,"name":CH4_NAME,"ip":SERVER_IP,"tcp_port":PORT_4,"udp_port":PORT_4,"state":STATE_NONE,},
+}
+
+SERVER02_CHANNEL_DICT = {
+	1:{"key":21,"name":CH1_NAME,"ip":SERVER_IP_TEST,"tcp_port":PORT_1,"udp_port":PORT_1,"state":STATE_NONE,},
+	2:{"key":22,"name":CH2_NAME,"ip":SERVER_IP_TEST,"tcp_port":PORT_2,"udp_port":PORT_2,"state":STATE_NONE,},
+}
+
+REGION_NAME_DICT = {
+	0 : "",		
+}
+
+REGION_AUTH_SERVER_DICT = {
+	0 : {
+		1 : { "ip":SERVER_IP, "port":PORT_AUTH, },
+		2 : { "ip":SERVER_IP_TEST, "port":PORT_AUTH, },
+
+	}		
+}
+
+REGION_DICT = {
+	0 : {
+		1 : { "name" :SERVER_NAME, "channel" : SERVER01_CHANNEL_DICT, },						
+		2 : { "name" :SERVER_NAME_TEST, "channel" : SERVER02_CHANNEL_DICT, },						
+	},
+}
+
+MARKADDR_DICT = {
+	10 : { "ip" : SERVER_IP, "tcp_port" : PORT_MARK, "mark" : "10.tga", "symbol_path" : "10", },
+	20 : { "ip" : SERVER_IP_TEST, "tcp_port" : PORT_MARK, "mark" : "20.tga", "symbol_path" : "20", },
+}
+== 7. m2pack verify ==
+== cabeceras ==
+  ! 20110915_ymir_item_proto: data_crc no coincide
+  ! 20110915_ymir_item_proto: descomprime 147976 != real 131293
+  ! 936mob_proto: data_crc no coincide
+  ! 936mob_proto: descomprime 15024 != real 15092
+  ! 936skilldesc.txt: data_crc no coincide
+  ! 936skilldesc.txt: descomprime 15751 != real 7007
+  ! 936skilltable.txt: data_crc no coincide
+  ! 936skilltable.txt: descomprime 9228 != real 3051
+  ! assassin_m.msm: data_crc no coincide
+  ! assassin_m.msm: descomprime 36070 != real 4142
+  ! assassin_w.msm: data_crc no coincide
+  ! assassin_w.msm: descomprime 38386 != real 4413
+  ! atlasinfo.txt: data_crc no coincide
+  ! atlasinfo.txt: descomprime 5038 != real 1367
+  ! colorinfo.py: data_crc no coincide
+  ! colorinfo.py: descomprime 1135 != real 470
+  ! consolemodule.py: data_crc no coincide
+  ! consolemodule.py: descomprime 25326 != real 7727
+  ! constinfo.py: data_crc no coincide
+  ! constinfo.py: descomprime 6838 != real 2455
+  ! debuginfo.py: data_crc no coincide
+  ! debuginfo.py: descomprime 172 != real 102
+  ! dragon_soul_refine_settings.py: data_crc no coincide
+  ! dragon_soul_refine_settings.py: descomprime 1396 != real 699
+  ! emotion.py: data_crc no coincide
+  ! emotion.py: descomprime 11056 != real 1749
+  ! exception.py: data_crc no coincide
+  ! exception.py: descomprime 754 != real 374
+  ! game.py: data_crc no coincide
+  ! game.py: descomprime 69379 != real 17771
+  ! grpblk.txt: data_crc no coincide
+  ! grpblk.txt: descomprime 474 != real 168
+  ! interfacemodule.py: data_crc no coincide
+  ! interfacemodule.py: descomprime 48032 != real 11797
+  ! introcreate.py: data_crc no coincide
+  ! introcreate.py: descomprime 19353 != real 5601
+  ! introempire.py: data_crc no coincide
+  ! introempire.py: descomprime 8528 != real 2475
+  ! introloading.py: data_crc no coincide
+  ! introloading.py: descomprime 13236 != real 3729
+  ! intrologin.py: data_crc no coincide
+  ! intrologin.py: descomprime 41161 != real 10640
+  ! intrologo.py: data_crc no coincide
+  ! intrologo.py: descomprime 2114 != real 940
+  ! introselect.py: data_crc no coincide
+  ! introselect.py: descomprime 22313 != real 6225
+  ! localeinfo.py: data_crc no coincide
+  ! localeinfo.py: descomprime 31450 != real 9869
+  ! makepackscript_onlyrootnopython.txt: data_crc no coincide
+  ! makepackscript_onlyrootnopython.txt: descomprime 1254 != real 549
+  ! mousemodule.py: data_crc no coincide
+  ! mousemodule.py: descomprime 11737 != real 3020
+  ! musicinfo.py: data_crc no coincide
+  ! musicinfo.py: descomprime 501 != real 274
+  ! networkmodule.py: data_crc no coincide
+  ! networkmodule.py: descomprime 6803 != real 2116
+  ! npclist.txt: data_crc no coincide
+  ! npclist.txt: descomprime 30796 != real 9260
+  ! playersettingmodule.py: data_crc no coincide
+  ! playersettingmodule.py: descomprime 95447 != real 12433
+  ! prototype.py: data_crc no coincide
+  ! prototype.py: descomprime 1564 != real 868
+  ! rootlibcythonizer.py: data_crc no coincide
+  ! rootlibcythonizer.py: descomprime 1110 != real 680
+  ! servercommandparser.py: data_crc no coincide
+  ! servercommandparser.py: descomprime 1606 != real 718
+  ! serverinfo.py: data_crc no coincide
+  ! serverinfo.py: descomprime 1694 != real 636
+  ! shaman_m.msm: data_crc no coincide
+  ! shaman_m.msm: descomprime 36790 != real 4143
+  ! shaman_w.msm: data_crc no coincide
+  ! shaman_w.msm: descomprime 37592 != real 4373
+  ! stringcommander.py: data_crc no coincide
+  ! stringcommander.py: descomprime 1528 != real 620
+  ! sura_m.msm: data_crc no coincide
+  ! sura_m.msm: descomprime 35427 != real 4279
+  ! sura_w.msm: data_crc no coincide
+  ! sura_w.msm: descomprime 37621 != real 4385
+  ! system.py: data_crc no coincide
+  ! system.py: descomprime 6096 != real 2701
+  ! test_affect.py: data_crc no coincide
+  ! test_affect.py: descomprime 1185 != real 604
+  ! ui.py: data_crc no coincide
+  ! ui.py: descomprime 100891 != real 20582
+  ! uiaffectshower.py: data_crc no coincide
+  ! uiaffectshower.py: descomprime 23067 != real 5779
+  ! uiattachmetin.py: data_crc no coincide
+  ! uiattachmetin.py: descomprime 3753 != real 1441
+  ! uiauction.py: data_crc no coincide
+  ! uiauction.py: descomprime 4470 != real 1440
+  ! uiautoban.py: data_crc no coincide
+  ! uiautoban.py: descomprime 4374 != real 1664
+  ! uicandidate.py: data_crc no coincide
+  ! uicandidate.py: descomprime 3918 != real 1362
+  ! uicharacter.py: data_crc no coincide
+  ! uicharacter.py: descomprime 38738 != real 9692
+  ! uichat.py: data_crc no coincide
+  ! uichat.py: descomprime 33015 != real 7540
+  ! uicommon.py: data_crc no coincide
+  ! uicommon.py: descomprime 10576 != real 2070
+  ! uicube.py: data_crc no coincide
+  ! uicube.py: descomprime 18390 != real 5090
+  ! uidragonsoul.py: data_crc no coincide
+  ! uidragonsoul.py: descomprime 51606 != real 11317
+  ! uiequipmentdialog.py: data_crc no coincide
+  ! uiequipmentdialog.py: descomprime 3308 != real 1211
+  ! uiex.py: data_crc no coincide
+  ! uiex.py: descomprime 1562 != real 753
+  ! uiexchange.py: data_crc no coincide
+  ! uiexchange.py: descomprime 7277 != real 2150
+  ! uigamebutton.py: data_crc no coincide
+  ! uigamebutton.py: descomprime 2608 != real 995
+  ! uigameoption.py: data_crc no coincide
+  ! uigameoption.py: descomprime 15977 != real 3633
+  ! uiguild.py: data_crc no coincide
+  ! uiguild.py: descomprime 90760 != real 20003
+  ! uihelp.py: data_crc no coincide
+  ! uihelp.py: descomprime 3314 != real 1198
+  ! uiinventory.py: data_crc no coincide
+  ! uiinventory.py: descomprime 38713 != real 8814
+  ! uimapnameshower.py: data_crc no coincide
+  ! uimapnameshower.py: descomprime 10794 != real 2377
+  ! uimessenger.py: data_crc no coincide
+  ! uimessenger.py: descomprime 21756 != real 5347
+  ! uiminimap.py: data_crc no coincide
+  ! uiminimap.py: descomprime 13651 != real 3627
+  ! uioption.py: data_crc no coincide
+  ! uioption.py: descomprime 14132 != real 3570
+  ! uiparty.py: data_crc no coincide
+  ! uiparty.py: descomprime 23528 != real 5580
+  ! uiphasecurtain.py: data_crc no coincide
+  ! uiphasecurtain.py: descomprime 1644 != real 731
+  ! uipickmoney.py: data_crc no coincide
+  ! uipickmoney.py: descomprime 2753 != real 1081
+  ! uiplayergauge.py: data_crc no coincide
+  ! uiplayergauge.py: descomprime 1219 != real 584
+  ! uipointreset.py: data_crc no coincide
+  ! uipointreset.py: descomprime 2260 != real 868
+  ! uiprivateshopbuilder.py: data_crc no coincide
+  ! uiprivateshopbuilder.py: descomprime 9461 != real 3043
+  ! uiquest.py: data_crc no coincide
+  ! uiquest.py: descomprime 24591 != real 7073
+  ! uirefine.py: data_crc no coincide
+  ! uirefine.py: descomprime 11799 != real 3182
+  ! uirestart.py: data_crc no coincide
+  ! uirestart.py: descomprime 1507 != real 618
+  ! uisafebox.py: data_crc no coincide
+  ! uisafebox.py: descomprime 19785 != real 4358
+  ! uiscriptlocale.py: data_crc no coincide
+  ! uiscriptlocale.py: descomprime 2822 != real 1194
+  ! uiselectitem.py: data_crc no coincide
+  ! uiselectitem.py: descomprime 3458 != real 1356
+  ! uiselectmusic.py: data_crc no coincide
+  ! uiselectmusic.py: descomprime 5151 != real 1655
+  ! uishop.py: data_crc no coincide
+  ! uishop.py: descomprime 14516 != real 4056
+  ! uisystem.py: data_crc no coincide
+  ! uisystem.py: descomprime 5010 != real 1525
+  ! uisystemoption.py: data_crc no coincide
+  ! uisystemoption.py: descomprime 7598 != real 2240
+  ! uitarget.py: data_crc no coincide
+  ! uitarget.py: descomprime 14232 != real 3752
+  ! uitaskbar.py: data_crc no coincide
+  ! uitaskbar.py: descomprime 35423 != real 8556
+  ! uitip.py: data_crc no coincide
+  ! uitip.py: descomprime 7647 != real 2253
+  ! uitooltip.py: data_crc no coincide
+  ! uitooltip.py: descomprime 77907 != real 17738
+  ! uiuploadmark.py: data_crc no coincide
+  ! uiuploadmark.py: descomprime 9744 != real 2014
+  ! uiweb.py: data_crc no coincide
+  ! uiweb.py: descomprime 2880 != real 1230
+  ! uiwhisper.py: data_crc no coincide
+  ! uiwhisper.py: descomprime 9920 != real 2958
+  ! utils.py: data_crc no coincide
+  ! utils.py: descomprime 2242 != real 1027
+  ! warrior_m.msm: data_crc no coincide
+  ! warrior_m.msm: descomprime 37628 != real 4231
+  ! warrior_w.msm: data_crc no coincide
+  ! warrior_w.msm: descomprime 39386 != real 4331
+
+== solapes ==
+
+RESULTADO: 180 problema(s)
+
+== 8. versiones ==
+Python 3.14.9
+	libminilzo.so.0 (libc6,x86-64) => /usr/lib/libminilzo.so.0
+	libminilzo.so (libc6,x86-64) => /usr/lib/libminilzo.so
+	liblzo2.so.2 (libc6,x86-64) => /usr/lib/liblzo2.so.2
+	liblzo2.so (libc6,x86-64) => /usr/lib/liblzo2.so

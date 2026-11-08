@@ -16,6 +16,14 @@ salidas/2026-11-07-b02-fuente-eterpack.txt):
     * tipo 2 (security)  CLZO cifrado (LZO + TEA) con s_adwEterPackSecurityKey
     * tipo 3/4/5         Panama / CSHybridCrypt: NO soportados (no se tocan)
 
+  Layout real de un blob CLZO (CLZObject::Compress / Encrypt):
+    offset 0   THeader (16 B): 'MCOZ' | encrypt_size | compressed_size | real_size
+    offset 16  DWORD 'MCOZ'  (segundo fourcc, forma parte del área cifrada)
+    offset 20  stream LZO de compressed_size bytes
+  O sea, el stream LZO empieza en el offset 20, no en el 16. Cuando el blob
+  está cifrado, TEA cubre desde el offset 16 (incluido el 'MCOZ' interno)
+  durante encrypt_size bytes; GetSize() = 16 + 4 + encrypt_size.
+
   TEterPackIndex (192 bytes, little endian, #pragma pack(4)):
     u32  id
     char filename[161]
@@ -152,8 +160,9 @@ _ENCRYPT = {"ref": _tea_encrypt_words_ref, "classic": _tea_encrypt_words_classic
 
 
 def tea_crypt(data: bytes, key, variant: str, decrypt: bool) -> bytes:
+    # tea_encrypt/tea_decrypt redondean a múltiplo de 8 (rellenan con ceros).
     if len(data) % 8:
-        raise PackError(f"TEA necesita múltiplos de 8 bytes, no {len(data)}")
+        data = data + b"\0" * (8 - len(data) % 8)
     n = len(data) // 4
     words = list(struct.unpack(f"<{n}I", data))
     fn = (_DECRYPT if decrypt else _ENCRYPT)[variant]
@@ -253,6 +262,7 @@ class Pack:
     entries: list[Entry]
     index_bytes: bytes
     data: bytes
+    index_clzo: tuple[int, int, int] | None = None   # (enc, comp, real)
 
     @property
     def tea_variant(self) -> str:
@@ -319,18 +329,39 @@ def _parse_index(body: bytes) -> list[Entry]:
     return entries
 
 
-def _clzo_payload(blob: bytes) -> tuple[int, int, int, int, bytes]:
+def _clzo_payload(blob: bytes) -> tuple[int, int, int, bytes]:
+    """Cabecera CLZO + payload.
+
+    Devuelve (encrypt_size, compressed_size, real_size, payload), donde
+    payload empieza justo en el DWORD 'MCOZ' interno (offset 16 del blob).
+    El stream LZO, por tanto, es payload[4:4+compressed_size].
+    """
     if len(blob) < CLZO_HEADER_SIZE:
         raise PackError("blob CLZO demasiado corto")
     fourcc, enc, comp, real = struct.unpack_from(CLZO_HEADER_FMT, blob, 0)
     if fourcc != int.from_bytes(MAGIC_LZO, "little"):
         raise PackError(f"se esperaba cabecera MCOZ, hay {blob[:4]!r}")
-    if CLZO_HEADER_SIZE + enc > len(blob):
+
+    stored = enc if enc else comp
+    if CLZO_HEADER_SIZE + stored > len(blob):
         raise PackError(
-            f"blob CLZO truncado: cabecera dice {enc} bytes cifrados, "
+            f"blob CLZO truncado: cabecera dice {stored} bytes, "
             f"solo hay {len(blob) - CLZO_HEADER_SIZE}"
         )
-    return enc, comp, real, CLZO_HEADER_SIZE, blob[CLZO_HEADER_SIZE:]
+    if enc and comp + 4 > enc:
+        raise PackError(
+            f"blob CLZO incoherente: compressed_size={comp} no cabe en "
+            f"encrypt_size={enc} (ni con el 'MCOZ' interno)"
+        )
+    return enc, comp, real, blob[CLZO_HEADER_SIZE:]
+
+
+def _require_inner_fourcc(plain: bytes, who: str) -> None:
+    if plain[:4] != MAGIC_LZO:
+        raise PackError(
+            f"{who}: falta el fourcc 'MCOZ' interno tras la cabecera "
+            f"(hay {plain[:4]!r})"
+        )
 
 
 def load_pack(packdir: Path, name: str = "root") -> Pack:
@@ -342,11 +373,13 @@ def load_pack(packdir: Path, name: str = "root") -> Pack:
         raise PackError(f"no existe {data_path}")
 
     raw = index_path.read_bytes()
+    index_clzo = None
     if raw[:4] == MAGIC_INDEX:
         variant = "plano"
         body = raw
     elif raw[:4] == MAGIC_LZO:
-        enc, comp, real, off, payload = _clzo_payload(raw)
+        enc, comp, real, payload = _clzo_payload(raw)
+        index_clzo = (enc, comp, real)
         encrypted = payload[:enc]
         body = None
         variant = ""
@@ -354,7 +387,8 @@ def load_pack(packdir: Path, name: str = "root") -> Pack:
         for candidate in ("ref", "classic"):
             try:
                 plain = tea_crypt(encrypted, ETERPACK_KEY, candidate, decrypt=True)
-                out = lzo().decompress(plain[:comp], real)
+                _require_inner_fourcc(plain, f"índice ({candidate})")
+                out = lzo().decompress(plain[4:4 + comp], real)
             except PackError as exc:
                 errors.append(f"{candidate}: {exc}")
                 continue
@@ -382,6 +416,7 @@ def load_pack(packdir: Path, name: str = "root") -> Pack:
         entries=entries,
         index_bytes=body,
         data=data_path.read_bytes(),
+        index_clzo=index_clzo,
     )
 
 
@@ -403,10 +438,11 @@ def decode_blob(pack: Pack, entry: Entry, blob: bytes) -> bytes:
     if entry.ctype in (2, 3) and crc32(blob) != entry.data_crc:
         raise PackError(f"{entry.filename}: data_crc no coincide (archivo dañado)")
 
-    enc, comp, real, _off, payload = _clzo_payload(blob)
+    enc, comp, real, payload = _clzo_payload(blob)
 
     if entry.ctype == 1:
-        return lzo().decompress(payload[:comp], real)
+        _require_inner_fourcc(payload, entry.filename)
+        return lzo().decompress(payload[4:4 + comp], real)
 
     if enc == 0:
         raise PackError(f"{entry.filename}: tipo 2 sin tamaño cifrado")
@@ -419,7 +455,8 @@ def decode_blob(pack: Pack, entry: Entry, blob: bytes) -> bytes:
     for variant in variants:
         try:
             plain = tea_crypt(payload[:enc], SECURITY_KEY, variant, decrypt=True)
-            return lzo().decompress(plain[:comp], real)
+            _require_inner_fourcc(plain, f"{entry.filename} ({variant})")
+            return lzo().decompress(plain[4:4 + comp], real)
         except PackError as exc:
             errors.append(f"{variant}: {exc}")
 
@@ -478,7 +515,12 @@ def cmd_info(pack: Pack, args) -> int:
     print(f"índice : {pack.index_path}")
     print(f"datos  : {pack.data_path}")
     print(f"formato: {pack.index_variant} "
-          f"({len(pack.index_bytes)} bytes)")
+          f"({pack.index_path.stat().st_size} bytes en disco, "
+          f"{len(pack.index_bytes)} bytes de índice plano)")
+    if pack.index_clzo is not None:
+        enc, comp, real = pack.index_clzo
+        print(f"  CLZO : encrypt_size={enc} compressed_size={comp} "
+              f"real_size={real}")
     print(f"epk    : {len(pack.data)} bytes")
     print(f"entradas: {len(pack.entries)}")
     reales = [e for e in pack.entries if not e.is_free]
@@ -657,7 +699,7 @@ def main(argv=None) -> int:
         help="carpeta con root.eix y root.epk (por defecto: .)",
     )
     parser.add_argument(
-        "-n", "--name", default="root",
+        "-n", "--name", dest="packname", default="root",
         help="nombre base del pack, sin extensión (por defecto: root)",
     )
     sub = parser.add_subparsers(dest="command", required=True)
@@ -684,7 +726,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        pack = load_pack(Path(args.packdir), args.name)
+        pack = load_pack(Path(args.packdir), args.packname)
         handler = {
             "info": cmd_info,
             "ls": cmd_ls,

@@ -60,16 +60,32 @@ offset  tamaño  campo
 4       4       dwEncryptSize     bytes cifrados (0 si no hay cifrado)
 8       4       dwCompressedSize  bytes que ocupa el LZO
 12      4       dwRealSize        bytes que ocupa el archivo original
-16      ...     payload
+16      4       'MCOZ'            segundo fourcc, dentro del área cifrada
+20      ...     stream LZO
 ```
 
-Leer un tipo 1 es: `payload[:dwCompressedSize]` → `lzo1x_decompress` →
+Ese **segundo `MCOZ`** es fácil de pasar por alto y es la causa del error más
+típico al escribir un lector propio: el stream LZO no empieza en el offset 16,
+sino en el **20**. Lo pone `CLZObject::Compress` y lo salta `BeginDecompress`
+(`m_pbIn = pvIn + sizeof(THeader) + sizeof(DWORD)`).
+
+Leer un tipo 1 es: `payload[4:4+dwCompressedSize]` → `lzo1x_decompress` →
 `dwRealSize` bytes.
 
-Leer un tipo 2 es: `payload[:dwEncryptSize]` → descifrar TEA → coger los
-primeros `dwCompressedSize` → `lzo1x_decompress`.
+Leer un tipo 2 es: `payload[:dwEncryptSize]` → descifrar TEA → comprobar que
+empieza por `MCOZ` → `descifrado[4:4+dwCompressedSize]` → `lzo1x_decompress`.
 
 Ese orden importa: primero se comprime y luego se cifra; para leer, al revés.
+
+Al cifrar, `CLZObject::Encrypt` llama a `tea_encrypt` **desde el offset 16** y
+con `dwCompressedSize + 19` bytes; `tea_encrypt` redondea a múltiplo de 8 y
+devuelve ese tamaño como `dwEncryptSize`. Por eso:
+
+```
+tamaño del blob en el .epk = 16 + 4 + dwEncryptSize
+```
+
+El `+4` cuenta el `MCOZ` interno, que también va cifrado.
 
 ## El índice
 
@@ -88,8 +104,11 @@ offset  tamaño  campo
 El archivo entero es un blob tipo 2 con la clave `s_adwEterPackKey`:
 
 ```
-'MCOZ' | encrypt | compressed | real | payload(TEA(LZO(índice plano)))
+'MCOZ' | encrypt | compressed | real | 'MCOZ' | TEA(LZO(índice plano))
 ```
+
+El índice plano va precedido del `MCOZ` interno, igual que cualquier otro blob;
+TEA cubre desde ese `MCOZ` interno hasta completar `encrypt` bytes.
 
 El cliente acepta **las dos**: si el primer DWORD es `EPKD`, lo lee directo; si
 es `MCOZ`, lo descomprime y descifra. Esto es lo que permite que `m2pack`

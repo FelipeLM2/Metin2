@@ -1,0 +1,179 @@
+== 1. estructura ==
+[1;34md[33mr[31mw[32mx[0m[33mr[1;90m-[0m[32mx[33mr[1;90m-[0m[32mx[0m   [1;90m-[0m [1;33mdeadivine[0m [34m11 jun  2023[0m [34m [1m.vs[0m
+[1;34md[33mr[31mw[32mx[0m[33mr[1;90m-[0m[32mx[33mr[1;90m-[0m[32mx[0m   [1;90m-[0m [1;33mdeadivine[0m [34m11 jun  2023[0m [34m [1mbinary[0m
+[1;34md[33mr[31mw[32mx[0m[33mr[1;90m-[0m[32mx[33mr[1;90m-[0m[32mx[0m   [1;90m-[0m [1;33mdeadivine[0m [34m11 jun  2023[0m [34m [1mDumpProto[0m
+[1;34md[33mr[31mw[32mx[0m[33mr[1;90m-[0m[32mx[33mr[1;90m-[0m[32mx[0m   [1;90m-[0m [1;33mdeadivine[0m [34m11 jun  2023[0m [34m [1mextern[0m
+[1;34md[33mr[31mw[32mx[0m[33mr[1;90m-[0m[32mx[33mr[1;90m-[0m[32mx[0m   [1;90m-[0m [1;33mdeadivine[0m [34m11 jun  2023[0m [34m [1msource[0m
+[1;34md[33mr[31mw[32mx[0m[33mr[1;90m-[0m[32mx[33mr[1;90m-[0m[32mx[0m   [1;90m-[0m [1;33mdeadivine[0m [34m11 jun  2023[0m [34m [1mvs_files[0m
+.[1;33mr[31mw[90m-[0m[33mr[1;90m--[0m[33mr[1;90m--[0m [1;32m12k[0m [1;33mdeadivine[0m [34m 9 nov  2021[0m  client.sln
+.[1;33mr[31mw[90m-[0m[33mr[1;90m--[0m[33mr[1;90m--[0m [32m100[0m [1;33mdeadivine[0m [34m11 jun  2023[0m  source.txt
+
+== 2. archivos eterpack ==
+./source/EterPack
+./source/EterPack/EterPack.cpp
+./source/EterPack/EterPack.h
+./source/EterPack/EterPackCursor.cpp
+./source/EterPack/EterPackCursor.h
+./source/EterPack/EterPackManager.cpp
+./source/EterPack/EterPackManager.h
+./source/EterPack/EterPackPolicy_CSHybridCrypt.cpp
+./source/EterPack/EterPackPolicy_CSHybridCrypt.h
+./vs_files/EterPack
+./vs_files/EterPack/Debug/EterPack.Build.CppClean.log
+./vs_files/EterPack/Debug/EterPack.log
+./vs_files/EterPack/Debug/EterPack.vcxproj.FileListAbsolute.txt
+./vs_files/EterPack/Distribute/EterPack.Build.CppClean.log
+./vs_files/EterPack/Distribute/EterPack.lib.recipe
+./vs_files/EterPack/Distribute/EterPack.log
+./vs_files/EterPack/Distribute/EterPack.tlog
+./vs_files/EterPack/Distribute/EterPack.vcxproj.FileListAbsolute.txt
+./vs_files/EterPack/EterPack.vcxproj
+./vs_files/EterPack/EterPack.vcxproj.user
+./vs_files/EterPack/Release/EterPack.Build.CppClean.log
+./vs_files/EterPack/Release/EterPack.log
+./vs_files/EterPack/Release/EterPack.vcxproj.FileListAbsolute.txt
+
+== 3. herramientas ==
+Python 3.14.9
+	libminilzo.so.0 (libc6,x86-64) => /usr/lib/libminilzo.so.0
+	libminilzo.so (libc6,x86-64) => /usr/lib/libminilzo.so
+	liblzo2.so.2 (libc6,x86-64) => /usr/lib/liblzo2.so.2
+	liblzo2.so (libc6,x86-64) => /usr/lib/liblzo2.so
+/usr/bin/xorriso
+/usr/bin/git
+
+== 4. xtea ==
+./DumpProto/dump_proto/tea.h:10:       <URL:http://www.cl.cam.ac.uk/ftp/users/djw3/xtea.ps> */
+./extern/include/cryptopp/bench2.cpp:235:		BenchMarkByName<SymmetricCipher>("XTEA/CTR");
+./extern/include/cryptopp/cryptlib.h:18:	\ref ThreeWay "3-Way", \ref Threefish256 "Threefish (256/512/1024)", Twofish, XTEA
+./extern/include/cryptopp/regtest3.cpp:65:	RegisterSymmetricCipherDefaultFactories<ECB_Mode<XTEA> >();
+./extern/include/cryptopp/regtest3.cpp:95:	RegisterSymmetricCipherDefaultFactories<CTR_Mode<XTEA> >();
+./extern/include/cryptopp/tea.cpp:62:void XTEA::Base::UncheckedSetKey(const byte *userKey, unsigned int length,  const NameValuePairs &params)
+./extern/include/cryptopp/tea.cpp:70:void XTEA::Enc::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock, byte *outBlock) const
+./extern/include/cryptopp/tea.cpp:86:void XTEA::Dec::ProcessAndXorBlock(const byte *inBlock, const byte *xorBlock, byte *outBlock) const
+./extern/include/cryptopp/tea.h:4:/// \brief Classes for the TEA, BTEA and XTEA block ciphers
+./extern/include/cryptopp/tea.h:62:/// \brief XTEA block cipher information
+./extern/include/cryptopp/tea.h:63:struct XTEA_Info : public FixedBlockSize<8>, public FixedKeyLength<16>, public VariableRounds<32>
+./extern/include/cryptopp/tea.h:69:	CRYPTOPP_STATIC_CONSTEXPR const char* StaticAlgorithmName() {return "XTEA";}
+./extern/include/cryptopp/tea.h:72:/// \brief XTEA block cipher
+./extern/include/cryptopp/tea.h:73:/// \sa <a href="http://www.cryptopp.com/wiki/TEA">XTEA</a>
+./extern/include/cryptopp/tea.h:74:class XTEA : public XTEA_Info, public BlockCipherDocumentation
+./extern/include/cryptopp/tea.h:76:	/// \brief XTEA block cipher default operation
+./extern/include/cryptopp/tea.h:77:	class CRYPTOPP_NO_VTABLE Base : public BlockCipherImpl<XTEA_Info>
+./extern/include/cryptopp/tea.h:87:	/// \brief XTEA block cipher encryption operation
+./extern/include/cryptopp/tea.h:94:	/// \brief XTEA block cipher decryption operation
+./extern/include/cryptopp/tea.h:117:/// \details Corrected Block TEA as described in "xxtea". This class hasn't been tested yet.
+./extern/include/cryptopp/tea.h:118:/// \sa <A HREF="http://www.movable-type.co.uk/scripts/xxtea.pdf">Correction to xtea</A> and
+./source/EterBase/tea.h:10:       <URL:http://www.cl.cam.ac.uk/ftp/users/djw3/xtea.ps> */
+./source/EterPack/EterPackPolicy_CSHybridCrypt.cpp:47://XTEA 8 16 1 16 
+./source/EterPack/EterPackPolicy_CSHybridCrypt.cpp:191:	else if( eAlgorithm == e_Cipher_XTEA )
+./source/EterPack/EterPackPolicy_CSHybridCrypt.cpp:194:		CIPHER_MODE<XTEA>::Encryption Encryptor;
+./source/EterPack/EterPackPolicy_CSHybridCrypt.cpp:195:		Encryptor.SetKeyWithIV(key.keyXTEA, sizeof(key.keyXTEA), iv.ivXTEA, sizeof(iv.ivXTEA));
+./source/EterPack/EterPackPolicy_CSHybridCrypt.cpp:256:	else if( eAlgorithm == e_Cipher_XTEA )
+./source/EterPack/EterPackPolicy_CSHybridCrypt.cpp:259:		CIPHER_MODE<XTEA>::Decryption Decryptor;
+./source/EterPack/EterPackPolicy_CSHybridCrypt.cpp:260:		Decryptor.SetKeyWithIV(key.keyXTEA, sizeof(key.keyXTEA), iv.ivXTEA, sizeof(iv.ivXTEA));
+./source/EterPack/EterPackPolicy_CSHybridCrypt.h:14:	e_Cipher_XTEA,
+./source/EterPack/EterPackPolicy_CSHybridCrypt.h:52:		BYTE keyXTEA	[ CryptoPP::XTEA::DEFAULT_KEYLENGTH];
+./source/EterPack/EterPackPolicy_CSHybridCrypt.h:61:		BYTE ivXTEA		[ CryptoPP::XTEA::BLOCKSIZE];
+
+== 5. magic y estructuras ==
+
+== 6. crc ==
+./DumpProto/lzo/lzoconf.h:428:lzo_crc32(lzo_uint32 _c, const lzo_byte *_buf, lzo_uint _len);
+./DumpProto/lzo/lzo_conf.h:328:__LZO_EXTERN_C const lzo_uint32 _lzo_crc32_table[256];
+./extern/include/cryptopp/crc_simd.cpp:64:        w = __crc32w(w,x);
+./extern/include/cryptopp/crc_simd.cpp:65:        w = __crc32h(w,y);
+./extern/include/cryptopp/crc_simd.cpp:66:        w = __crc32b(w,z);
+./extern/include/cryptopp/crc_simd.cpp:67:        w = __crc32cw(w,x);
+./extern/include/cryptopp/crc_simd.cpp:68:        w = __crc32ch(w,y);
+./extern/include/cryptopp/crc_simd.cpp:69:        w = __crc32cb(w,z);
+./extern/include/cryptopp/crc_simd.cpp:100:        w = __crc32w(w,x);
+./extern/include/cryptopp/crc_simd.cpp:101:        w = __crc32h(w,y);
+./extern/include/cryptopp/crc_simd.cpp:102:        w = __crc32b(w,z);
+./extern/include/cryptopp/crc_simd.cpp:103:        w = __crc32cw(w,x);
+./extern/include/cryptopp/crc_simd.cpp:104:        w = __crc32ch(w,y);
+./extern/include/cryptopp/crc_simd.cpp:105:        w = __crc32cb(w,z);
+./extern/include/cryptopp/crc_simd.cpp:125:        c = __crc32b(c, *s);
+./extern/include/cryptopp/crc_simd.cpp:128:        c = __crc32w(c, *(const word32 *)(void*)s);
+./extern/include/cryptopp/crc_simd.cpp:131:        c = __crc32b(c, *s);
+./extern/include/cryptopp/crc_simd.cpp:137:        c = __crc32cb(c, *s);
+./extern/include/cryptopp/crc_simd.cpp:140:        c = __crc32cw(c, *(const word32 *)(void*)s);
+./extern/include/cryptopp/crc_simd.cpp:143:        c = __crc32cb(c, *s);
+./extern/include/cryptopp/crc_simd.cpp:151:        c = _mm_crc32_u8(c, *s);
+./extern/include/cryptopp/crc_simd.cpp:154:        c = _mm_crc32_u32(c, *(const word32 *)(void*)s);
+./extern/include/cryptopp/crc_simd.cpp:157:        c = _mm_crc32_u8(c, *s);
+./extern/include/cryptopp/gf2n_simd.cpp:122:// Intel paper or https://github.com/antonblanchard/crc32-vpmsum.
+./extern/include/cryptopp/gf2n_simd.cpp:253:// Intel paper or https://github.com/antonblanchard/crc32-vpmsum.
+./extern/include/cryptopp/gf2n_simd.cpp:407:// Intel paper or https://github.com/antonblanchard/crc32-vpmsum.
+./extern/include/lzo/lzoconf.h:363:    lzo_crc32(lzo_uint32_t c, const lzo_bytep buf, lzo_uint len);
+./extern/include/lzo/lzoconf.h:365:    lzo_get_crc32_table(void);
+./extern/include/lzo/lzo_asm.h:118:lzo_crc32_asm(lzo_uint32_t c, const lzo_bytep buf, lzo_uint len,
+./extern/include/lzo/lzo_asm.h:122:lzo_crc32_asm_small(lzo_uint32_t c, const lzo_bytep buf, lzo_uint len);
+./source/EterBase/CRC32.cpp:57:DWORD GetCRC32(const char * buf, size_t len)
+./source/EterBase/CRC32.cpp:157:		dwRetCRC32=GetCRC32((const char*)lpMapData, dwFileSize);
+./source/EterBase/CRC32.h:6:DWORD GetCRC32(const char* buffer, size_t count);
+./source/EterLib/GrpExpandedImageInstance.cpp:192:	static DWORD s_dwType = GetCRC32("CGraphicExpandedImageInstance", strlen("CGraphicExpandedImageInstance"));
+./source/EterLib/GrpImageInstance.cpp:181:	static DWORD s_dwType = GetCRC32("CGraphicImageInstance", strlen("CGraphicImageInstance"));
+./source/EterLib/GrpMarkInstance.cpp:213:	static DWORD s_dwType = GetCRC32("CGraphicMarkInstance", strlen("CGraphicMarkInstance"));
+./source/EterLib/Resource.cpp:112:	return GetCRC32(c_szType, strlen(c_szType));
+./source/EterLib/ResourceManager.cpp:28:	DWORD dwCacheKey=GetCRC32(c_szFileName, strlen(c_szFileName));
+./source/EterLib/ResourceManager.cpp:82:		m_WaitingMap.erase(GetCRC32(pData->stFileName.c_str(), pData->stFileName.size()));
+./source/EterLib/ResourceManager.cpp:365:	return (GetCRC32(s_szFullPathFileName, len));
+./config.exe
+./devil.dll
+./Eternexus/EterNexus.exe
+./Eternexus/EterPackAPI.dll
+./Eternexus/libgcc_s_dw2-1.dll
+./Eternexus/mingwm10.dll
+./Eternexus/QtCore4.dll
+./Eternexus/QtGui4.dll
+./Eternexus/QtNetwork4.dll
+./Eternexus/QtWebKit4.dll
+./Eternexus/vcredist_x64.exe
+./Eternexus/vcredist_x86.exe
+./granny2.dll
+./Metin2Distribute.exe
+./miles/mss32.dll
+./MSS32.DLL
+./python27.dll
+./SpeedTreeRT.dll
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EffectLib/EffectMesh.cpp:4:#include "../eterpack/EterPackManager.h"
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EffectLib/EffectMesh.cpp:198:			if (CEterPackManager::Instance().Get(File, pMeshData->szDiffuseMapFileName, &pMotionData))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EffectLib/EffectMesh.cpp:343:			if (CEterPackManager::Instance().Get(File, pMeshData->szDiffuseMapFileName, &pMotionData))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/FileLoaderThread.cpp:2:#include "../EterPack/EterPackManager.h"
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/FileLoaderThread.cpp:168:	if (CEterPackManager::Instance().Get(pData->File, pData->stFileName.c_str(), &pvBuf))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/GrpImageTexture.cpp:3:#include "../eterPack/EterPackManager.h"
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/GrpImageTexture.cpp:56:		if (!CEterPackManager::Instance().Get(mappedFile, m_stFileName.c_str(), &c_pvMap))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/Resource.cpp:2:#include "../eterPack/EterPackManager.h"
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/Resource.cpp:51:	if (CEterPackManager::Instance().Get(file, c_szFileName, &fileData))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/Resource.cpp:87:	if (CEterPackManager::Instance().Get(file, GetFileName(), &fileData))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/ResourceManager.cpp:6:#include "../eterPack/EterPackManager.h"
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/ResourceManager.cpp:475:	return CEterPackManager::Instance().isExist(c_szFileName);
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/TextFileLoader.cpp:4:#include "../eterPack/EterPackManager.h"
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/TextFileLoader.cpp:184:	if (!CEterPackManager::Instance().Get(kFile, c_szFileName, &pvData))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/Util.cpp:2:#include "../eterPack/EterPackManager.h"
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/Util.cpp:26:	if (!CEterPackManager::Instance().Get(File, c_szFileName, &pMotionData))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterLib/Util.cpp:56:	if (!CEterPackManager::Instance().Get(File, c_szFileName, &pModelData))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:8:#include "EterPack.h"
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:10:#include "EterPackPolicy_CSHybridCrypt.h"
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:202:FILE * CEterPack::ms_PackLogFile = NULL;
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:205:CEterPack::CEterPack() : m_indexCount(0), m_indexData(NULL), m_FragmentSize(0), m_bEncrypted(false), m_bReadOnly(false), m_bDecrypedIV(false)
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:207:	m_pCSHybridCryptPolicy = new EterPackPolicy_CSHybridCrypt;
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:211:CEterPack::~CEterPack()
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:219:void CEterPack::Destroy()
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:237:const std::string& CEterPack::GetPathName()
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:242:bool CEterPack::Create(CEterFileDict& rkFileDict, const char * dbname, const char* pathName, bool bReadOnly, const BYTE* iv)
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:286:bool CEterPack::DecryptIV(DWORD dwPanamaKey)
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:304:bool CEterPack::DecryptIndexFile()
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:314:	file.Write(&eterpack::c_IndexCC, sizeof(DWORD));
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:315:	file.Write(&eterpack::c_Version, sizeof(DWORD));
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:317:	file.Write(m_indexData, sizeof(TEterPackIndex) * m_indexCount);
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:325:static DWORD s_adwEterPackKey[] =
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:333:static DWORD s_adwEterPackSecurityKey[] =
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:341:bool CEterPack::EncryptIndexFile()
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:357:	if (!CLZO::Instance().CompressEncryptedMemory(zObj, pbData, file.Size(), s_adwEterPackKey))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:394:bool CEterPack::__BuildIndex(CEterFileDict& rkFileDict, bool bOverwrite)
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:407:	if (file.Size() < eterpack::c_HeaderSize)
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:418:	if (fourcc == eterpack::c_IndexCC)
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:427:		if (!CLZO::Instance().Decompress(zObj, (const BYTE *) pvData, s_adwEterPackKey))
+/home/deadivine/metin2lab/tmp4/Client/ClientVS22/source/EterPack/EterPack.cpp:430:		if (zObj.GetSize() < eterpack::c_HeaderSize)

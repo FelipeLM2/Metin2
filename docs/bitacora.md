@@ -53,3 +53,22 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   `serverinfo.py` al `.epk` como tipo 0 (sin LZO ni XTEA), sin tocar los otros
   89 archivos.
 - Pendiente: reconocimiento de la fuente en CachyOS.
+
+## 2026-11-08 — B04: pack parcheado y cliente sin portproxy
+
+- `m2pack` ya lee y **escribe** el pack real: el `set` comprime con LZO (tipo 1,
+  como el original) y reescribe el índice en claro.
+- **Hallazgo**: los dos `long` de tamaño del índice van al revés de lo que
+  declara `ClientVS22`. En el pack real, offset 172 = blob y 176 = hueco
+  (múltiplo de 256). `m2pack` ya no asume el orden: el menor es el blob real.
+  Eso era lo que hacía fallar `verify` en el `item_proto` y en `serverinfo.py`.
+- `SERVER_IP` parcheado de `192.168.0.122` a `10.10.10.10` sobre una copia.
+  `serverinfo.py` pasa de 1694 a 1689 B; el blob queda en 701 B dentro de su
+  hueco de 768, así que no se mueve nada más del `.epk`.
+- La copia pasa `verify` **antes y después**, y el `diff` es de una sola línea.
+- El cliente arrancó y se entró al juego con el pack nuevo y el `portproxy`
+  quitado, según el usuario. La transcripción del cliente se perdió por un
+  fallo de `Start-Transcript` + `Read-Host`, así que la constancia queda
+  pendiente en **B05**.
+- **Lección**: para capturar salida en el cliente, `*> $log` a un archivo y
+  copiarlo al disco FAT de retorno; nada de `Start-Transcript` con `Read-Host`.

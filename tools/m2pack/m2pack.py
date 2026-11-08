@@ -652,7 +652,7 @@ def cmd_set(pack: Pack, args) -> int:
         how = f"en su hueco ({pos}, {real} bytes)"
     else:
         pos = len(data)
-        real = len(new) + (256 - (len(new) % 256))
+        real = len(new) + (-len(new) % 256)
         data += new
         data += b"\0" * (real - len(new))
         how = f"al final del .epk ({pos}, hueco nuevo de {real} bytes)"

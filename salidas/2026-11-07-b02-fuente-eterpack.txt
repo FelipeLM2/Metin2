@@ -1,0 +1,3940 @@
+### ESTUDIO: extracto de source/EterPack y dependencias (Fase B)
+### No forma parte del proyecto; se puede borrar tras la fase.
+
+== 1. tama챰o de los archivos ==
+ 1615 source/EterPack/EterPack.cpp
+   59 source/EterPack/EterPackCursor.cpp
+  621 source/EterPack/EterPackManager.cpp
+  503 source/EterPack/EterPackPolicy_CSHybridCrypt.cpp
+    2 source/EterPack/StdAfx.cpp
+   25 source/EterPack/EterPackCursor.h
+  248 source/EterPack/EterPack.h
+   96 source/EterPack/EterPackManager.h
+   94 source/EterPack/EterPackPolicy_CSHybridCrypt.h
+   34 source/EterPack/Inline.h
+  127 source/EterPack/md5.h
+    8 source/EterPack/StdAfx.h
+ 3432 total
+
+== 2. contenido de source/EterPack ==
+===== FILE: source/EterPack/EterPack.cpp =====
+#include "StdAfx.h"
+
+#include <windows.h>
+#include <mmsystem.h>
+#include <io.h>
+#include <assert.h>
+
+#include "EterPack.h"
+#include "Inline.h"
+#include "EterPackPolicy_CSHybridCrypt.h"
+
+#pragma warning(push, 3)
+#include <cryptopp/cryptlib.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/tiger.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/ripemd.h>
+#include <cryptopp/whrlpool.h>
+#include <cryptopp/panama.h>
+
+#include <cryptopp/cryptoppLibLink.h>
+#pragma warning(pop)
+
+#include "../EterBase/utils.h"
+#include "../EterBase/Debug.h"
+#include "../EterBase/CRC32.h"
+
+#ifdef __THEMIDA__
+#include <ThemidaSDK.h>
+#endif
+
+#include <iostream>
+#include <fstream>
+
+void CMakePackLog::SetFileName(const char* c_szFileName)
+{
+	m_stFileName=c_szFileName;
+	m_stFileName +=".log";
+	m_stErrorFileName = c_szFileName;
+	m_stErrorFileName += ".err";
+}
+
+CMakePackLog& CMakePackLog::GetSingleton()
+{
+	static CMakePackLog s_kMakePackLog;
+	return s_kMakePackLog;
+}
+
+CMakePackLog::CMakePackLog()
+{
+	m_fp=NULL;
+	m_fp_err = NULL;
+}
+
+CMakePackLog::~CMakePackLog()
+{
+	if (NULL!=m_fp)
+	{
+		fclose(m_fp);
+		m_fp=NULL;
+	}
+	if (NULL != m_fp_err)
+	{
+		fclose(m_fp_err);
+		m_fp_err = NULL;
+	}
+}
+
+bool CMakePackLog::__IsLogMode()
+{
+	if (m_stFileName.empty())
+		return false;
+
+	return true;
+}
+
+void CMakePackLog::Writef(const char* c_szFormat, ...)
+{
+	if (!__IsLogMode())
+		return;
+
+	va_list args;
+	va_start(args, c_szFormat);
+
+	char szBuf[1024];
+	int nBufLen = _vsnprintf(szBuf, sizeof(szBuf), c_szFormat, args);
+	szBuf[nBufLen++] = '\0';
+	__Write(szBuf, nBufLen);
+}
+
+void CMakePackLog::Writenf(const char* c_szFormat, ...)
+{
+	if (!__IsLogMode())
+		return;
+
+	va_list args;
+	va_start(args, c_szFormat);
+
+	char szBuf[1024+1];
+	int nBufLen = _vsnprintf(szBuf, sizeof(szBuf)-1, c_szFormat, args);
+	if (nBufLen > 0)
+	{
+		szBuf[nBufLen++] = '\n';
+		szBuf[nBufLen++] = '\0';
+	}
+	__Write(szBuf, nBufLen);
+}
+
+void CMakePackLog::Write(const char* c_szBuf)
+{
+	if (!__IsLogMode())
+		return;
+
+	__Write(c_szBuf, strlen(c_szBuf)+1);
+}
+
+void CMakePackLog::__Write(const char* c_szBuf, int nBufLen)
+{
+	if (!__IsLogMode())
+		return;
+
+	if (NULL==m_fp)
+		m_fp=fopen(m_stFileName.c_str(), "w");
+
+	fwrite(c_szBuf, nBufLen, 1, m_fp);
+
+	printf("%s", c_szBuf);
+}
+
+
+
+void CMakePackLog::WriteErrorf(const char* c_szFormat, ...)
+{
+	if (!__IsLogMode())
+		return;
+
+	va_list args;
+	va_start(args, c_szFormat);
+
+	char szBuf[1024];
+	int nBufLen = _vsnprintf(szBuf, sizeof(szBuf), c_szFormat, args);
+	szBuf[nBufLen++] = '\0';
+	__WriteError(szBuf, nBufLen);
+}
+
+void CMakePackLog::WriteErrornf(const char* c_szFormat, ...)
+{
+	if (!__IsLogMode())
+		return;
+
+	va_list args;
+	va_start(args, c_szFormat);
+
+	char szBuf[1024+1];
+	int nBufLen = _vsnprintf(szBuf, sizeof(szBuf)-1, c_szFormat, args);
+	if (nBufLen > 0)
+	{
+		szBuf[nBufLen++] = '\n';
+		szBuf[nBufLen++] = '\0';
+	}
+	__WriteError(szBuf, nBufLen);
+}
+
+void CMakePackLog::WriteError(const char* c_szBuf)
+{
+	if (!__IsLogMode())
+		return;
+
+	__WriteError(c_szBuf, strlen(c_szBuf)+1);
+}
+
+void CMakePackLog::__WriteError(const char* c_szBuf, int nBufLen)
+{
+	if (!__IsLogMode())
+		return;
+
+	if (NULL==m_fp_err)
+		m_fp_err=fopen(m_stErrorFileName.c_str(), "w");
+
+	fwrite(c_szBuf, nBufLen, 1, m_fp_err);
+
+	printf("Error: %s", c_szBuf);
+}
+
+void CMakePackLog::FlushError()
+{
+	std::wifstream iFile(m_stErrorFileName.c_str());
+    std::istream_iterator <std::wstring, wchar_t> iit(iFile);
+    std::istream_iterator <std::wstring, wchar_t> eos;
+
+    std::vector <std::wstring> vText;
+
+    std::copy (iit, eos, std::back_inserter(vText));
+
+    std::ostream_iterator <std::wstring, wchar_t, std::char_traits <wchar_t> > oit(std::wcout);
+
+    std::sort (vText.begin(), vText.end());
+    std::copy (vText.begin(), vText.end(), oit);
+}
+#ifdef __MAKE_PACK__
+FILE * CEterPack::ms_PackLogFile = NULL;
+#endif
+///////////////////////////////////////////////////////////////////////////////
+CEterPack::CEterPack() : m_indexCount(0), m_indexData(NULL), m_FragmentSize(0), m_bEncrypted(false), m_bReadOnly(false), m_bDecrypedIV(false)
+{
+	m_pCSHybridCryptPolicy = new EterPackPolicy_CSHybridCrypt;
+	
+}
+
+CEterPack::~CEterPack()
+{
+	Destroy();
+	
+	delete m_pCSHybridCryptPolicy;
+	m_pCSHybridCryptPolicy = NULL;
+}
+
+void CEterPack::Destroy()
+{
+	m_bReadOnly = false;
+	m_bEncrypted = false;
+	m_indexCount = 0;
+	m_DataPositionMap.clear();
+
+	for (int i = 0; i < FREE_INDEX_MAX_SIZE + 1; ++i)
+		m_FreeIndexList[i].clear();
+
+	SAFE_DELETE_ARRAY(m_indexData);
+
+	m_FragmentSize = 0;
+
+	memset(m_dbName, 0, sizeof(m_dbName));
+	memset(m_indexFileName, 0, sizeof(m_indexFileName));	
+}
+
+const std::string& CEterPack::GetPathName()
+{
+	return m_stPathName;
+}
+
+bool CEterPack::Create(CEterFileDict& rkFileDict, const char * dbname, const char* pathName, bool bReadOnly, const BYTE* iv)
+{
+	if (iv)
+	{
+		m_stIV_Panama.assign((const char*) iv, 32);
+		m_bDecrypedIV = false;
+	}
+
+	m_stPathName = pathName;
+
+	strncpy(m_dbName, dbname, DBNAME_MAX_LEN);
+	
+	strncpy(m_indexFileName, dbname, MAX_PATH);
+	strcat(m_indexFileName, ".eix");
+
+	m_stDataFileName = dbname;
+	m_stDataFileName += ".epk";
+	
+	m_bReadOnly = bReadOnly;
+
+	// bReadOnly 모드가 아니고 데이터 베이스가 열린다면 생성 실패
+	if (!CreateIndexFile())
+		return false;
+
+	if (!CreateDataFile())
+		return false;
+
+	bool bOverwrite = (iv != NULL);
+	__BuildIndex(rkFileDict, bOverwrite);
+
+	if (m_bReadOnly)
+	{
+		//m_bIsDataLoaded = true;		
+		//if (!m_file.Create(m_stDataFileName.c_str(), (const void**)&m_file_data, 0, 0))
+		//	return false;
+	}
+	else
+	{
+		DecryptIndexFile();
+	}
+
+	return true;
+}
+
+bool CEterPack::DecryptIV(DWORD dwPanamaKey)
+{	
+	if (m_stIV_Panama.length() != 32)
+		return false;
+
+	if (m_bDecrypedIV) // 이미 암호화가 풀렸으면 다시 처리 안함
+		return true;
+
+	DWORD* ivs = (DWORD*)&m_stIV_Panama[0];
+	for (int i = 0; i != m_stIV_Panama.length() / sizeof(DWORD); ++i)
+	{
+		ivs[i] ^= dwPanamaKey + i * 16777619;		
+	}
+
+	m_bDecrypedIV = true;
+	return true;
+}
+
+bool CEterPack::DecryptIndexFile()
+{
+	if (!m_bEncrypted)
+		return true;
+
+	CFileBase file;
+	
+	if (!file.Create(m_indexFileName, CFileBase::FILEMODE_WRITE))
+		return false;
+
+	file.Write(&eterpack::c_IndexCC, sizeof(DWORD));
+	file.Write(&eterpack::c_Version, sizeof(DWORD));
+	file.Write(&m_indexCount, sizeof(long));
+	file.Write(m_indexData, sizeof(TEterPackIndex) * m_indexCount);
+
+	file.Close();
+
+	m_bEncrypted = false;
+	return true;
+}
+
+static DWORD s_adwEterPackKey[] =
+{
+	45129401,
+	92367215,
+	681285731,
+	1710201,
+};
+
+static DWORD s_adwEterPackSecurityKey[] =
+{
+	78952482,
+	527348324,
+	1632942,
+	486274726,
+};
+
+bool CEterPack::EncryptIndexFile()
+{
+	CMappedFile file;
+	LPCVOID pvData;
+
+	if (NULL == file.Create(m_indexFileName, &pvData, 0, 0))
+	{
+		TraceError("EncryptIndex: Cannot open pack index file! %s", m_dbName);
+		return false;
+	}
+
+	BYTE * pbData = new BYTE[file.Size()];
+	memcpy(pbData, pvData, file.Size());
+
+	CLZObject zObj;
+	
+	if (!CLZO::Instance().CompressEncryptedMemory(zObj, pbData, file.Size(), s_adwEterPackKey))
+	{
+		TraceError("EncryptIndex: Cannot encrypt! %s", m_dbName);
+		SAFE_DELETE_ARRAY(pbData);
+		return false;
+	}
+
+	file.Destroy();
+
+	while (!DeleteFile(m_indexFileName));
+
+	FILE * fp;
+
+	fp = fopen(m_indexFileName, "wb");
+
+	if (!fp)
+	{
+		TraceError("EncryptIndex: Cannot open file for writing! %s", m_dbName);
+		SAFE_DELETE_ARRAY(pbData);
+		return false;
+	}
+
+	if (1 != fwrite(zObj.GetBuffer(), zObj.GetSize(), 1, fp))
+	{
+		TraceError("Encryptindex: Cannot write to file! %s", m_indexFileName);
+		SAFE_DELETE_ARRAY(pbData);
+		fclose(fp);
+		return false;
+	}
+	
+	fclose(fp);
+
+	m_bEncrypted = true;
+	delete [] pbData;
+	return true;
+}
+
+bool CEterPack::__BuildIndex(CEterFileDict& rkFileDict, bool bOverwrite)
+{
+	//DWORD dwBeginTime = ELTimer_GetMSec();
+	CMappedFile file;
+	LPCVOID pvData;
+	CLZObject zObj;
+
+	if (NULL == file.Create(m_indexFileName, &pvData, 0, 0))
+	{
+		TraceError("Cannot open pack index file! %s", m_dbName);
+		return false;
+	}
+
+	if (file.Size() < eterpack::c_HeaderSize)
+	{
+		TraceError("Pack index file header error! %s", m_dbName);
+		return false;
+	}
+
+	DWORD fourcc = *(DWORD *) pvData;
+
+	BYTE * pbData;
+	UINT uiFileSize;
+
+	if (fourcc == eterpack::c_IndexCC)
+	{
+		pbData = (BYTE *) pvData;
+		uiFileSize = file.Size();
+	}
+	else if (fourcc == CLZObject::ms_dwFourCC)
+	{
+		m_bEncrypted = true;
+
+		if (!CLZO::Instance().Decompress(zObj, (const BYTE *) pvData, s_adwEterPackKey))
+			return false;
+
+		if (zObj.GetSize() < eterpack::c_HeaderSize)
+			return false;
+
+		pbData = zObj.GetBuffer();
+		uiFileSize = zObj.GetSize();
+	}
+	else
+	{
+		TraceError("Pack index file fourcc error! %s", m_dbName);
+		return false;
+	}
+
+	pbData += sizeof(DWORD);
+
+	DWORD ver = *(DWORD *) pbData;
+	pbData += sizeof(DWORD);
+
+	if (ver != eterpack::c_Version)
+	{
+		TraceError("Pack index file version error! %s", m_dbName);
+		return false;
+	}
+
+	m_indexCount = *(long *) pbData;
+	pbData += sizeof(long);
+
+	if (uiFileSize < eterpack::c_HeaderSize + sizeof(TEterPackIndex) * m_indexCount)
+	{
+		TraceError("Pack index file size error! %s, indexCount %d", m_dbName, m_indexCount);
+		return false;
+	}
+
+	//Tracef("Loading Pack file %s elements: %d ... ", m_dbName, m_indexCount);
+
+	m_indexData = new TEterPackIndex[m_indexCount];
+	memcpy(m_indexData, pbData, sizeof(TEterPackIndex) * m_indexCount);
+
+	TEterPackIndex * index = m_indexData;
+
+	for (int i = 0; i < m_indexCount; ++i, ++index)
+	{
+		if (!index->filename_crc)
+		{
+			PushFreeIndex(index);
+		}
+		else
+		{
+			if (index->real_data_size > index->data_size)
+				m_FragmentSize += index->real_data_size - index->data_size;
+
+			m_DataPositionMap.insert(TDataPositionMap::value_type(index->filename_crc, index));
+
+			if (bOverwrite) // 서버 연동 패킹 파일은 나중에 들어오지만 최상위로 등록해야한다
+				rkFileDict.UpdateItem(this, index);
+			else
+				rkFileDict.InsertItem(this, index);
+		}
+	}
+
+	//Tracef("Done. (spent %dms)\n", ELTimer_GetMSec() - dwBeginTime);
+	return true;
+}
+//
+//void CEterPack::UpdateLastAccessTime()
+//{
+//	m_tLastAccessTime = time(NULL);
+//}
+//
+//void CEterPack::ClearDataMemoryMap()
+//{
+//	// m_file이 data file이다...
+//	m_file.Destroy();
+//	m_tLastAccessTime = 0;
+//	m_bIsDataLoaded = false;
+//}
+
+bool CEterPack::Get(CMappedFile& out_file, const char * filename, LPCVOID * data)
+{
+	TEterPackIndex * index = FindIndex(filename);
+	
+	if (!index)
+	{
+		return false;
+	}
+
+	//UpdateLastAccessTime();
+	//if (!m_bIsDataLoaded)
+	//{
+	//	if (!m_file.Create(m_stDataFileName.c_str(), (const void**)&m_file_data, 0, 0))
+	//		return false;
+	//	
+	//	m_bIsDataLoaded = true;
+	//}
+	
+	// 기존에는 CEterPack에서 epk를 memory map에 올려놓고, 요청이 오면 그 부분을 링크해서 넘겨 줬었는데,
+	// 이제는 요청이 오면, 필요한 부분만 memory map에 올리고, 요청이 끝나면 해제하게 함.
+	out_file.Create(m_stDataFileName.c_str(), data, index->data_position, index->data_size);
+	
+	bool bIsSecurityCheckRequired = ( index->compressed_type == COMPRESSED_TYPE_SECURITY ||
+									  index->compressed_type == COMPRESSED_TYPE_PANAMA );
+
+	if( bIsSecurityCheckRequired )
+	{
+#ifdef CHECKSUM_CHECK_MD5
+		MD5_CTX context;
+		GenerateMD5Hash( (BYTE*)(*data), index->data_size, context );
+
+		if( memcmp( index->MD5Digest, context.digest, 16 ) != 0 )
+		{
+			return false;
+		}	
+#else
+		DWORD dwCrc32 = GetCRC32((const char*)(*data), index->data_size);
+
+		if( index->data_crc != dwCrc32 )
+		{
+			return false;
+		}
+#endif
+	}
+
+
+	if (COMPRESSED_TYPE_COMPRESS == index->compressed_type)
+	{
+		CLZObject * zObj = new CLZObject;
+
+		if (!CLZO::Instance().Decompress(*zObj, static_cast<const BYTE *>(*data)))
+		{
+			TraceError("Failed to decompress : %s", filename);
+			delete zObj;
+			return false;
+		}
+
+		out_file.BindLZObject(zObj);
+		*data = zObj->GetBuffer();
+	}
+	else if (COMPRESSED_TYPE_SECURITY == index->compressed_type)
+	{
+		CLZObject * zObj = new CLZObject;
+
+		if (!CLZO::Instance().Decompress(*zObj, static_cast<const BYTE *>(*data), s_adwEterPackSecurityKey))
+		{
+			TraceError("Failed to encrypt : %s", filename);
+			delete zObj;
+			return false;
+		}
+
+		out_file.BindLZObject(zObj);
+		*data = zObj->GetBuffer();
+	}
+	else if (COMPRESSED_TYPE_PANAMA == index->compressed_type)
+	{
+		CLZObject* zObj = new CLZObject;
+		if (!__Decrypt_Panama(filename, static_cast<const BYTE*>(*data), index->data_size, *zObj))
+		{
+			delete zObj;
+			return false;
+		}
+
+		out_file.BindLZObjectWithBufferedSize(zObj);
+		*data = zObj->GetBuffer();
+	}
+	else if (COMPRESSED_TYPE_HYBRIDCRYPT == index->compressed_type || COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB == index->compressed_type)
+	{
+#ifdef __THEMIDA__
+		VM_START
+#endif
+	
+		CLZObject * zObj = new CLZObject;
+		auto ssvv = std::string(filename);
+		if (!m_pCSHybridCryptPolicy->DecryptMemory(ssvv, static_cast<const BYTE*>(*data), index->data_size, *zObj))
+		{
+			delete zObj;
+			return false;
+		}
+
+		out_file.BindLZObjectWithBufferedSize(zObj);
+		if( COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB == index->compressed_type)
+		{
+			BYTE* pSDBData;
+			int   iSDBSize;
+
+			if (!m_pCSHybridCryptPolicy->GetSupplementaryDataBlock(ssvv, pSDBData, iSDBSize))
+			{
+				delete zObj;
+				return false;
+			}
+
+			*data = out_file.AppendDataBlock( pSDBData, iSDBSize );
+		}
+		else
+		{
+			*data = zObj->GetBuffer();
+		}
+#ifdef __THEMIDA__
+		VM_END
+#endif
+	}
+	return true;
+}
+
+bool CEterPack::Get2(CMappedFile& out_file, const char * filename, TEterPackIndex * index, LPCVOID * data)
+{
+	if (!index)
+	{
+		return false;
+	}
+
+	//UpdateLastAccessTime();
+	//if (!m_bIsDataLoaded)
+	//{
+	//	if (!m_file.Create(m_stDataFileName.c_str(), (const void**)&m_file_data, 0, 0))
+	//		return false;
+	//	
+	//	m_bIsDataLoaded = true;
+	//}
+	out_file.Create(m_stDataFileName.c_str(), data, index->data_position, index->data_size);
+
+	bool bIsSecurityCheckRequired = ( index->compressed_type == COMPRESSED_TYPE_SECURITY ||
+									  index->compressed_type == COMPRESSED_TYPE_PANAMA );
+
+	if( bIsSecurityCheckRequired )
+	{
+#ifdef CHECKSUM_CHECK_MD5
+		MD5_CTX context;
+		GenerateMD5Hash( (BYTE*)(*data), index->data_size, context );
+
+		if( memcmp( index->MD5Digest, context.digest, 16 ) != 0 )
+		{
+			return false;
+		}	
+#else
+		DWORD dwCrc32 = GetCRC32((const char*)(*data), index->data_size);
+
+		if( index->data_crc != dwCrc32 )
+		{
+			return false;
+		}
+#endif
+	}
+
+
+	if (COMPRESSED_TYPE_COMPRESS == index->compressed_type)
+	{
+		CLZObject * zObj = new CLZObject;
+
+		if (!CLZO::Instance().Decompress(*zObj, static_cast<const BYTE *>(*data)))
+		{
+			TraceError("Failed to decompress : %s", filename);
+			delete zObj;
+			return false;
+		}
+
+		out_file.BindLZObject(zObj);
+		*data = zObj->GetBuffer();
+	}
+	else if (COMPRESSED_TYPE_SECURITY == index->compressed_type)
+	{
+		CLZObject * zObj = new CLZObject;
+
+		if (!CLZO::Instance().Decompress(*zObj, static_cast<const BYTE *>(*data), s_adwEterPackSecurityKey))
+		{
+			TraceError("Failed to encrypt : %s", filename);
+			delete zObj;
+			return false;
+		}
+
+		out_file.BindLZObject(zObj);
+		*data = zObj->GetBuffer();
+	}
+	else if (COMPRESSED_TYPE_PANAMA == index->compressed_type)
+	{
+		CLZObject * zObj = new CLZObject;
+		__Decrypt_Panama(filename, static_cast<const BYTE*>(*data), index->data_size, *zObj);
+		out_file.BindLZObjectWithBufferedSize(zObj);
+		*data = zObj->GetBuffer();
+	}
+	else if (COMPRESSED_TYPE_HYBRIDCRYPT == index->compressed_type || COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB == index->compressed_type)
+	{
+#ifdef __THEMIDA__
+		VM_START
+#endif
+
+		CLZObject * zObj = new CLZObject;
+		auto ssvv = std::string(filename);
+		if( !m_pCSHybridCryptPolicy->DecryptMemory(ssvv, static_cast<const BYTE*>(*data), index->data_size, *zObj) )
+		{
+			delete zObj;
+			return false;
+		}
+
+		out_file.BindLZObjectWithBufferedSize(zObj);
+
+		if( COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB == index->compressed_type)
+		{
+			BYTE* pSDBData;
+			int   iSDBSize;
+			
+			if( !m_pCSHybridCryptPolicy->GetSupplementaryDataBlock(ssvv, pSDBData, iSDBSize) )
+			{
+				return false;
+			}
+
+			*data = out_file.AppendDataBlock( pSDBData, iSDBSize );
+		}
+		else
+		{
+			*data = zObj->GetBuffer();
+		}
+#ifdef __THEMIDA__
+		VM_END
+#endif
+	}
+
+	return true;
+}
+
+
+bool CEterPack::Delete(TEterPackIndex * pIndex)
+{
+	CFileBase fileIndex;
+
+	if (!fileIndex.Create(m_indexFileName, CFileBase::FILEMODE_WRITE))
+		return false;
+
+	PushFreeIndex(pIndex);
+	WriteIndex(fileIndex, pIndex);
+	return true;
+}
+
+bool CEterPack::Delete(const char * filename)
+{
+	TEterPackIndex * pIndex = FindIndex(filename);
+
+	if (!pIndex)
+		return false;
+
+	return Delete(pIndex);
+}
+
+bool CEterPack::Extract()
+{
+	CMappedFile dataMapFile;
+	LPCVOID		data;
+
+	if (!dataMapFile.Create(m_stDataFileName.c_str(), &data, 0, 0))
+		return false;
+
+	CLZObject zObj;
+	
+	for (TDataPositionMap::iterator i = m_DataPositionMap.begin();
+		i != m_DataPositionMap.end();
+		++i)
+	{
+		TEterPackIndex* index = i->second;
+		CFileBase writeFile;
+		
+		inlinePathCreate(index->filename);
+		printf("%s\n", index->filename);
+		
+		writeFile.Create(index->filename, CFileBase::FILEMODE_WRITE);
+
+		if (COMPRESSED_TYPE_COMPRESS == index->compressed_type)
+		{
+			if (!CLZO::Instance().Decompress(zObj, (const BYTE *) data + index->data_position))
+			{
+				printf("cannot decompress");
+				return false;
+			}
+
+			writeFile.Write(zObj.GetBuffer(), zObj.GetSize());
+			zObj.Clear();
+		}
+		else if (COMPRESSED_TYPE_SECURITY == index->compressed_type)
+		{
+			if (!CLZO::Instance().Decompress(zObj, (const BYTE *) data + index->data_position, s_adwEterPackSecurityKey))
+			{
+				printf("cannot decompress");
+				return false;
+			}
+
+			writeFile.Write(zObj.GetBuffer(), zObj.GetSize());
+			zObj.Clear();
+		}
+		else if (COMPRESSED_TYPE_PANAMA == index->compressed_type)
+		{
+			__Decrypt_Panama(index->filename, (const BYTE *) data + index->data_position, index->data_size, zObj);
+			writeFile.Write(zObj.GetBuffer(), zObj.GetBufferSize());
+			zObj.Clear();
+		}
+		else if (COMPRESSED_TYPE_HYBRIDCRYPT == index->compressed_type || COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB == index->compressed_type)
+		{
+#ifdef __THEMIDA__
+			VM_START
+#endif
+			auto ssvv = std::string(index->filename);
+			if( !m_pCSHybridCryptPolicy->DecryptMemory(ssvv, (const BYTE *) data + index->data_position, index->data_size, zObj) )
+				return false;
+
+			if( COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB == index->compressed_type)
+			{
+				dataMapFile.BindLZObjectWithBufferedSize(&zObj);
+
+				BYTE* pSDBData;
+				int   iSDBSize;
+
+				if( !m_pCSHybridCryptPolicy->GetSupplementaryDataBlock(ssvv, pSDBData, iSDBSize) )
+					return false;
+
+				dataMapFile.AppendDataBlock( pSDBData, iSDBSize );
+				writeFile.Write(dataMapFile.AppendDataBlock( pSDBData, iSDBSize ),dataMapFile.Size());
+			}
+			else
+			{
+				writeFile.Write(zObj.GetBuffer(), zObj.GetBufferSize());
+			}
+			zObj.Clear();
+#ifdef __THEMIDA__
+			VM_END
+#endif
+		}
+		else if (COMPRESSED_TYPE_NONE == index->compressed_type)
+			writeFile.Write((const char *) data + index->data_position, index->data_size);
+		
+		writeFile.Destroy();
+	}
+	return true;
+}
+
+bool CEterPack::GetNames(std::vector<std::string>* retNames)
+{
+	CMappedFile dataMapFile;
+	LPCVOID		data;
+
+	if (!dataMapFile.Create(m_stDataFileName.c_str(), &data, 0, 0))
+		return false;
+
+	CLZObject zObj;
+	
+	for (TDataPositionMap::iterator i = m_DataPositionMap.begin();
+		i != m_DataPositionMap.end();
+		++i)
+	{
+		TEterPackIndex* index = i->second;
+		
+		inlinePathCreate(index->filename);
+
+		retNames->push_back(index->filename);
+	}
+	return true;
+}
+
+bool CEterPack::Put(const char * filename, const char * sourceFilename, BYTE packType, const std::string& strRelateMapName )
+{
+	CMappedFile mapFile;
+	LPCVOID		data;
+
+	if (sourceFilename)
+	{
+		if (!mapFile.Create(sourceFilename, &data, 0, 0))
+		{
+			return false;
+		}
+	}
+	else if (!mapFile.Create(filename, &data, 0, 0))
+	{
+		return false;
+	}
+
+	BYTE*  pMappedData    = (BYTE*)data;
+	int	   iMappedDataSize = mapFile.Size();
+
+	if( packType == COMPRESSED_TYPE_HYBRIDCRYPT || packType == COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB )
+	{
+#ifdef __THEMIDA__
+		VM_START
+#endif
+			auto ssvvv = std::string(filename);
+			m_pCSHybridCryptPolicy->GenerateCryptKey(ssvvv);
+
+		if( packType == COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB )
+		{
+			if( !m_pCSHybridCryptPolicy->GenerateSupplementaryDataBlock(ssvvv, strRelateMapName, (const BYTE*)data, mapFile.Size(), pMappedData, iMappedDataSize ))
+			{
+				return false;
+			}
+		}
+#ifdef __THEMIDA__
+		VM_END
+#endif
+	}
+
+	return Put(filename, pMappedData, iMappedDataSize, packType);
+}
+
+#ifdef CHECKSUM_CHECK_MD5
+void CEterPack::GenerateMD5Hash( BYTE* pData, int nLength, IN OUT MD5_CTX& mdContext )
+{
+	MD5Init (&mdContext);
+
+	const int nBlockSize = 1024;
+
+	int nLoopCnt   = nLength / nBlockSize;
+	int nRemainder = nLength % nBlockSize;
+	int i;
+
+	for(i = 0; i < nLoopCnt; ++i )
+	{
+		MD5Update (&mdContext, reinterpret_cast<BYTE*>(pData + i*nBlockSize), nBlockSize);
+	}
+
+	if( nRemainder > 0 ) 
+		MD5Update (&mdContext, reinterpret_cast<BYTE*>(pData + i*nBlockSize), nRemainder);
+
+	MD5Final (&mdContext);
+}
+#endif
+bool CEterPack::Put(const char * filename, LPCVOID data, long len, BYTE packType)
+{
+	if (m_bEncrypted)
+	{
+		TraceError("EterPack::Put : Cannot put to encrypted pack (filename: %s, DB: %s)", filename, m_dbName);
+		return false;
+	}
+
+	CFileBase fileIndex;
+
+	if (!fileIndex.Create(m_indexFileName, CFileBase::FILEMODE_WRITE))
+	{
+		return false;
+	}
+
+	CFileBase fileData;
+
+	if (!fileData.Create(m_stDataFileName.c_str(), CFileBase::FILEMODE_WRITE))
+	{
+		return false;
+	}
+
+	TEterPackIndex * pIndex;
+	pIndex = FindIndex(filename);
+
+	CLZObject zObj;
+	std::string encryptStr;
+
+	if (packType == COMPRESSED_TYPE_SECURITY || 
+		packType == COMPRESSED_TYPE_COMPRESS)
+	{
+		if (packType == COMPRESSED_TYPE_SECURITY)
+		{
+			if (!CLZO::Instance().CompressEncryptedMemory(zObj, data, len, s_adwEterPackSecurityKey))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			if (!CLZO::Instance().CompressMemory(zObj, data, len))
+			{
+				return false;
+			}
+		}
+
+		data = zObj.GetBuffer();
+		len = zObj.GetSize();
+	}
+	else if (packType == COMPRESSED_TYPE_PANAMA)
+	{
+		if (!__Encrypt_Panama(filename, (const BYTE *) data, len, zObj))
+		{
+			return false;
+		}
+
+		data = zObj.GetBuffer();
+		len = zObj.GetBufferSize();
+	}
+	else if (packType == COMPRESSED_TYPE_HYBRIDCRYPT || packType == COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB)
+	{
+#ifdef __THEMIDA__
+		VM_START
+#endif
+
+		auto ssvv = std::string(filename);
+		if (!m_pCSHybridCryptPolicy->EncryptMemory(ssvv, (const BYTE*)data, len, zObj))
+		{
+			return false;
+		}
+
+		data = zObj.GetBuffer();
+		len = zObj.GetBufferSize();
+#ifdef __THEMIDA__
+		VM_END
+#endif
+
+	}
+
+
+#ifdef CHECKSUM_CHECK_MD5
+	MD5_CTX context;
+	GenerateMD5Hash( (BYTE*)(data), len, context );
+#else
+	DWORD data_crc;
+	data_crc = GetCRC32((const char *) data, len);
+#endif
+
+	// 기존 데이터가 있으면..
+	if (pIndex)
+	{
+		// 기존 data 크기가 넣을 데이터 크기를 수용할 수 있다면
+		if (pIndex->real_data_size >= len)
+		{
+			++m_map_indexRefCount[pIndex->id];
+
+			// 길이가 틀리거나, checksum이 틀릴 때만 저장 한다.
+			if ( (pIndex->data_size != len) || 
+#ifdef CHECKSUM_CHECK_MD5
+				(memcmp( pIndex->MD5Digest, context.digest, 16 ) != 0) )
+#else
+				(pIndex->data_crc != data_crc) )
+#endif
+			{
+#ifdef __MAKE_PACK__
+				if (ms_PackLogFile)
+					fprintf(ms_PackLogFile, "Overwrite[%d/%d] %s\n", bCompress, bSecurity, pIndex->filename);
+				printf("Overwrite[%d/%d] %s\n", bCompress, bSecurity, pIndex->filename);
+#endif
+				pIndex->data_size = len;
+#ifdef CHECKSUM_CHECK_MD5
+				memcpy( pIndex->MD5Digest, context.digest, 16 );
+
+#else
+				pIndex->data_crc = data_crc;
+#endif
+
+				pIndex->compressed_type = packType;
+
+				CMakePackLog::GetSingleton().Writef("Overwrite[type:%u] %s\n", pIndex->compressed_type, pIndex->filename);
+
+				WriteIndex(fileIndex, pIndex);
+				WriteData(fileData, pIndex, data);
+			}
+
+			return true;
+		}
+
+		// 기존 데이터 크기가 새로 들어갈 것 보다 적다면, 새로 인덱스를 할당해
+		// 넣어야 한다. 원래 있던 인덱스는 비워 둔다.
+		PushFreeIndex(pIndex);
+		WriteIndex(fileIndex, pIndex);
+	}
+
+	// 새 데이터
+	pIndex = NewIndex(fileIndex, filename, len);
+	pIndex->data_size = len;
+
+#ifdef CHECKSUM_CHECK_MD5
+		memcpy( pIndex->MD5Digest, context.digest, 16 );
+#else
+		pIndex->data_crc = data_crc;
+#endif
+
+
+	pIndex->data_position = GetNewDataPosition(fileData);
+	pIndex->compressed_type = packType;
+
+	WriteIndex(fileIndex, pIndex);
+	WriteNewData(fileData, pIndex, data);
+
+	++m_map_indexRefCount[pIndex->id];
+
+#ifdef __MAKE_PACK__
+	if (ms_PackLogFile)
+		fprintf(ms_PackLogFile, "Write[%d/%d] %s\n", bCompress, bSecurity, pIndex->filename);
+	printf("Write[%d/%d] %s, position %ld realsize %ld size %ld\n",
+			bCompress, bSecurity, pIndex->filename, pIndex->data_position, pIndex->real_data_size, pIndex->data_size);
+#endif
+	CMakePackLog::GetSingleton().Writef("Write[type:%u] %s\n", pIndex->compressed_type, pIndex->filename);
+
+	return true;
+}
+
+long CEterPack::GetFragmentSize()
+{
+	return m_FragmentSize;
+}
+
+// Private methods
+bool CEterPack::CreateIndexFile()
+{
+	FILE * fp;
+
+	if (NULL != (fp = fopen(m_indexFileName, "rb")))
+	{
+		fclose(fp);
+		return true;
+	}
+	else if (m_bReadOnly)
+		return false;
+
+	//
+	// 파일이 없으므로 새로 만든다.
+	//
+	fp = fopen(m_indexFileName, "wb");
+	
+	if (!fp)
+		return false;
+
+	fwrite(&eterpack::c_IndexCC, sizeof(DWORD), 1, fp);
+	fwrite(&eterpack::c_Version, sizeof(DWORD), 1, fp);
+	fwrite(&m_indexCount, sizeof(long), 1, fp);
+
+	fclose(fp);
+	return true;
+}
+
+
+void CEterPack::WriteIndex(CFileBase & file, TEterPackIndex * index)
+{
+	file.Seek(sizeof(DWORD) + sizeof(DWORD));
+	file.Write(&m_indexCount, sizeof(long));
+	file.Seek(eterpack::c_HeaderSize + (index->id * sizeof(TEterPackIndex)));
+
+	if (!file.Write(index, sizeof(TEterPackIndex)))
+	{
+		assert(!"WriteIndex: fwrite failed");
+		return;
+	}
+}
+
+/*
+ *	Free Block 이란 데이터에서 지워진 부분을 말한다.
+ *	Free Block 들은 각각 FREE_INDEX_BLOCK_SIZE (32768) 단위로 나누어져
+ *	리스트로 관리된다.
+ *
+ *	예를 들어 128k 의 데이터는
+ *	128 * 1024 / FREE_INDEX_BLOCK_SIZE = 4 이므로
+ *	최종 적으로는 m_FreeIndexList[4] 에 들어간다.
+ *
+ *	FREE_INDEX_BLOCK_SIZE 의 최대 값은 FREE_INDEX_MAX_SIZE(512) 이다.
+ *	따라서 16MB 이상의 데이터는 무조건 배열의 512 위치에 들어간다.
+ */
+int CEterPack::GetFreeBlockIndex(long size)
+{
+	return min(FREE_INDEX_MAX_SIZE, size / FREE_INDEX_BLOCK_SIZE);
+}
+
+void CEterPack::PushFreeIndex(TEterPackIndex* index)
+{
+	if (index->filename_crc != 0)
+	{
+		TDataPositionMap::iterator i = m_DataPositionMap.find(index->filename_crc);
+
+		if (i != m_DataPositionMap.end())
+			m_DataPositionMap.erase(i);
+
+		index->filename_crc = 0;
+		memset(index->filename, 0, sizeof(index->filename));
+	}
+
+	int blockidx = GetFreeBlockIndex(index->real_data_size);
+	m_FreeIndexList[blockidx].push_back(index);
+	m_FragmentSize += index->real_data_size;
+	//printf("FreeIndex: size %d: blockidx: %d\n", index->real_data_size, blockidx);
+}
+
+long CEterPack::GetNewIndexPosition(CFileBase & file)
+{
+	long pos = (file.Size() - eterpack::c_HeaderSize) / sizeof(TEterPackIndex);
+	++m_indexCount;
+	return (pos);
+}
+
+TEterPackIndex* CEterPack::NewIndex(CFileBase& file, const char* filename, long size)
+{
+	TEterPackIndex* index = NULL;
+	int block_size = size + (DATA_BLOCK_SIZE - (size % DATA_BLOCK_SIZE));
+//	if ((index = FindIndex(filename))) // 이미 인덱스가 존재하는지 확인
+//		return index;
+
+	int blockidx = GetFreeBlockIndex(block_size);
+
+	for (TFreeIndexList::iterator i = m_FreeIndexList[blockidx].begin();
+		 i != m_FreeIndexList[blockidx].end();
+		 ++i)
+	{
+		 if ((*i)->real_data_size >= size)
+		 {
+			 index = *i;
+			 m_FreeIndexList[blockidx].erase(i);
+
+			 assert(index->filename_crc == 0);
+			 break;
+		 }
+	}
+
+	if (!index)
+	{
+		index = new TEterPackIndex;
+		index->real_data_size = block_size;
+		index->id = GetNewIndexPosition(file);
+	}
+
+	strncpy(index->filename, filename, FILENAME_MAX_LEN);
+	index->filename[FILENAME_MAX_LEN] = '\0';
+	inlineConvertPackFilename(index->filename);
+
+	index->filename_crc	= GetCRC32(index->filename, strlen(index->filename));
+
+	m_DataPositionMap.insert(TDataPositionMap::value_type(index->filename_crc, index));
+	return index;
+}
+
+TEterPackIndex* CEterPack::FindIndex(const char * filename)
+{
+	static char tmpFilename[MAX_PATH + 1];
+	strncpy(tmpFilename, filename, MAX_PATH);
+	inlineConvertPackFilename(tmpFilename);
+
+	DWORD filename_crc = GetCRC32(tmpFilename, strlen(tmpFilename));
+	TDataPositionMap::iterator i = m_DataPositionMap.find(filename_crc);
+
+	if (i == m_DataPositionMap.end())
+		return NULL;
+
+	return (i->second);
+}
+
+bool CEterPack::IsExist(const char * filename)
+{
+	return FindIndex(filename) ? true : false;
+}
+
+bool CEterPack::CreateDataFile()
+{
+	FILE * fp;
+	
+	if (NULL != (fp = fopen(m_stDataFileName.c_str(), "rb")))
+	{
+		fclose(fp);
+		return true;
+	}
+	else if (m_bReadOnly)
+		return false;
+
+	fp = fopen(m_stDataFileName.c_str(), "wb");
+
+	if (!fp)
+		return false;
+
+	fclose(fp);
+	return true;
+}
+
+long CEterPack::GetNewDataPosition(CFileBase& file)
+{
+	return file.Size();
+}
+
+bool CEterPack::ReadData(CFileBase & file, TEterPackIndex* index, LPVOID data, long maxsize)
+{
+	if (index->data_size > maxsize)
+		return false;
+
+	file.Seek(index->data_position);
+	file.Read(data, index->data_size);
+	return true;
+}
+
+bool CEterPack::WriteData(CFileBase & file, TEterPackIndex* index, LPCVOID data)
+{
+	file.Seek(index->data_position);
+	
+	if (!file.Write(data, index->data_size))
+	{
+		assert(!"WriteData: fwrite data failed");
+		return false;
+	}
+
+	return true;
+}
+
+bool CEterPack::WriteNewData(CFileBase& file, TEterPackIndex* index, LPCVOID data)
+{
+	file.Seek(index->data_position);
+	
+	if (!file.Write(data, index->data_size))
+	{
+		assert(!"WriteData: fwrite data failed");
+		return false;
+	}
+
+	int empty_size = index->real_data_size - index->data_size;
+
+	if (empty_size < 0)
+	{
+		printf("SYSERR: WriteNewData(): CRITICAL ERROR: empty_size lower than 0!\n");
+		exit(1);
+	}
+
+	if (empty_size == 0)
+		return true;
+
+	char * empty_buf = (char *) calloc(empty_size, sizeof(char));
+
+	if (!file.Write(empty_buf, empty_size))
+	{
+		assert(!"WriteData: fwrite empty data failed");
+		return false;
+	}
+
+	free(empty_buf);
+	return true;
+}
+
+TDataPositionMap & CEterPack::GetIndexMap()
+{
+	return m_DataPositionMap;
+}
+
+DWORD CEterPack::DeleteUnreferencedData()
+{
+	TDataPositionMap::iterator i = m_DataPositionMap.begin();
+	DWORD dwCount = 0;
+
+	while (i != m_DataPositionMap.end())
+	{
+		TEterPackIndex * pIndex = (i++)->second;
+
+		if (0 == m_map_indexRefCount[pIndex->id])
+		{
+			printf("Unref File %s\n", pIndex->filename);
+			Delete(pIndex);
+			++dwCount;
+		}
+	}
+
+	return dwCount;
+}
+
+const char * CEterPack::GetDBName()
+{
+	return m_dbName;
+}
+
+void CEterPack::__CreateFileNameKey_Panama(const char * filename, BYTE * key, unsigned int keySize)
+{
+	// 키 암호화
+	if (keySize != 32)
+		return;
+
+	std::string SrcStringForKey(filename);
+	unsigned int idx = GetCRC32(SrcStringForKey.c_str(), SrcStringForKey.length()) & 3;
+
+	CryptoPP::HashTransformation* hm1 = NULL;
+	CryptoPP::HashTransformation* hm2 = NULL;
+
+	static CryptoPP::Tiger tiger;
+	static CryptoPP::SHA1 sha1;
+	static CryptoPP::RIPEMD128 ripemd128;
+	static CryptoPP::Whirlpool whirlpool;
+
+	switch (idx & 3)
+	{
+		case 0:
+			hm1 = &whirlpool;
+			break;
+
+		case 1:
+			hm1 = &tiger;
+			break;
+
+		case 2:
+			hm1 = &sha1;
+			break;
+
+		case 3:
+			hm1 = &ripemd128;
+			break;
+	}
+
+	CryptoPP::StringSource(SrcStringForKey, true,
+					 new CryptoPP::HashFilter(*hm1, 
+						//new CryptoPP::HexEncoder(
+							new CryptoPP::ArraySink(key, 16)
+						//) // HexEncoder
+					 ) // HashFilter
+				 ); // StringSource
+
+	// 만들어진 키의 첫번째 4바이트로 다음 16바이트 키 생성 알고리즘 선택
+	unsigned int idx2 = *(unsigned int*) key;
+
+	switch (idx2 & 3)
+	{
+		case 0:
+			hm2 = &sha1;
+			break;
+
+		case 1:
+			hm2 = &ripemd128;
+			break;
+
+		case 2:
+			hm2 = &whirlpool;
+			break;
+
+		case 3:
+			hm2 = &tiger;
+			break;
+	}
+
+	CryptoPP::StringSource(SrcStringForKey, true,
+					 new CryptoPP::HashFilter(*hm2, 
+						//new CryptoPP::HexEncoder(
+							new CryptoPP::ArraySink(key + 16, 16)
+						//) // HexEncoder
+					 ) // HashFilter
+				 ); // StringSource
+	// 키 생성 완료
+}
+
+bool CEterPack::__Encrypt_Panama(const char* filename, const BYTE* data, SIZE_T dataSize, CLZObject& zObj)
+{
+	if (32 != m_stIV_Panama.length())
+	{
+		// 해커가 이 메세지를 보면 힌트를 얻을까봐 디버그에서만 출력
+#ifdef _DEBUG
+		TraceError("IV not set (filename: %s)", filename);
+#endif
+		return false;
+	}
+
+	CryptoPP::PanamaCipher<CryptoPP::LittleEndian>::Encryption Encryptor;
+
+	if (dataSize < Encryptor.MandatoryBlockSize())
+	{
+#ifdef _DEBUG
+		TraceError("Type 3 pack file must be bigger than %u bytes (filename: %s)", Encryptor.MandatoryBlockSize(), filename);
+#endif
+		return false;
+	}
+
+	BYTE key[32];
+
+	__CreateFileNameKey_Panama(filename, key, sizeof(key));
+	Encryptor.SetKeyWithIV(key, sizeof(key), (const BYTE*) m_stIV_Panama.c_str(), 32);
+
+	// MandatoryBlockSize에 나누어 떨어지게 만들고 최대 2048 바이트만
+	DWORD cryptSize = dataSize - (dataSize % Encryptor.MandatoryBlockSize());
+	cryptSize = cryptSize > 2048 ? 2048 : cryptSize;
+
+	std::string tmp;
+
+	tmp.reserve(cryptSize);
+
+	CryptoPP::ArraySource(data, cryptSize, true,
+		new CryptoPP::StreamTransformationFilter(Encryptor,
+			new CryptoPP::StringSink(tmp)
+		)
+	);
+
+	if (tmp.length() != cryptSize)
+	{
+#ifdef _DEBUG
+		TraceError("Type 3 pack crypt buffer size error (out %u should be %u)", tmp.length(), cryptSize);
+#endif
+		return false;
+	}
+
+	zObj.AllocBuffer(dataSize);
+	memcpy(zObj.GetBuffer(), tmp.c_str(), cryptSize);
+
+	if (dataSize - cryptSize > 0)
+		memcpy(zObj.GetBuffer() + cryptSize, data + cryptSize, dataSize - cryptSize);
+
+	return true;
+}
+
+bool CEterPack::__Decrypt_Panama(const char* filename, const BYTE* data, SIZE_T dataSize, CLZObject& zObj)
+{
+	if (32 != m_stIV_Panama.length())
+	{
+		// 해커가 이 메세지를 보면 힌트를 얻을까봐 디버그에서만 출력
+#ifdef _DEBUG
+		TraceError("IV not set (filename: %s)", filename);
+#endif
+		return false;
+	}
+
+	CryptoPP::PanamaCipher<CryptoPP::LittleEndian>::Decryption Decryptor;
+
+	BYTE key[32];
+
+	__CreateFileNameKey_Panama(filename, key, sizeof(key));
+	Decryptor.SetKeyWithIV(key, sizeof(key), (const BYTE*) m_stIV_Panama.c_str(), 32);
+
+	// MandatoryBlockSize에 나누어 떨어지게 만들고 최대 2048 바이트만
+	DWORD cryptSize = dataSize - (dataSize % Decryptor.MandatoryBlockSize());
+	cryptSize = cryptSize > 2048 ? 2048 : cryptSize;
+
+	std::string tmp;
+
+	tmp.reserve(cryptSize);
+
+	CryptoPP::ArraySource(data, cryptSize, true,
+		new CryptoPP::StreamTransformationFilter(Decryptor,
+			new CryptoPP::StringSink(tmp)
+		)
+	);
+
+	if (tmp.length() != cryptSize)
+	{
+#ifdef _DEBUG
+		TraceError("Type 3 pack crypt buffer size error (out %u should be %u)", tmp.length(), cryptSize);
+#endif
+		return false;
+	}
+
+	zObj.AllocBuffer(dataSize);
+	memcpy(zObj.GetBuffer(), tmp.c_str(), cryptSize);
+
+	if (dataSize - cryptSize > 0)
+		memcpy(zObj.GetBuffer() + cryptSize, data + cryptSize, dataSize - cryptSize);
+
+	return true;
+}
+
+EterPackPolicy_CSHybridCrypt* CEterPack::GetPackPolicy_HybridCrypt() const
+{
+	return  m_pCSHybridCryptPolicy;
+}
+
+
+/////////////////////////
+
+void CEterFileDict::InsertItem(CEterPack* pkPack, TEterPackIndex* pkInfo)
+{
+	Item item;
+
+	item.pkPack = pkPack;
+	item.pkInfo = pkInfo;
+
+	m_dict.insert(TDict::value_type(pkInfo->filename_crc, item));
+}
+
+void CEterFileDict::UpdateItem(CEterPack* pkPack, TEterPackIndex* pkInfo)
+{
+	Item item;
+
+	item.pkPack = pkPack;
+	item.pkInfo = pkInfo;
+
+	TDict::iterator f = m_dict.find(pkInfo->filename_crc);
+	if (f == m_dict.end())	
+		m_dict.insert(TDict::value_type(pkInfo->filename_crc, item));
+	else
+	{
+		if (strcmp(f->second.pkInfo->filename, item.pkInfo->filename) == 0)
+		{
+			f->second = item;
+		}
+		else
+		{
+			TraceError("NAME_COLLISION: OLD: %s NEW: %s", f->second.pkInfo->filename, item.pkInfo->filename);			
+		}
+		
+	}
+}
+
+CEterFileDict::Item* CEterFileDict::GetItem(DWORD dwFileNameHash, const char * c_pszFileName)
+{
+	std::pair<TDict::iterator, TDict::iterator> iter_pair = m_dict.equal_range(dwFileNameHash);
+
+	TDict::iterator iter = iter_pair.first;
+
+	while (iter != iter_pair.second)
+	{
+		Item& item = iter->second;
+
+		if (0 == strcmp(c_pszFileName, item.pkInfo->filename))
+			return &item;
+
+		++iter;
+	}
+
+	return NULL;
+}
+
+===== FILE: source/EterPack/EterPackCursor.cpp =====
+#include "StdAfx.h"
+#include "EterPackCursor.h"
+#include "Inline.h"
+
+CEterPackCursor::CEterPackCursor(CEterPack* pack) : m_pPack(pack), m_pData(NULL), m_ReadPoint(0)
+{
+}
+
+CEterPackCursor::~CEterPackCursor()
+{
+	Close();
+}
+
+bool CEterPackCursor::Open(const char* filename)
+{
+	assert(m_pPack != NULL);
+	
+	char tmpFilename[MAX_PATH + 1];
+	strncpy(tmpFilename, filename, MAX_PATH);
+	inlineConvertPackFilename(tmpFilename);
+	
+	if (!m_pPack->Get(m_file, tmpFilename, &m_pData))
+		return false;
+	
+	return true;
+}
+
+void CEterPackCursor::Close()
+{
+	m_file.Destroy();
+	m_pData = NULL;
+	m_ReadPoint = 0;
+}
+
+void CEterPackCursor::Seek(long offset)
+{
+	m_ReadPoint = max(0, min(Size(), offset));
+}
+
+bool CEterPackCursor::Read(LPVOID data, long size)
+{
+	if (m_file.IsNull())
+		return false;
+	
+	if (m_ReadPoint + size > Size())
+		return false;
+	
+	memcpy(data, (char*) m_pData + m_ReadPoint, size);
+	m_ReadPoint += size;
+	return true;
+}
+
+long CEterPackCursor::Size()
+{
+	if (m_file.IsNull())
+		return 0;
+	
+	return m_file.Size();
+}
+
+===== FILE: source/EterPack/EterPackManager.cpp =====
+#include "StdAfx.h"
+
+#include <io.h>
+#include <assert.h>
+
+#include "EterPackManager.h"
+#include "EterPackPolicy_CSHybridCrypt.h"
+
+#include "../eterBase/Debug.h"
+#include "../eterBase/CRC32.h"
+
+#define PATH_ABSOLUTE_YMIRWORK1	"d:/ymir work/"
+#define PATH_ABSOLUTE_YMIRWORK2	"d:\\ymir work\\"
+
+#ifdef __THEMIDA__
+#include <ThemidaSDK.h>
+#endif
+
+
+CEterPack* CEterPackManager::FindPack(const char* c_szPathName)
+{
+	std::string strFileName;
+
+	if (0 == ConvertFileName(c_szPathName, strFileName))
+	{
+		return &m_RootPack;
+	}
+	else
+	{
+		for (TEterPackMap::iterator itor = m_DirPackMap.begin(); itor != m_DirPackMap.end(); ++itor)
+		{
+			const std::string & c_rstrName = itor->first;
+			CEterPack * pEterPack = itor->second;
+
+			if (CompareName(c_rstrName.c_str(), c_rstrName.length(), strFileName.c_str()))
+			{
+				return pEterPack;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+void CEterPackManager::SetCacheMode()
+{
+	m_isCacheMode=true;
+}
+
+void CEterPackManager::SetRelativePathMode()
+{
+	m_bTryRelativePath = true;
+}
+
+
+// StringPath std::string 버전
+int CEterPackManager::ConvertFileName(const char * c_szFileName, std::string & rstrFileName)
+{
+	rstrFileName = c_szFileName;
+	stl_lowers(rstrFileName);
+
+	int iCount = 0;
+
+	for (DWORD i = 0; i < rstrFileName.length(); ++i)
+	{
+		if (rstrFileName[i] == '/')
+			++iCount;
+		else if (rstrFileName[i] == '\\')
+		{
+			rstrFileName[i] = '/';
+			++iCount;
+		}
+	}
+
+	return iCount;
+}
+
+bool CEterPackManager::CompareName(const char * c_szDirectoryName, DWORD /*dwLength*/, const char * c_szFileName)
+{
+	const char * c_pszSrc = c_szDirectoryName;
+	const char * c_pszCmp = c_szFileName;
+
+	while (*c_pszSrc)
+	{
+		if (*(c_pszSrc++) != *(c_pszCmp++))
+			return false;
+
+		if (!*c_pszCmp)
+			return false;
+	}
+
+	return true;
+}
+
+void CEterPackManager::LoadStaticCache(const char* c_szFileName)
+{
+	if (!m_isCacheMode)
+		return;
+
+	std::string strFileName;
+	if (0 == ConvertFileName(c_szFileName, strFileName))
+	{
+		return;
+	}
+	
+	DWORD dwFileNameHash = GetCRC32(strFileName.c_str(), strFileName.length());
+
+	std::unordered_map<DWORD, SCache>::iterator f = m_kMap_dwNameKey_kCache.find(dwFileNameHash);
+	if (m_kMap_dwNameKey_kCache.end() != f)
+		return;	
+	
+	CMappedFile kMapFile;
+	const void* c_pvData;
+	if (!Get(kMapFile, c_szFileName, &c_pvData))
+		return;
+
+	SCache kNewCache;
+	kNewCache.m_dwBufSize = kMapFile.Size();
+	kNewCache.m_abBufData = new BYTE[kNewCache.m_dwBufSize];
+	memcpy(kNewCache.m_abBufData, c_pvData, kNewCache.m_dwBufSize);
+	m_kMap_dwNameKey_kCache.insert(std::unordered_map<DWORD, SCache>::value_type(dwFileNameHash, kNewCache));
+}
+
+CEterPackManager::SCache* CEterPackManager::__FindCache(DWORD dwFileNameHash)
+{	
+	std::unordered_map<DWORD, SCache>::iterator f=m_kMap_dwNameKey_kCache.find(dwFileNameHash);
+	if (m_kMap_dwNameKey_kCache.end()==f)
+		return NULL;
+
+	return &f->second;
+}
+
+void	CEterPackManager::__ClearCacheMap()
+{
+	std::unordered_map<DWORD, SCache>::iterator i;
+
+	for (i = m_kMap_dwNameKey_kCache.begin(); i != m_kMap_dwNameKey_kCache.end(); ++i)
+		delete [] i->second.m_abBufData;
+
+	m_kMap_dwNameKey_kCache.clear();
+}
+
+struct TimeChecker
+{
+	TimeChecker(const char* name) : name(name)
+	{
+		baseTime = timeGetTime();
+	}
+	~TimeChecker()
+	{
+		printf("load %s (%d)\n", name, timeGetTime() - baseTime);
+	}
+
+	const char* name;
+	DWORD baseTime;
+};
+
+bool CEterPackManager::Get(CMappedFile & rMappedFile, const char * c_szFileName, LPCVOID * pData)
+{
+	//TimeChecker timeChecker(c_szFileName);
+	//Logf(1, "Load %s\n", c_szFileName);
+
+	if (m_iSearchMode == SEARCH_FILE_FIRST)
+	{
+		if (GetFromFile(rMappedFile, c_szFileName, pData))
+		{
+			return true;
+		}
+
+		return GetFromPack(rMappedFile, c_szFileName, pData);
+	}
+	
+	if (GetFromPack(rMappedFile, c_szFileName, pData))
+	{
+		return true;
+	}
+
+	return GetFromFile(rMappedFile, c_szFileName, pData);
+}
+
+struct FinderLock
+{
+	FinderLock(CRITICAL_SECTION& cs) : p_cs(&cs)
+	{
+		EnterCriticalSection(p_cs);
+	}
+
+	~FinderLock()
+	{
+		LeaveCriticalSection(p_cs);
+	}
+
+	CRITICAL_SECTION* p_cs;
+};
+
+bool CEterPackManager::GetFromPack(CMappedFile & rMappedFile, const char * c_szFileName, LPCVOID * pData)
+{
+	FinderLock lock(m_csFinder);
+
+	static std::string strFileName;
+	
+	if (0 == ConvertFileName(c_szFileName, strFileName))
+	{
+		return m_RootPack.Get(rMappedFile, strFileName.c_str(), pData);
+	}
+	else
+	{
+		DWORD dwFileNameHash = GetCRC32(strFileName.c_str(), strFileName.length());
+		SCache* pkCache = __FindCache(dwFileNameHash);
+
+		if (pkCache)
+		{
+			rMappedFile.Link(pkCache->m_dwBufSize, pkCache->m_abBufData);
+			return true;
+		}
+
+		CEterFileDict::Item* pkFileItem = m_FileDict.GetItem(dwFileNameHash, strFileName.c_str());
+
+		if (pkFileItem)
+			if (pkFileItem->pkPack)
+			{
+				bool r = pkFileItem->pkPack->Get2(rMappedFile, strFileName.c_str(), pkFileItem->pkInfo, pData);	
+				//pkFileItem->pkPack->ClearDataMemoryMap();
+				return r;
+			}
+	}
+#ifdef _DEBUG
+	TraceError("CANNOT_FIND_PACK_FILE [%s]", strFileName.c_str());
+#endif
+
+	return false;
+}
+
+const time_t g_tCachingInterval = 10; // 10초
+void CEterPackManager::ArrangeMemoryMappedPack()
+{
+	//time_t curTime = time(NULL);
+	//CEterFileDict::TDict dict = m_FileDict.GetDict();
+	//for (CEterFileDict::TDict::iterator it = dict.begin(); it != dict.end(); ++it)
+	//{
+	//	CEterFileDict::Item &rFileItem = it->second;
+	//	CEterPack* pkPack = rFileItem.pkPack;
+	//	if (pkPack)
+	//	{
+	//		if (curTime - pkPack->GetLastAccessTime() > g_tCachingInterval)
+	//		{
+	//			pkPack->ClearDataMemoryMap();
+	//		}
+	//	}
+	//}
+}
+
+bool CEterPackManager::GetFromFile(CMappedFile & rMappedFile, const char * c_szFileName, LPCVOID * pData)
+{
+#ifndef _DEBUG
+	//const char *pcExt = strchr(c_szFileName, '.');
+	//if (pcExt && 
+	//	_strnicmp(pcExt, ".py", 3) == 0 && // python 스크립트 중
+	//	stricmp(c_szFileName, "logininfo.py") != 0 && // 로그인 정보 파일이 아니고
+	//	strnicmp(c_szFileName, "locale", 6) != 0
+	//	)
+	//{
+	//	return false;
+	//}
+#endif
+
+	//if(m_bTryRelativePath) {
+	//	if (strnicmp(c_szFileName, PATH_ABSOLUTE_YMIRWORK1, strlen(PATH_ABSOLUTE_YMIRWORK1)) == 0 || strnicmp(c_szFileName, PATH_ABSOLUTE_YMIRWORK2, strlen(PATH_ABSOLUTE_YMIRWORK2)) == 0) {
+	//		if(rMappedFile.Create(c_szFileName+strlen(PATH_ABSOLUTE_YMIRWORK1), pData, 0, 0))
+	//		{
+	//			return true;
+	//		}
+	//	}
+	//}
+
+	return rMappedFile.Create(c_szFileName, pData, 0, 0) ? true : false;
+}
+
+bool CEterPackManager::isExistInPack(const char * c_szFileName)
+{
+	std::string strFileName;
+
+	if (0 == ConvertFileName(c_szFileName, strFileName))
+	{
+		return m_RootPack.IsExist(strFileName.c_str());
+	}
+	else
+	{
+		DWORD dwFileNameHash = GetCRC32(strFileName.c_str(), strFileName.length());
+		CEterFileDict::Item* pkFileItem = m_FileDict.GetItem(dwFileNameHash, strFileName.c_str());
+
+		if (pkFileItem)
+			if (pkFileItem->pkPack)
+				return pkFileItem->pkPack->IsExist(strFileName.c_str());
+	}
+
+	// NOTE : 매치 되는 팩이 없다면 false - [levites]
+	return false;
+}
+
+bool CEterPackManager::isExist(const char * c_szFileName)
+{
+	if (m_iSearchMode == SEARCH_PACK_FIRST)
+	{
+		if (isExistInPack(c_szFileName))
+			return true;
+
+		return _access(c_szFileName, 0) == 0 ? true : false;
+	}
+
+	//if(m_bTryRelativePath) {
+	//	if (strnicmp(c_szFileName, PATH_ABSOLUTE_YMIRWORK1, strlen(PATH_ABSOLUTE_YMIRWORK1)) == 0 || strnicmp(c_szFileName, PATH_ABSOLUTE_YMIRWORK2, strlen(PATH_ABSOLUTE_YMIRWORK2)) == 0) {
+	//		if(access(c_szFileName+strlen(PATH_ABSOLUTE_YMIRWORK1), 0) == 0)
+	//			return true;
+	//	}
+	//}
+
+	if (_access(c_szFileName, 0) == 0)
+		return true;
+
+	return isExistInPack(c_szFileName);
+}
+
+
+void CEterPackManager::RegisterRootPack(const char * c_szName)
+{
+	if (!m_RootPack.Create(m_FileDict, c_szName, ""))
+	{
+		TraceError("%s: Pack file does not exist", c_szName);
+	}
+}
+
+const char * CEterPackManager::GetRootPackFileName()
+{
+	return m_RootPack.GetDBName();
+}
+
+bool CEterPackManager::DecryptPackIV(DWORD dwPanamaKey)
+{
+	TEterPackMap::iterator itor = m_PackMap.begin();
+	while (itor != m_PackMap.end())
+	{
+		itor->second->DecryptIV(dwPanamaKey);
+		itor++;
+	}
+	return true;
+}
+
+bool CEterPackManager::RegisterPackWhenPackMaking(const char * c_szName, const char * c_szDirectory, CEterPack* pPack)
+{
+	m_PackMap.insert(TEterPackMap::value_type(c_szName, pPack));
+	m_PackList.push_front(pPack);
+
+	m_DirPackMap.insert(TEterPackMap::value_type(c_szDirectory, pPack));
+	return true;
+}
+
+
+bool CEterPackManager::RegisterPack(const char * c_szName, const char * c_szDirectory, const BYTE* c_pbIV)
+{
+	CEterPack * pEterPack = NULL;
+	{
+		TEterPackMap::iterator itor = m_PackMap.find(c_szName);
+
+		if (m_PackMap.end() == itor)
+		{
+			bool bReadOnly = true;
+
+			pEterPack = new CEterPack;
+			if (pEterPack->Create(m_FileDict, c_szName, c_szDirectory, bReadOnly, c_pbIV))
+			{
+				m_PackMap.insert(TEterPackMap::value_type(c_szName, pEterPack));
+			}
+			else
+			{
+#ifdef _DEBUG
+				Tracef("The eterpack doesn't exist [%s]\n", c_szName);
+#endif
+				delete pEterPack;
+				pEterPack = NULL;
+				return false;
+			}
+		}
+		else
+		{
+			pEterPack = itor->second;
+		}		
+	}
+
+	if (c_szDirectory && c_szDirectory[0] != '*')
+	{
+		TEterPackMap::iterator itor = m_DirPackMap.find(c_szDirectory);
+		if (m_DirPackMap.end() == itor)
+		{
+			m_PackList.push_front(pEterPack);
+			m_DirPackMap.insert(TEterPackMap::value_type(c_szDirectory, pEterPack));
+		}		
+	}	
+
+	return true;
+}
+
+void CEterPackManager::SetSearchMode(bool bPackFirst)
+{
+	m_iSearchMode = bPackFirst ? SEARCH_PACK_FIRST : SEARCH_FILE_FIRST;
+}
+
+int CEterPackManager::GetSearchMode()
+{
+	return m_iSearchMode;
+}
+
+CEterPackManager::CEterPackManager() : m_bTryRelativePath(false), m_iSearchMode(SEARCH_FILE_FIRST), m_isCacheMode(false)
+{
+	InitializeCriticalSection(&m_csFinder);
+}
+
+CEterPackManager::~CEterPackManager()
+{
+	__ClearCacheMap();
+
+	TEterPackMap::iterator i = m_PackMap.begin();
+	TEterPackMap::iterator e = m_PackMap.end();
+	while (i != e)
+	{
+		delete i->second;
+		i++;
+	}	
+	DeleteCriticalSection(&m_csFinder);
+}
+
+void CEterPackManager::RetrieveHybridCryptPackKeys(const BYTE *pStream)
+{
+	////dump file format
+	//total packagecnt (4byte)
+	//	for	packagecntpackage 
+	//		db name hash ( stl.h stringhash )
+	//		extension cnt( 4byte)
+	//		for	extension cnt
+	//			ext hash ( stl.h stringhash )
+	//			key-16byte 
+	//			iv-16byte
+	int iMemOffset = 0;
+
+	int		iPackageCnt;
+	DWORD	dwPackageNameHash;
+
+	memcpy( &iPackageCnt, pStream + iMemOffset, sizeof(int) );
+	iMemOffset += sizeof(iPackageCnt);
+
+	for( int i = 0; i < iPackageCnt; ++i )
+	{
+		int iRecvedCryptKeySize = 0;
+		memcpy( &iRecvedCryptKeySize, pStream + iMemOffset, sizeof(iRecvedCryptKeySize) );
+		iRecvedCryptKeySize -= sizeof(dwPackageNameHash); // 서버에서 받은 key stream에는 filename hash가 포함되어 있으므로, hash 사이즈 만큼 배줌.
+		iMemOffset += sizeof(iRecvedCryptKeySize); 
+
+		memcpy( &dwPackageNameHash, pStream + iMemOffset, sizeof(dwPackageNameHash) );
+		iMemOffset += sizeof(dwPackageNameHash);
+
+		TEterPackMap::const_iterator cit;
+		for( cit = m_PackMap.begin(); cit != m_PackMap.end(); ++cit )
+		{
+			auto ssvv = std::string(cit->first);
+			std::string noPathName = CFileNameHelper::NoPath(ssvv);
+			if( dwPackageNameHash == stringhash().GetHash(noPathName) )
+			{
+				EterPackPolicy_CSHybridCrypt* pCryptPolicy = cit->second->GetPackPolicy_HybridCrypt();
+				int iHavedCryptKeySize = pCryptPolicy->ReadCryptKeyInfoFromStream( pStream + iMemOffset );
+				if (iRecvedCryptKeySize != iHavedCryptKeySize)
+				{
+					TraceError("CEterPackManager::RetrieveHybridCryptPackKeys	cryptokey length of file(%s) is not matched. received(%d) != haved(%d)", noPathName.c_str(), iRecvedCryptKeySize, iHavedCryptKeySize);
+				}
+				break;
+			}
+		}
+		iMemOffset += iRecvedCryptKeySize;
+	}
+}
+
+void CEterPackManager::RetrieveHybridCryptPackSDB( const BYTE* pStream )
+{
+	//cnt
+	//for cnt
+	//DWORD				dwPackageIdentifier;
+	//DWORD				dwFileIdentifier;
+	//std::vector<BYTE>	vecSDBStream;
+	int iReadOffset = 0;
+	int iSDBInfoCount = 0;
+
+	memcpy( &iSDBInfoCount, pStream+iReadOffset, sizeof(int) );
+	iReadOffset += sizeof(int);
+
+	for( int i = 0; i < iSDBInfoCount; ++i )
+	{
+		DWORD dwPackgeIdentifier;
+		memcpy( &dwPackgeIdentifier, pStream+iReadOffset, sizeof(DWORD) );
+		iReadOffset += sizeof(DWORD);
+
+		TEterPackMap::const_iterator cit;
+		for( cit = m_PackMap.begin(); cit != m_PackMap.end(); ++cit )
+		{
+			auto ssvv = std::string(cit->first);
+			std::string noPathName = CFileNameHelper::NoPath(ssvv);
+			if( dwPackgeIdentifier == stringhash().GetHash(noPathName) )
+			{
+				EterPackPolicy_CSHybridCrypt* pCryptPolicy = cit->second->GetPackPolicy_HybridCrypt();
+				iReadOffset += pCryptPolicy->ReadSupplementatyDataBlockFromStream( pStream+iReadOffset );
+				break;
+			}
+		}
+	}
+}
+
+
+void CEterPackManager::WriteHybridCryptPackInfo(const char* pFileName)
+{
+	//NOTE : this file format contains a little bit of redundant data.
+	//however it`s better for seperating cryptkey & supplementary data block.
+
+	//dump file format
+
+	//SDB data offset(4)
+
+	// about cryptkey
+	//total packagecnt (4byte)
+	//	for	packagecnt 
+	//		db name hash 4byte( stl.h stringhash )
+	//		extension cnt( 4byte)
+	//		for	extension cnt
+	//			ext hash ( stl.h stringhash )
+	//			key-16byte 
+	//			iv-16byte
+
+	//about SDB data
+	//total packagecnt (4byte)
+	//	for	packagecnt 
+	//		db name hash 4byte( stl.h stringhash ) +child node size(4byte)
+	//		sdb file cnt( 4byte )
+	//		for	sdb file cnt
+	//			filename hash ( stl.h stringhash )
+	//			related map name size(4), relate map name
+	//			sdb block size( 1byte )
+	//			sdb blocks 
+
+	CFileBase keyFile;
+
+	if( !keyFile.Create( pFileName, CFileBase::FILEMODE_WRITE) )
+	{
+		//TODO : write log
+		return;
+	}
+
+	int iKeyPackageCount = 0;
+
+	//write later ( SDB Offset & PackageCnt for Key )
+	keyFile.SeekCur(2*sizeof(int));
+
+	TEterPackMap::const_iterator cit;
+	for( cit = m_PackMap.begin(); cit != m_PackMap.end(); ++cit )
+	{
+		EterPackPolicy_CSHybridCrypt* pPolicy = cit->second->GetPackPolicy_HybridCrypt();
+		if( !pPolicy || !pPolicy->IsContainingCryptKey() )
+			continue;
+
+		iKeyPackageCount++;
+		auto ssvv = std::string(cit->first);
+		std::string noPathName = CFileNameHelper::NoPath(ssvv);
+
+		DWORD dwPackNamehash = stringhash().GetHash(noPathName);
+
+		CMakePackLog::GetSingleton().Writef("CEterPackManager::WriteHybridCryptPackInfo PackName : %s, Hash : %x", noPathName.c_str(), dwPackNamehash);
+		keyFile.Write( &dwPackNamehash, sizeof(DWORD) );
+
+		pPolicy->WriteCryptKeyToFile( keyFile );
+	}
+
+	//Write SDB Data
+	int iSDBDataOffset = keyFile.GetPosition();
+	int iSDBPackageCnt = 0;
+
+	//Write SDB PackageCnt Later
+	keyFile.SeekCur(sizeof(int));
+	for( cit = m_PackMap.begin(); cit != m_PackMap.end(); ++cit )
+	{
+		EterPackPolicy_CSHybridCrypt* pPolicy = cit->second->GetPackPolicy_HybridCrypt();
+		if( !pPolicy || !pPolicy->IsContainingSDBFile() )
+			continue;
+
+		iSDBPackageCnt++;
+
+		auto ssvv1 = std::string(cit->first);
+		auto noPathName = CFileNameHelper::NoPath(ssvv1);
+
+		DWORD dwPackNamehash = stringhash().GetHash(noPathName);
+		keyFile.Write( &dwPackNamehash, sizeof(DWORD) );
+
+		int iSDBSizeWriteOffset = keyFile.GetPosition();
+		keyFile.SeekCur(sizeof(int));
+
+		pPolicy->WriteSupplementaryDataBlockToFile( keyFile );
+		int iSDBSizeAfterWrite = keyFile.GetPosition();
+
+		keyFile.Seek(iSDBSizeWriteOffset);
+
+		int iSDBSize = iSDBSizeAfterWrite-(iSDBSizeWriteOffset+4);
+		keyFile.Write( &iSDBSize, sizeof(int) );
+
+		keyFile.Seek(iSDBSizeAfterWrite);
+	}
+
+	//write sdb data start offset & package cnt
+	keyFile.Seek(0);
+	keyFile.Write( &iSDBDataOffset, sizeof(int));
+	keyFile.Write( &iKeyPackageCount, sizeof(int));
+
+	keyFile.Seek(iSDBDataOffset);
+	keyFile.Write( &iSDBPackageCnt, sizeof(int));
+
+	keyFile.Close();
+}
+
+===== FILE: source/EterPack/EterPackPolicy_CSHybridCrypt.cpp =====
+#include "Stdafx.h"
+#include "EterPackPolicy_CSHybridCrypt.h"
+#include "../EterBase/Stl.h"
+#include "../EterBase/FileName.h"
+#include "../EterBase/FileBase.h"
+#include "../EterBase/Crc32.h"
+#include "../EterBase/lzo.h"
+#include "../EterBase/Random.h"
+#include <cryptopp/modes.h>
+#include <cryptopp/osrng.h>
+
+using namespace CryptoPP;
+
+#define CIPHER_MODE	CTR_Mode
+
+#ifdef __THEMIDA__
+#include <ThemidaSDK.h>
+#endif
+//Cipher
+//Block Size
+//Key Length
+// 
+//Default Minimum Maximum 
+//AES(Rijndael) 16 16 16 32 
+//Blowfish 8 16 0 56 
+//Camellia 16 16 16 32 
+//CAST-128 8 16 5 16 
+//CAST-256 16 16 16 32 
+//DES 8 8 8 8 
+//DES-EDE2 8 16 16 16 
+//DES-EDE3 8 24 24 24 
+//DES-XEX3 8 24 24 24 
+//GOST 8 32 32 32 
+//IDEA 8 16 16 16 
+//MARS 16 16 16 56 
+//RC2 8 16 1 128 
+//RC5 8 16 0 255 
+//RC6 16 16 0 255 
+//SAFER-K 8 16 8 16 
+//SAFER-SK 8 16 8 16 
+//Serpent 16 16 1 32 
+//SHACAL-2 32 16 1 64 
+//SHARK-E 8 16 1 16 
+//SKIPJACK 8 10 1 10 
+//3-Way 12 12 1 12 
+//Twofish 16 16 0 32 
+//XTEA 8 16 1 16 
+
+inline std::string GetFileExt( std::string& rfileName )
+{
+	stl_lowers(rfileName);
+	return CFileNameHelper::GetExtension(rfileName);
+}
+
+EterPackPolicy_CSHybridCrypt::~EterPackPolicy_CSHybridCrypt()
+{
+	m_mapHybridCryptKey.clear();
+	m_mapSDBMap.clear();
+}
+
+bool EterPackPolicy_CSHybridCrypt::IsContainingCryptKey() const
+{
+	return (m_mapHybridCryptKey.size() > 0) ? true : false;
+}
+
+
+bool EterPackPolicy_CSHybridCrypt::GenerateCryptKey( std::string& rfileName )
+{
+#ifdef __THEMIDA__
+	VM_START
+#endif
+
+	//make lower & extract ext
+	std::string extName = GetFileExt(rfileName);
+	stl_lowers(extName);
+
+	DWORD  dwExtHash  = stringhash().GetHash(extName);
+
+	TCSHybridCryptKeyMap::const_iterator cit = m_mapHybridCryptKey.find( dwExtHash );
+
+	if( cit != m_mapHybridCryptKey.end() )
+	{
+		//TODO : log already registered
+		return false;
+	}
+
+	static AutoSeededRandomPool rnd;
+
+	TCSHybridCryptKey info;
+	{
+		rnd.GenerateBlock( &(info.uEncryptKey.key[0]), sizeof(info.uEncryptKey) ); 
+		rnd.GenerateBlock( &(info.uEncryptIV.iv[0]), sizeof(info.uEncryptIV) );
+
+		//for test
+	/*	memset( &info.uEncryptKey.key, 0x10, sizeof(info.uEncryptKey) ); 
+		memset( &info.uEncryptIV.iv, 0x10, sizeof(info.uEncryptIV) ); */
+	}
+	m_mapHybridCryptKey[dwExtHash] = info;
+
+#ifdef __THEMIDA__
+	VM_END
+#endif
+
+	return true;
+}
+
+bool EterPackPolicy_CSHybridCrypt::GetPerFileCryptKey( std::string& rfileName, eHybridCipherAlgorithm& eAlgorithm, TEncryptKey& key, TEncryptIV& iv )
+{
+#ifdef __THEMIDA__
+	VM_START
+#endif
+
+	std::string fileNamelower = rfileName;
+	stl_lowers(fileNamelower);
+
+	std::string extName = GetFileExt(fileNamelower);
+
+	TCSHybridCryptKeyMap::const_iterator cit = m_mapHybridCryptKey.find( stringhash().GetHash(extName));
+
+	if( cit == m_mapHybridCryptKey.end() )
+	{
+		//TODO : log no file ext info
+		return false;
+	}
+
+	DWORD dwfileNameCrc = GetCRC32(fileNamelower.c_str(), fileNamelower.size());
+
+	//make file specific algorithm & key & iv
+	eAlgorithm = (eHybridCipherAlgorithm)(dwfileNameCrc % Num_Of_Ciphers);
+	
+	::memcpy(key.key, cit->second.uEncryptKey.key, sizeof(key) );
+	::memcpy(iv.iv,   cit->second.uEncryptIV.iv,   sizeof(iv) );
+
+
+	//Themida Warning
+	for( int i = 0; i < (sizeof(key)/sizeof(dwfileNameCrc)); ++i)
+	{
+		*((DWORD*)key.key + i) ^= dwfileNameCrc;
+	}
+	for( int i = 0; i < (sizeof(iv)/sizeof(dwfileNameCrc)); ++i)
+	{
+		*((DWORD*)iv.iv + i) ^= dwfileNameCrc;
+	}
+#ifdef __THEMIDA__
+	VM_END
+#endif
+
+	return true;
+}
+
+
+bool EterPackPolicy_CSHybridCrypt::EncryptMemory( std::string& rfileName, IN const BYTE* pSrcData, IN int iSrcLen, OUT CLZObject& zObj )
+{
+#ifdef __THEMIDA__
+	VM_START
+#endif
+
+	eHybridCipherAlgorithm eAlgorithm;
+	TEncryptKey			   key;
+	TEncryptIV			   iv;
+
+	if( !GetPerFileCryptKey( rfileName, eAlgorithm, key, iv ) )
+	{
+		return false;
+	}
+
+	// start cipher
+	std::string strCipher;
+	//NOTE : ciphered stream size could be different from original size if you choose diffrent cipher mode & algorithm
+	//( i.e ECB or CBC mode )
+	strCipher.reserve(iSrcLen);
+
+	if( eAlgorithm == e_Cipher_Camellia )
+	{
+		// Encryptor
+		CIPHER_MODE<Camellia>::Encryption Encryptor;
+		Encryptor.SetKeyWithIV(key.keyCamellia, sizeof(key.keyCamellia), iv.ivCamellia, sizeof(iv.ivCamellia));
+
+		ArraySource(pSrcData, iSrcLen, true,
+							           new StreamTransformationFilter(Encryptor, new CryptoPP::StringSink(strCipher)));
+	}
+	else if( eAlgorithm == e_Cipher_Twofish )
+	{
+		// Encryptor
+		CIPHER_MODE<Twofish>::Encryption Encryptor;
+		Encryptor.SetKeyWithIV(key.keyTwofish, sizeof(key.keyTwofish), iv.ivTwofish, sizeof(iv.ivTwofish));
+
+		ArraySource(pSrcData, iSrcLen, true,
+							           new StreamTransformationFilter(Encryptor, new CryptoPP::StringSink(strCipher)));
+	}
+	else if( eAlgorithm == e_Cipher_XTEA )
+	{
+		// Encryptor
+		CIPHER_MODE<XTEA>::Encryption Encryptor;
+		Encryptor.SetKeyWithIV(key.keyXTEA, sizeof(key.keyXTEA), iv.ivXTEA, sizeof(iv.ivXTEA));
+
+		ArraySource(pSrcData, iSrcLen, true,
+							           new StreamTransformationFilter(Encryptor, new CryptoPP::StringSink(strCipher)));
+	}
+	
+	if (strCipher.length() != iSrcLen)
+	{
+		//TODO: size error log
+		return false;
+	}
+
+	zObj.AllocBuffer(iSrcLen);
+	memcpy(zObj.GetBuffer(), strCipher.c_str(), strCipher.length() );
+
+#ifdef __THEMIDA__
+	VM_END
+#endif
+
+	return true;
+}
+
+bool EterPackPolicy_CSHybridCrypt::DecryptMemory( std::string& rfilename, IN const BYTE* pEncryptedData, IN int iEncryptedLen, OUT CLZObject& zObj )
+{
+#ifdef __THEMIDA__
+	VM_START
+#endif
+
+	eHybridCipherAlgorithm eAlgorithm;
+	TEncryptKey			   key;
+	TEncryptIV			   iv;
+
+	if( !GetPerFileCryptKey( rfilename, eAlgorithm, key, iv ) )
+	{
+		return false;
+	}
+
+	// start decipher
+	std::string strDecipher;
+	//NOTE : ciphered stream size could be different from original size if you choose diffrent cipher mode & algorithm
+	//( i.e ECB or CBC mode )
+	strDecipher.reserve(iEncryptedLen);
+
+	if( eAlgorithm == e_Cipher_Camellia )
+	{
+		// Decryptor
+		CIPHER_MODE<Camellia>::Decryption Decryptor;
+		Decryptor.SetKeyWithIV(key.keyCamellia, sizeof(key.keyCamellia), iv.ivCamellia, sizeof(iv.ivCamellia));
+
+		ArraySource(pEncryptedData, iEncryptedLen, true,
+							           new StreamTransformationFilter(Decryptor, new CryptoPP::StringSink(strDecipher)));
+	}
+	else if( eAlgorithm == e_Cipher_Twofish )
+	{
+		// Decryptor
+		CIPHER_MODE<Twofish>::Decryption Decryptor;
+		Decryptor.SetKeyWithIV(key.keyTwofish, sizeof(key.keyTwofish), iv.ivTwofish, sizeof(iv.ivTwofish));
+
+		ArraySource(pEncryptedData, iEncryptedLen, true,
+							           new StreamTransformationFilter(Decryptor, new CryptoPP::StringSink(strDecipher)));
+	}
+	else if( eAlgorithm == e_Cipher_XTEA )
+	{
+		// Decryptor
+		CIPHER_MODE<XTEA>::Decryption Decryptor;
+		Decryptor.SetKeyWithIV(key.keyXTEA, sizeof(key.keyXTEA), iv.ivXTEA, sizeof(iv.ivXTEA));
+
+		ArraySource(pEncryptedData, iEncryptedLen, true,
+							           new StreamTransformationFilter(Decryptor, new CryptoPP::StringSink(strDecipher)));
+	}
+
+
+	if (strDecipher.length() != iEncryptedLen)
+	{
+		//TODO: size error log
+		return false;
+	}
+
+	zObj.AllocBuffer(iEncryptedLen);
+	memcpy(zObj.GetBuffer(), strDecipher.c_str(), strDecipher.length() );
+
+#ifdef __THEMIDA__
+	VM_END
+#endif
+
+	return true;
+}
+
+void EterPackPolicy_CSHybridCrypt::WriteCryptKeyToFile( CFileBase& rFile )
+{
+	//		ext cnt 4byte
+	//		for	ext hash ( crc32 )
+	//			key-16byte 
+	//			iv-16byte
+
+	DWORD dwCryptKeySize = m_mapHybridCryptKey.size();
+	rFile.Write( &dwCryptKeySize, sizeof(DWORD) );
+
+	TCSHybridCryptKeyMap::const_iterator cit;
+	for( cit = m_mapHybridCryptKey.begin(); cit != m_mapHybridCryptKey.end(); ++cit )
+	{
+		DWORD extNamehash = cit->first;
+		const TCSHybridCryptKey& CryptKey = cit->second;
+
+		rFile.Write( &extNamehash, sizeof(DWORD) );
+		rFile.Write( CryptKey.uEncryptKey.key, sizeof(TEncryptKey) );
+		rFile.Write( CryptKey.uEncryptIV.iv, sizeof(TEncryptIV) );
+	}
+}
+
+int EterPackPolicy_CSHybridCrypt::ReadCryptKeyInfoFromStream( IN const BYTE* pStream )
+{
+	int	iStreamOffset = 0;
+	
+	DWORD dwCryptoInfoSize;
+	memcpy(&dwCryptoInfoSize, pStream, sizeof(DWORD) );
+	iStreamOffset += sizeof(DWORD);
+
+	DWORD dwExtHash;
+
+	m_mapHybridCryptKey.clear();
+
+	for( int i = 0; i < dwCryptoInfoSize; ++i )
+	{
+		memcpy(&dwExtHash, pStream + iStreamOffset, sizeof(DWORD) );
+		iStreamOffset += sizeof(DWORD);
+
+		TCSHybridCryptKey info;
+		{
+			memcpy(info.uEncryptKey.key, pStream + iStreamOffset, sizeof(TEncryptKey) );
+			iStreamOffset += sizeof(TEncryptKey);
+
+			memcpy(info.uEncryptIV.iv, pStream + iStreamOffset, sizeof(TEncryptIV) );
+			iStreamOffset += sizeof(TEncryptIV);
+		}
+
+		m_mapHybridCryptKey[dwExtHash] = info;
+	}
+
+	return iStreamOffset;
+}
+
+bool EterPackPolicy_CSHybridCrypt::GenerateSupplementaryDataBlock(std::string& rfilename, const std::string& strMapName, IN const BYTE* pSrcData, IN int iSrcLen, OUT LPBYTE& pDestData, OUT int& iDestLen )
+{
+#ifdef __THEMIDA__
+	VM_START
+#endif
+
+	std::string fileNamelower = rfilename;
+	stl_lowers( fileNamelower );
+
+	DWORD dwFileNameHash  = stringhash().GetHash(fileNamelower);
+	TSupplementaryDataBlockMap::const_iterator cit = m_mapSDBMap.find( dwFileNameHash );
+
+	if( cit != m_mapSDBMap.end() )
+	{
+		//TODO : log already registered
+		return false;
+	}
+
+	//TODO : Find Better Method for deciding SDB Postion & Size
+
+	//prevent stream copy duplication
+	TSupplementaryDataBlockInfo info;
+	m_mapSDBMap[dwFileNameHash] = info;
+
+	std::string& strRelatedMapName = m_mapSDBMap[dwFileNameHash].strRelatedMapName;
+	std::vector<BYTE>& sdbVector   = m_mapSDBMap[dwFileNameHash].vecStream;
+
+
+	//fill the data!!
+	{
+		strRelatedMapName = strMapName;
+
+		int iSDBSize = random_range( 64, 128 );
+
+		if( iSrcLen < iSDBSize )
+		{
+			iSDBSize = iSrcLen - 1;
+			if( iSDBSize <= 0 )
+			{
+				//TODO : is there 1byte file exist???
+				return false;
+			}
+		}
+
+		sdbVector.resize( iSDBSize );
+		
+		iDestLen  = iSrcLen - iSDBSize;
+		pDestData = (LPBYTE)pSrcData;
+
+		memcpy( &sdbVector[0], pDestData + iDestLen, iSDBSize );
+	}
+#ifdef __THEMIDA__
+	VM_END
+#endif
+	return true;
+}
+
+
+bool EterPackPolicy_CSHybridCrypt::GetSupplementaryDataBlock( std::string& rfilename, OUT LPBYTE& pSDB, OUT int& iSDBSize )
+{
+#ifdef __THEMIDA__
+	VM_START
+#endif
+
+	std::string fileNamelower = rfilename;
+	stl_lowers( fileNamelower );
+
+	DWORD dwFileNameHash  = stringhash().GetHash(fileNamelower);
+	TSupplementaryDataBlockMap::const_iterator cit = m_mapSDBMap.find( dwFileNameHash );
+
+	if( cit == m_mapSDBMap.end() )
+	{
+		//TODO : log already registered
+		return false;
+	}
+
+	const std::vector<BYTE>& vecSDB = cit->second.vecStream;
+
+	iSDBSize = vecSDB.size();
+
+	if(iSDBSize <= 0)
+	{
+		pSDB = NULL;
+		return false;
+	}
+
+	pSDB = (BYTE*)&vecSDB[0]; 
+#ifdef __THEMIDA__
+	VM_END
+#endif
+
+	return true;
+}
+
+bool EterPackPolicy_CSHybridCrypt::IsContainingSDBFile() const
+{
+	return m_mapSDBMap.size() > 0 ? true : false;
+}
+
+void EterPackPolicy_CSHybridCrypt::WriteSupplementaryDataBlockToFile( CFileBase& rFile )
+{
+	//about SDB data
+	//		sdb file cnt( 4byte )
+	//		for	sdb file cnt
+	//			filename hash ( stl.h stringhash )
+	//			related map name size(4), relate map name
+	//			sdb block size( 1byte )
+	//			sdb blocks 
+
+	DWORD dwSDBMapSize = m_mapSDBMap.size();
+	rFile.Write( &dwSDBMapSize, sizeof(DWORD) );
+
+	TSupplementaryDataBlockMap::const_iterator cit;
+	for( cit = m_mapSDBMap.begin(); cit != m_mapSDBMap.end(); ++cit )
+	{
+		DWORD dwFileNamehash = cit->first;
+		rFile.Write( &dwFileNamehash, sizeof(DWORD) );
+
+		const std::string strRelatedMapName = cit->second.strRelatedMapName;
+		DWORD dwMapNameSize = strRelatedMapName.size();
+		rFile.Write( &dwMapNameSize, sizeof(DWORD) );
+		rFile.Write( strRelatedMapName.c_str(), dwMapNameSize );
+
+		const std::vector<BYTE>& sdbVector = cit->second.vecStream;
+		BYTE bSDBSize = (BYTE)(sdbVector.size());
+
+		rFile.Write( &bSDBSize, sizeof(bSDBSize) );
+		if( bSDBSize > 0 )
+			rFile.Write( &sdbVector[0], bSDBSize );
+	}
+}
+
+int EterPackPolicy_CSHybridCrypt::ReadSupplementatyDataBlockFromStream( IN const BYTE* pStream )
+{
+#ifdef __THEMIDA__
+	VM_START
+#endif
+
+	//DWORD				dwFileIdentifier;
+	//std::vector<BYTE>	vecSDBStream;
+
+	DWORD dwFileNameHash;
+	BYTE  bSDBSize;
+	int   iStreamOffset = 0;
+	
+	memcpy(&dwFileNameHash, pStream + iStreamOffset, sizeof(DWORD) );
+	iStreamOffset += sizeof(DWORD);
+
+	memcpy(&bSDBSize, pStream + iStreamOffset, sizeof(BYTE) );
+	iStreamOffset += sizeof(BYTE);
+
+	// NOTE : related map name isn`t required in client. so we don`t recv it from stream to reduce packet size.
+	TSupplementaryDataBlockInfo info;
+	{
+		info.vecStream.resize( bSDBSize );
+		memcpy(&info.vecStream[0],  pStream + iStreamOffset, bSDBSize );
+		iStreamOffset += bSDBSize;
+
+		m_mapSDBMap[dwFileNameHash] = info;
+	}
+
+#ifdef __THEMIDA__
+	VM_END
+#endif
+
+	return iStreamOffset;
+}
+
+===== FILE: source/EterPack/StdAfx.cpp =====
+#include "stdafx.h"
+
+
+===== FILE: source/EterPack/EterPackCursor.h =====
+#ifndef __INC_ETERPACKCURSOR_H__
+#define __INC_ETERPACKCURSOR_H__
+
+#include "EterPack.h"
+
+class CEterPackCursor
+{
+	public:
+		CEterPackCursor(CEterPack * pack);
+		~CEterPackCursor();
+
+		bool		Open(const char* filename);
+		void		Close();
+		void		Seek(long offset);
+		bool		Read(LPVOID data, long size);
+		long		Size();
+
+	private:
+		CEterPack * m_pPack;
+		CMappedFile m_file;
+		LPCVOID 	m_pData;
+		long		m_ReadPoint;
+};
+
+#endif
+
+===== FILE: source/EterPack/EterPack.h =====
+#ifndef __INC_ETERPACKLIB_ETERPACK_H__
+#define __INC_ETERPACKLIB_ETERPACK_H__
+
+#include <list>
+#include <unordered_map>
+
+#include "../EterBase/MappedFile.h"
+
+#ifndef MAKEFOURCC
+#define MAKEFOURCC(ch0, ch1, ch2, ch3)                                                  \
+                        ((DWORD)(BYTE) (ch0       ) | ((DWORD)(BYTE) (ch1) <<  8) |     \
+                        ((DWORD)(BYTE) (ch2) << 16) | ((DWORD)(BYTE) (ch3) << 24))
+#endif
+
+
+//#define  CHECKSUM_CHECK_MD5
+
+#include "md5.h"
+
+namespace eterpack
+{
+	const DWORD	c_PackCC = MAKEFOURCC('E', 'P', 'K', 'D');
+	const DWORD	c_IndexCC = MAKEFOURCC('E', 'P', 'K', 'D');
+	const DWORD c_Version = 2;
+								// FourCC + Version + m_indexCount
+	const DWORD c_HeaderSize = sizeof(DWORD) + sizeof(DWORD) + sizeof(long);
+};
+
+enum EEterPackTypes
+{
+	DBNAME_MAX_LEN = 255,
+	FILENAME_MAX_LEN = 160,
+	FREE_INDEX_BLOCK_SIZE = 32768,
+	FREE_INDEX_MAX_SIZE = 512,
+	DATA_BLOCK_SIZE = 256,
+
+	COMPRESSED_TYPE_NONE = 0,
+	COMPRESSED_TYPE_COMPRESS = 1,
+	COMPRESSED_TYPE_SECURITY = 2,
+	COMPRESSED_TYPE_PANAMA = 3,
+	COMPRESSED_TYPE_HYBRIDCRYPT = 4,
+	COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB = 5,
+	COMPRESSED_TYPE_COUNT = 6,
+};
+
+#pragma pack(push, 4)
+typedef struct SEterPackIndex
+{
+	long			id;
+	char			filename[FILENAME_MAX_LEN + 1];
+	DWORD			filename_crc;
+	long			real_data_size;
+	long			data_size;
+#ifdef CHECKSUM_CHECK_MD5
+	BYTE			MD5Digest[16];	
+#else
+	DWORD			data_crc;
+#endif
+	long			data_position;
+	char			compressed_type;
+} TEterPackIndex;
+#pragma pack(pop)
+
+typedef std::unordered_map<DWORD, TEterPackIndex *> TDataPositionMap;
+typedef std::list<TEterPackIndex *> TFreeIndexList;
+
+
+class CEterPack;
+
+class CEterFileDict
+{
+public:
+	struct Item
+	{
+		Item() : pkPack(NULL), pkInfo(NULL) {}
+
+		CEterPack*			pkPack;
+		TEterPackIndex*		pkInfo;
+	};
+
+	enum
+	{
+		BUCKET_SIZE = 16,
+	};
+
+	typedef std::unordered_multimap<DWORD, Item> TDict;
+
+public:
+	void InsertItem(CEterPack* pkPack, TEterPackIndex* pkInfo);
+	void UpdateItem(CEterPack* pkPack, TEterPackIndex* pkInfo);
+
+	Item* GetItem(DWORD dwFileNameHash, const char* c_pszFileName);
+
+	const TDict& GetDict() const
+	{
+		return m_dict;
+	}
+
+private:
+	TDict m_dict;
+};
+
+class EterPackPolicy_CSHybridCrypt;
+
+class CEterPack
+{
+	public:
+		CEterPack();
+		virtual ~CEterPack();
+		
+		void				Destroy();
+		bool				Create(CEterFileDict& rkFileDict, const char * dbname, const char * pathName, bool bReadOnly = true, const BYTE* iv = NULL);
+		bool				DecryptIV(DWORD dwPanamaKey);
+
+		const std::string&	GetPathName();
+		const char *		GetDBName();
+
+		//THEMIDA
+		bool				Get(CMappedFile & mappedFile, const char * filename, LPCVOID * data);
+		//THEMIDA
+		bool				Get2(CMappedFile & mappedFile, const char * filename, TEterPackIndex* index, LPCVOID * data);
+
+
+		//THEMIDA
+		bool				Put(const char * filename, const char * sourceFilename, BYTE packType, const std::string& strRelateMapName);
+		//THEMIDA
+		bool				Put(const char * filename, LPCVOID data, long len, BYTE packType);
+
+		bool				Delete(const char * filename);
+
+		bool				Extract();
+
+		long				GetFragmentSize();
+
+		bool				IsExist(const char * filename);
+
+		TDataPositionMap &	GetIndexMap();
+
+		bool				EncryptIndexFile();
+		bool				DecryptIndexFile();
+
+		DWORD				DeleteUnreferencedData();	// 몇개가 삭제 되었는지 리턴 한다.
+
+		bool				GetNames(std::vector<std::string>* retNames);
+		
+		EterPackPolicy_CSHybridCrypt* GetPackPolicy_HybridCrypt() const;
+
+	private:
+		bool				__BuildIndex(CEterFileDict& rkFileDict, bool bOverwirte=false);
+
+		bool				CreateIndexFile();
+		TEterPackIndex *	FindIndex(const char * filename);
+		long				GetNewIndexPosition(CFileBase& file);
+		TEterPackIndex *	NewIndex(CFileBase& file, const char * filename, long size);
+		void				WriteIndex(CFileBase& file, TEterPackIndex * index);
+		int					GetFreeBlockIndex(long size);
+		void				PushFreeIndex(TEterPackIndex * index);
+
+		bool				CreateDataFile();
+		long				GetNewDataPosition(CFileBase& file);
+		bool				ReadData(CFileBase& file, TEterPackIndex * index, LPVOID data, long maxsize);
+		bool				WriteData(CFileBase& file, TEterPackIndex * index, LPCVOID data);
+		bool				WriteNewData(CFileBase& file, TEterPackIndex * index, LPCVOID data);
+		
+		bool				Delete(TEterPackIndex * pIndex);
+
+	protected:
+		CMappedFile				m_file;
+
+		char*					m_file_data;
+		unsigned				m_file_size;
+
+		long					m_indexCount;
+		bool					m_bEncrypted;
+
+		char					m_dbName[DBNAME_MAX_LEN+1];
+		char					m_indexFileName[MAX_PATH+1];
+		TEterPackIndex *		m_indexData;
+		long					m_FragmentSize;
+		bool					m_bReadOnly;
+		bool					m_bDecrypedIV;
+
+		std::unordered_map<DWORD, DWORD> m_map_indexRefCount;
+		TDataPositionMap		m_DataPositionMap;
+		TFreeIndexList			m_FreeIndexList[FREE_INDEX_MAX_SIZE + 1];	// MAX 도 억세스 하므로 + 1 크기만큼 만든다.
+
+		std::string				m_stDataFileName;
+		std::string				m_stPathName;
+
+		
+		EterPackPolicy_CSHybridCrypt* m_pCSHybridCryptPolicy;
+
+	private:
+		void				__CreateFileNameKey_Panama(const char * filename, BYTE * key, unsigned int keySize);
+		bool				__Decrypt_Panama(const char* filename, const BYTE* data, SIZE_T dataSize, CLZObject& zObj);
+		bool				__Encrypt_Panama(const char* filename, const BYTE* data, SIZE_T dataSize, CLZObject& zObj);
+		std::string			m_stIV_Panama;
+
+	//private:
+	//	bool				m_bIsDataLoaded;
+	//	// 그냥 time_t를 쓰면, 32bit time_t를 사용하는 소스에서는, 
+	//	// CEterPack의 size를 실제 size - 4로 인식하기 때문에 문제가 발생할 수 있다.
+	//	__time64_t			m_tLastAccessTime;
+	//public:
+	//	__time64_t			GetLastAccessTime() { return m_tLastAccessTime; }
+	//	void				UpdateLastAccessTime();
+	//	void				ClearDataMemoryMap();
+
+#ifdef CHECKSUM_CHECK_MD5
+		void	GenerateMD5Hash( BYTE* pData, int nLength, IN OUT MD5_CTX& context );
+#endif
+};
+
+class CMakePackLog
+{
+	public:
+		static CMakePackLog& GetSingleton();
+
+	public:
+		CMakePackLog();
+		~CMakePackLog();
+
+		void SetFileName(const char* c_szFileName);
+
+		void Writef(const char* c_szFormat, ...);
+		void Writenf(const char* c_szFormat, ...);
+		void Write(const char* c_szBuf);
+
+		void WriteErrorf(const char* c_szFormat, ...);
+		void WriteErrornf(const char* c_szFormat, ...);
+		void WriteError(const char* c_szBuf);
+
+		void FlushError();
+
+	private:
+		void __Write(const char* c_szBuf, int nBufLen);
+		void __WriteError(const char* c_szBuf, int nBufLen);
+		bool __IsLogMode();
+
+	private:
+		FILE* m_fp;
+		FILE* m_fp_err;
+		
+		std::string m_stFileName;
+		std::string m_stErrorFileName;
+};
+
+#endif
+
+===== FILE: source/EterPack/EterPackManager.h =====
+#pragma once
+
+#include <windows.h>
+#include <unordered_map>
+#include "../eterBase/Singleton.h"
+#include "../eterBase/Stl.h"
+
+#include "EterPack.h"
+
+class CEterPackManager : public CSingleton<CEterPackManager>
+{
+	public:
+		struct SCache
+		{
+			BYTE* m_abBufData;
+			DWORD m_dwBufSize;
+		};
+	public:
+		enum ESearchModes
+		{
+			SEARCH_FILE_FIRST,
+			SEARCH_PACK_FIRST
+		};
+
+		typedef std::list<CEterPack*> TEterPackList;
+		typedef std::unordered_map<std::string, CEterPack*, stringhash> TEterPackMap;
+
+	public:
+		CEterPackManager();
+		virtual ~CEterPackManager();
+
+		void SetCacheMode();
+		void SetRelativePathMode();
+		
+		void LoadStaticCache(const char* c_szFileName);
+		
+		void SetSearchMode(bool bPackFirst);
+		int GetSearchMode();
+
+		//THEMIDA
+		bool Get(CMappedFile & rMappedFile, const char * c_szFileName, LPCVOID * pData);
+		
+		//THEMIDA
+		bool GetFromPack(CMappedFile & rMappedFile, const char * c_szFileName, LPCVOID * pData);
+		
+		//THEMIDA
+		bool GetFromFile(CMappedFile & rMappedFile, const char * c_szFileName, LPCVOID * pData);
+		bool isExist(const char * c_szFileName);
+		bool isExistInPack(const char * c_szFileName);
+
+		bool RegisterPack(const char * c_szName, const char * c_szDirectory, const BYTE* c_pbIV = NULL);		
+		void RegisterRootPack(const char * c_szName);
+		bool RegisterPackWhenPackMaking(const char * c_szName, const char * c_szDirectory, CEterPack* pPack);		
+
+
+		bool DecryptPackIV(DWORD key);
+
+		const char * GetRootPackFileName();
+
+		//for hybridcrypt
+		//THEMIDA
+		void WriteHybridCryptPackInfo(const char* pFileName);
+
+		//THEMIDA
+		void RetrieveHybridCryptPackKeys( const BYTE* pStream );
+		//THEMIDA
+		void RetrieveHybridCryptPackSDB( const BYTE* pStream );
+
+		// 메모리에 매핑된 팩들 가운데, 정리해야할 것들 정리.
+	public:
+		void ArrangeMemoryMappedPack();
+
+	protected:
+		int ConvertFileName(const char * c_szFileName, std::string & rstrFileName); // StringPath std::string 버전
+		bool CompareName(const char * c_szDirectoryName, DWORD iLength, const char * c_szFileName);
+
+		CEterPack* FindPack(const char* c_szPathName);
+
+		SCache* __FindCache(DWORD dwFileNameHash);
+		void	__ClearCacheMap();
+
+	protected:
+		bool					m_bTryRelativePath;
+		bool					m_isCacheMode;
+		int						m_iSearchMode;
+
+		CEterFileDict			m_FileDict;
+		CEterPack				m_RootPack;
+		TEterPackList			m_PackList;
+		TEterPackMap			m_PackMap;
+		TEterPackMap			m_DirPackMap;		
+
+		std::unordered_map<DWORD, SCache> m_kMap_dwNameKey_kCache;
+
+		CRITICAL_SECTION		m_csFinder;
+};
+
+===== FILE: source/EterPack/EterPackPolicy_CSHybridCrypt.h =====
+#ifndef __INC_ETERPACKLIB_ETERPACKPOLICY_CSHYBRIDCRYPT_H__
+#define __INC_ETERPACKLIB_ETERPACKPOLICY_CSHYBRIDCRYPT_H__
+
+#include <unordered_map>
+#include <cryptopp/cryptlib.h>
+#include <cryptopp/camellia.h>
+#include <cryptopp/twofish.h>
+#include <cryptopp/tea.h>
+
+enum eHybridCipherAlgorithm
+{
+	e_Cipher_Camellia,
+	e_Cipher_Twofish,
+	e_Cipher_XTEA,
+	Num_Of_Ciphers
+};
+
+
+class CFileBase;
+class CLZObject;
+
+//THEMIDA
+class EterPackPolicy_CSHybridCrypt
+{
+public:
+	~EterPackPolicy_CSHybridCrypt();
+
+	bool GenerateCryptKey( std::string& rfileName );
+	bool EncryptMemory( std::string& rfilename, IN const BYTE* pSrcData, IN int iSrcLen, OUT CLZObject& zObj );
+	bool DecryptMemory( std::string& rfilename, IN const BYTE* pSrcData, IN int iSrcLen, OUT CLZObject& zObj );
+	bool IsContainingCryptKey() const;
+
+	//Supplementary Data Block (SDB)
+	bool GenerateSupplementaryDataBlock(std::string& rfilename, const std::string& strMapName, IN const BYTE* pSrcData, IN int iSrcLen, OUT LPBYTE& pDestData, OUT int& iDestLen );
+	bool GetSupplementaryDataBlock( std::string& rfilename, OUT LPBYTE& pSDB, OUT int& iSDBSize  );
+	bool IsContainingSDBFile() const;
+
+	// Read/Write IO
+	void WriteCryptKeyToFile( CFileBase& rFile );
+	int  ReadCryptKeyInfoFromStream( IN const BYTE* pStream );
+
+	void WriteSupplementaryDataBlockToFile( CFileBase& rFile );
+	int  ReadSupplementatyDataBlockFromStream( IN const BYTE* pStream );
+
+protected:
+
+	typedef union UEncryptKey
+	{
+		BYTE key[16];
+		BYTE keyCamellia[ CryptoPP::Camellia::DEFAULT_KEYLENGTH];
+		BYTE keyTwofish [ CryptoPP::Twofish::DEFAULT_KEYLENGTH];
+		BYTE keyXTEA	[ CryptoPP::XTEA::DEFAULT_KEYLENGTH];
+	
+	} TEncryptKey;
+
+	typedef union UEncryptIV
+	{
+		BYTE iv[16];
+		BYTE ivCamellia [ CryptoPP::Camellia::BLOCKSIZE];
+		BYTE ivTwofish	[ CryptoPP::Twofish::BLOCKSIZE];
+		BYTE ivXTEA		[ CryptoPP::XTEA::BLOCKSIZE];
+	
+	} TEncryptIV;
+
+
+	typedef struct SCSHybridCryptKey
+	{
+		TEncryptKey		uEncryptKey;
+		TEncryptIV		uEncryptIV;
+
+	} TCSHybridCryptKey;
+
+	typedef std::unordered_map<DWORD, TCSHybridCryptKey>	TCSHybridCryptKeyMap;
+	TCSHybridCryptKeyMap	m_mapHybridCryptKey;
+
+	typedef struct SSupplementaryDataBlockInfo
+	{
+		std::string		  strRelatedMapName; 
+		std::vector<BYTE> vecStream;
+
+	} TSupplementaryDataBlockInfo;
+
+	typedef std::unordered_map<DWORD, TSupplementaryDataBlockInfo> TSupplementaryDataBlockMap; //key filename hash
+	TSupplementaryDataBlockMap m_mapSDBMap;
+
+private:
+	bool GetPerFileCryptKey( std::string& rfileName, eHybridCipherAlgorithm& eAlgorithm, TEncryptKey& key, TEncryptIV& iv );
+
+
+};
+
+
+
+#endif // __INC_ETERPACKLIB_ETERPACKPOLICY_CSHYBRIDCRYPT_H__
+
+===== FILE: source/EterPack/Inline.h =====
+#ifndef __INC_ETERPACK_INLINE_H__
+#define __INC_ETERPACK_INLINE_H__
+
+inline void inlinePathCreate(const char* path)
+{
+	char dir[64];
+	const char* p, *k;
+	
+	p = path + 3;
+	
+	while (NULL != (k = strchr(p, '/')))
+	{
+		memset(dir, 0, sizeof(dir));
+		strncpy(dir, path, k - path);
+		CreateDirectory(dir, NULL);
+		p = k + 1;
+	}
+}
+
+inline void inlineConvertPackFilename(char* name)
+{
+	char * p = name;
+
+	while (*p)
+	{
+		if (*p == '\\')
+			*p = '/';
+		else
+			*p = (int) tolower(*p);
+		p++;
+	}
+}
+
+#endif
+
+===== FILE: source/EterPack/md5.h =====
+#ifndef __INC_ETERPACKLIB_MD5_H__
+#define __INC_ETERPACKLIB_MD5_H__
+
+/*
+
+ ***********************************************************************
+
+ ** md5.h -- header file for implementation of MD5                    **
+
+ ** RSA Data Security, Inc. MD5 Message-Digest Algorithm              **
+
+ ** Created: 2/17/90 RLR                                              **
+
+ ** Revised: 12/27/90 SRD,AJ,BSK,JT Reference C version               **
+
+ ** Revised (for MD5): RLR 4/27/91                                    **
+
+ **   -- G modified to have y&~z instead of y&z                       **
+
+ **   -- FF, GG, HH modified to add in last register done             **
+
+ **   -- Access pattern: round 2 works mod 5, round 3 works mod 3     **
+
+ **   -- distinct additive constant for each step                     **
+
+ **   -- round 4 added, working mod 7                                 **
+
+ ***********************************************************************
+
+ */
+
+/*
+
+ ***********************************************************************
+
+ ** Copyright (C) 1990, RSA Data Security, Inc. All rights reserved.  **
+
+ **                                                                   **
+
+ ** License to copy and use this software is granted provided that    **
+
+ ** it is identified as the "RSA Data Security, Inc. MD5 Message-     **
+
+ ** Digest Algorithm" in all material mentioning or referencing this  **
+
+ ** software or this function.                                        **
+
+ **                                                                   **
+
+ ** License is also granted to make and use derivative works          **
+
+ ** provided that such works are identified as "derived from the RSA  **
+
+ ** Data Security, Inc. MD5 Message-Digest Algorithm" in all          **
+
+ ** material mentioning or referencing the derived work.              **
+
+ **                                                                   **
+
+ ** RSA Data Security, Inc. makes no representations concerning       **
+
+ ** either the merchantability of this software or the suitability    **
+
+ ** of this software for any particular purpose.  It is provided "as  **
+
+ ** is" without express or implied warranty of any kind.              **
+
+ **                                                                   **
+
+ ** These notices must be retained in any copies of any part of this  **
+
+ ** documentation and/or software.                                    **
+
+ ***********************************************************************
+
+ */
+
+ 
+
+/* typedef a 32-bit type */
+
+typedef unsigned long int UINT4;
+
+ 
+
+/* Data structure for MD5 (Message-Digest) computation */
+
+typedef struct {
+
+  UINT4 i[2];                   /* number of _bits_ handled mod 2^64 */
+
+  UINT4 buf[4];                                    /* scratch buffer */
+
+  unsigned char in[64];                              /* input buffer */
+
+  unsigned char digest[16];     /* actual digest after MD5Final call */
+
+} MD5_CTX;
+
+ 
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
+void MD5Init (MD5_CTX *);
+
+void MD5Update (MD5_CTX *,unsigned char *,unsigned int);
+
+void MD5Final (MD5_CTX *);
+
+void MD5Transform(UINT4 *,UINT4 *);
+
+#if defined (__cplusplus)
+};
+#endif
+
+/*
+
+ ***********************************************************************
+
+ ** End of md5.h                                                      **
+
+ ******************************** (cut) ********************************
+
+ */
+
+
+#endif
+===== FILE: source/EterPack/StdAfx.h =====
+#pragma once
+
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+
+//#include <crtdbg.h>
+#include <windows.h>
+#include <assert.h>
+
+#include "../eterBase/StdAfx.h"
+== 3. CLZO ==
+source/EterBase/lzo.h
+source/EterPack/EterPackPolicy_CSHybridCrypt.h
+===== FILE: source/EterBase/lzo.h =====
+#ifndef __INC_METIN_II_371GNFBQOCJ_LZO_H__
+#define __INC_METIN_II_371GNFBQOCJ_LZO_H__
+
+#include <windows.h>
+#include <lzo/lzo1x.h>
+#include "Singleton.h"
+
+class CLZObject
+{
+	public:
+		#pragma pack(4)
+			typedef struct SHeader
+			{
+				DWORD	dwFourCC;
+				DWORD	dwEncryptSize;		// 암호화된 크기
+				DWORD	dwCompressedSize;	// 압축된 데이터 크기
+				DWORD	dwRealSize;		// 실제 데이터 크기
+			} THeader;
+		#pragma pack()
+		
+		CLZObject();
+		~CLZObject();
+		
+		void			Clear();
+		
+		void			BeginCompress(const void * pvIn, UINT uiInLen);
+		void			BeginCompressInBuffer(const void * pvIn, UINT uiInLen, void * pvOut);
+		bool			Compress();
+		
+		bool			BeginDecompress(const void * pvIn);
+		bool			Decompress(DWORD * pdwKey = NULL);
+		
+		bool			Encrypt(DWORD * pdwKey);
+		bool			__Decrypt(DWORD * key, BYTE* data);
+		
+		const THeader &	GetHeader() { return *m_pHeader; }
+		BYTE *			GetBuffer() { return m_pbBuffer; }
+		DWORD			GetSize();
+		void			AllocBuffer(DWORD dwSize);
+		DWORD			GetBufferSize() { return m_dwBufferSize; }
+		//void			CopyBuffer(const char* pbSrc, DWORD dwSrcSize);
+		
+	private:
+		void			Initialize();
+		
+		BYTE *			m_pbBuffer;
+		DWORD			m_dwBufferSize;
+		
+		THeader	*		m_pHeader;
+		const BYTE *	m_pbIn;
+		bool			m_bCompressed;
+
+		bool			m_bInBuffer;
+
+	public:
+		static DWORD	ms_dwFourCC;
+};
+
+class CLZO : public CSingleton<CLZO>
+{
+	public:
+		CLZO();
+		virtual ~CLZO();
+		
+		bool	CompressMemory(CLZObject & rObj, const void * pIn, UINT uiInLen);
+		bool	CompressEncryptedMemory(CLZObject & rObj, const void * pIn, UINT uiInLen, DWORD * pdwKey);
+		bool	Decompress(CLZObject & rObj, const BYTE * pbBuf, DWORD * pdwKey = NULL);
+		BYTE *	GetWorkMemory();
+		
+	private:
+		BYTE *	m_pWorkMem;
+};
+
+#endif
+
+===== FILE: source/EterPack/EterPackPolicy_CSHybridCrypt.h =====
+#ifndef __INC_ETERPACKLIB_ETERPACKPOLICY_CSHYBRIDCRYPT_H__
+#define __INC_ETERPACKLIB_ETERPACKPOLICY_CSHYBRIDCRYPT_H__
+
+#include <unordered_map>
+#include <cryptopp/cryptlib.h>
+#include <cryptopp/camellia.h>
+#include <cryptopp/twofish.h>
+#include <cryptopp/tea.h>
+
+enum eHybridCipherAlgorithm
+{
+	e_Cipher_Camellia,
+	e_Cipher_Twofish,
+	e_Cipher_XTEA,
+	Num_Of_Ciphers
+};
+
+
+class CFileBase;
+class CLZObject;
+
+//THEMIDA
+class EterPackPolicy_CSHybridCrypt
+{
+public:
+	~EterPackPolicy_CSHybridCrypt();
+
+	bool GenerateCryptKey( std::string& rfileName );
+	bool EncryptMemory( std::string& rfilename, IN const BYTE* pSrcData, IN int iSrcLen, OUT CLZObject& zObj );
+	bool DecryptMemory( std::string& rfilename, IN const BYTE* pSrcData, IN int iSrcLen, OUT CLZObject& zObj );
+	bool IsContainingCryptKey() const;
+
+	//Supplementary Data Block (SDB)
+	bool GenerateSupplementaryDataBlock(std::string& rfilename, const std::string& strMapName, IN const BYTE* pSrcData, IN int iSrcLen, OUT LPBYTE& pDestData, OUT int& iDestLen );
+	bool GetSupplementaryDataBlock( std::string& rfilename, OUT LPBYTE& pSDB, OUT int& iSDBSize  );
+	bool IsContainingSDBFile() const;
+
+	// Read/Write IO
+	void WriteCryptKeyToFile( CFileBase& rFile );
+	int  ReadCryptKeyInfoFromStream( IN const BYTE* pStream );
+
+	void WriteSupplementaryDataBlockToFile( CFileBase& rFile );
+	int  ReadSupplementatyDataBlockFromStream( IN const BYTE* pStream );
+
+protected:
+
+	typedef union UEncryptKey
+	{
+		BYTE key[16];
+		BYTE keyCamellia[ CryptoPP::Camellia::DEFAULT_KEYLENGTH];
+		BYTE keyTwofish [ CryptoPP::Twofish::DEFAULT_KEYLENGTH];
+		BYTE keyXTEA	[ CryptoPP::XTEA::DEFAULT_KEYLENGTH];
+	
+	} TEncryptKey;
+
+	typedef union UEncryptIV
+	{
+		BYTE iv[16];
+		BYTE ivCamellia [ CryptoPP::Camellia::BLOCKSIZE];
+		BYTE ivTwofish	[ CryptoPP::Twofish::BLOCKSIZE];
+		BYTE ivXTEA		[ CryptoPP::XTEA::BLOCKSIZE];
+	
+	} TEncryptIV;
+
+
+	typedef struct SCSHybridCryptKey
+	{
+		TEncryptKey		uEncryptKey;
+		TEncryptIV		uEncryptIV;
+
+	} TCSHybridCryptKey;
+
+	typedef std::unordered_map<DWORD, TCSHybridCryptKey>	TCSHybridCryptKeyMap;
+	TCSHybridCryptKeyMap	m_mapHybridCryptKey;
+
+	typedef struct SSupplementaryDataBlockInfo
+	{
+		std::string		  strRelatedMapName; 
+		std::vector<BYTE> vecStream;
+
+	} TSupplementaryDataBlockInfo;
+
+	typedef std::unordered_map<DWORD, TSupplementaryDataBlockInfo> TSupplementaryDataBlockMap; //key filename hash
+	TSupplementaryDataBlockMap m_mapSDBMap;
+
+private:
+	bool GetPerFileCryptKey( std::string& rfileName, eHybridCipherAlgorithm& eAlgorithm, TEncryptKey& key, TEncryptIV& iv );
+
+
+};
+
+
+
+#endif // __INC_ETERPACKLIB_ETERPACKPOLICY_CSHYBRIDCRYPT_H__
+
+== 4. XTEA de EterBase ==
+-rw-r--r-- 1 deadivine deadivine 2716 oct 20  2019 source/EterBase/tea.cpp
+-rw-r--r-- 1 deadivine deadivine  641 sep 28  2013 source/EterBase/tea.h
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+    /* TEA is a 64-bit symmetric block cipher with a 128-bit key, developed
+       by David J. Wheeler and Roger M. Needham, and described in their
+       paper at <URL:http://www.cl.cam.ac.uk/ftp/users/djw3/tea.ps>.
+
+       This implementation is based on their code in
+       <URL:http://www.cl.cam.ac.uk/ftp/users/djw3/xtea.ps> */
+
+	#define TEA_KEY_LENGTH 16
+
+    int tea_encrypt(unsigned long *dest, const unsigned long *src, const unsigned long *key, int size);
+    int tea_decrypt(unsigned long *dest, const unsigned long *src, const unsigned long *key, int size);
+
+#ifdef __cplusplus
+};
+#endif
+
+== 5. CRC32 ==
+#ifndef __INC_CRC32_H__
+#define __INC_CRC32_H__
+
+#include <windows.h>
+
+DWORD GetCRC32(const char* buffer, size_t count);
+DWORD GetCaseCRC32(const char * buf, size_t len);
+DWORD GetHFILECRC32(HANDLE hFile);
+DWORD GetFileCRC32(const char* c_szFileName);
+DWORD GetFileSize(const char* c_szFileName);
+
+#endif
+#include "StdAfx.h"
+#include "CRC32.h"
+
+static unsigned long CRCTable[256] = 
+{
+	0x00000000,0x77073096,0xEE0E612C,0x990951BA,0x076DC419,0x706AF48F,
+	0xE963A535,0x9E6495A3,0x0EDB8832,0x79DCB8A4,0xE0D5E91E,0x97D2D988,
+    0x09B64C2B,0x7EB17CBD,0xE7B82D07,0x90BF1D91,0x1DB71064,0x6AB020F2,
+    0xF3B97148,0x84BE41DE,0x1ADAD47D,0x6DDDE4EB,0xF4D4B551,0x83D385C7,
+    0x136C9856,0x646BA8C0,0xFD62F97A,0x8A65C9EC,0x14015C4F,0x63066CD9,
+    0xFA0F3D63,0x8D080DF5,0x3B6E20C8,0x4C69105E,0xD56041E4,0xA2677172,
+    0x3C03E4D1,0x4B04D447,0xD20D85FD,0xA50AB56B,0x35B5A8FA,0x42B2986C,
+    0xDBBBC9D6,0xACBCF940,0x32D86CE3,0x45DF5C75,0xDCD60DCF,0xABD13D59,
+    0x26D930AC,0x51DE003A,0xC8D75180,0xBFD06116,0x21B4F4B5,0x56B3C423,
+    0xCFBA9599,0xB8BDA50F,0x2802B89E,0x5F058808,0xC60CD9B2,0xB10BE924,
+    0x2F6F7C87,0x58684C11,0xC1611DAB,0xB6662D3D,0x76DC4190,0x01DB7106,
+    0x98D220BC,0xEFD5102A,0x71B18589,0x06B6B51F,0x9FBFE4A5,0xE8B8D433,
+    0x7807C9A2,0x0F00F934,0x9609A88E,0xE10E9818,0x7F6A0DBB,0x086D3D2D,
+    0x91646C97,0xE6635C01,0x6B6B51F4,0x1C6C6162,0x856530D8,0xF262004E,
+    0x6C0695ED,0x1B01A57B,0x8208F4C1,0xF50FC457,0x65B0D9C6,0x12B7E950,
+    0x8BBEB8EA,0xFCB9887C,0x62DD1DDF,0x15DA2D49,0x8CD37CF3,0xFBD44C65,
+    0x4DB26158,0x3AB551CE,0xA3BC0074,0xD4BB30E2,0x4ADFA541,0x3DD895D7,
+    0xA4D1C46D,0xD3D6F4FB,0x4369E96A,0x346ED9FC,0xAD678846,0xDA60B8D0,
+    0x44042D73,0x33031DE5,0xAA0A4C5F,0xDD0D7CC9,0x5005713C,0x270241AA,
+    0xBE0B1010,0xC90C2086,0x5768B525,0x206F85B3,0xB966D409,0xCE61E49F,
+    0x5EDEF90E,0x29D9C998,0xB0D09822,0xC7D7A8B4,0x59B33D17,0x2EB40D81,
+    0xB7BD5C3B,0xC0BA6CAD,0xEDB88320,0x9ABFB3B6,0x03B6E20C,0x74B1D29A,
+    0xEAD54739,0x9DD277AF,0x04DB2615,0x73DC1683,0xE3630B12,0x94643B84,
+    0x0D6D6A3E,0x7A6A5AA8,0xE40ECF0B,0x9309FF9D,0x0A00AE27,0x7D079EB1,
+    0xF00F9344,0x8708A3D2,0x1E01F268,0x6906C2FE,0xF762575D,0x806567CB,
+    0x196C3671,0x6E6B06E7,0xFED41B76,0x89D32BE0,0x10DA7A5A,0x67DD4ACC,
+    0xF9B9DF6F,0x8EBEEFF9,0x17B7BE43,0x60B08ED5,0xD6D6A3E8,0xA1D1937E,
+    0x38D8C2C4,0x4FDFF252,0xD1BB67F1,0xA6BC5767,0x3FB506DD,0x48B2364B,
+    0xD80D2BDA,0xAF0A1B4C,0x36034AF6,0x41047A60,0xDF60EFC3,0xA867DF55,
+    0x316E8EEF,0x4669BE79,0xCB61B38C,0xBC66831A,0x256FD2A0,0x5268E236,
+    0xCC0C7795,0xBB0B4703,0x220216B9,0x5505262F,0xC5BA3BBE,0xB2BD0B28,
+    0x2BB45A92,0x5CB36A04,0xC2D7FFA7,0xB5D0CF31,0x2CD99E8B,0x5BDEAE1D,
+    0x9B64C2B0,0xEC63F226,0x756AA39C,0x026D930A,0x9C0906A9,0xEB0E363F,
+    0x72076785,0x05005713,0x95BF4A82,0xE2B87A14,0x7BB12BAE,0x0CB61B38,
+    0x92D28E9B,0xE5D5BE0D,0x7CDCEFB7,0x0BDBDF21,0x86D3D2D4,0xF1D4E242,
+    0x68DDB3F8,0x1FDA836E,0x81BE16CD,0xF6B9265B,0x6FB077E1,0x18B74777,
+    0x88085AE6,0xFF0F6A70,0x66063BCA,0x11010B5C,0x8F659EFF,0xF862AE69,
+    0x616BFFD3,0x166CCF45,0xA00AE278,0xD70DD2EE,0x4E048354,0x3903B3C2,
+    0xA7672661,0xD06016F7,0x4969474D,0x3E6E77DB,0xAED16A4A,0xD9D65ADC,
+    0x40DF0B66,0x37D83BF0,0xA9BCAE53,0xDEBB9EC5,0x47B2CF7F,0x30B5FFE9,
+    0xBDBDF21C,0xCABAC28A,0x53B39330,0x24B4A3A6,0xBAD03605,0xCDD70693,
+    0x54DE5729,0x23D967BF,0xB3667A2E,0xC4614AB8,0x5D681B02,0x2A6F2B94,
+    0xB40BBE37,0xC30C8EA1,0x5A05DF1B,0x2D02EF8D
+};
+
+#define DO1(buf, i)     crc = CRCTable[(crc ^ buf[i]) & 0xff] ^ (crc >> 8)
+#define DO2(buf, i)     DO1(buf, i); DO1(buf, i + 1);
+#define DO4(buf, i)     DO2(buf, i); DO2(buf, i + 2);
+#define DO8(buf, i)     DO4(buf, i); DO4(buf, i + 4);
+#define DO16(buf, i)    DO8(buf, i); DO8(buf, i + 8);
+
+DWORD GetCRC32(const char * buf, size_t len)
+{
+    DWORD crc = 0xffffffff;
+
+    if (len >= 16)
+    {
+        do
+        {
+            DO16(buf, 0);
+
+            buf += 16;
+            len -= 16;
+        } while (len >= 16);
+    }
+
+    if (len != 0)
+    {
+        do
+        {
+            DO1(buf, 0);
+            ++buf;
+            --len;
+        } while (len > 0);
+    }
+	
+	crc ^= 0xffffffff;
+	return crc;
+}
+
+#ifndef UPPER
+#define UPPER(c)        (((c)>='a'  && (c) <= 'z') ? ((c)+('A'-'a')) : (c))
+#endif
+
+#define DO1CI(buf, i)   crc = CRCTable[(crc ^ UPPER(buf[i])) & 0xff] ^ (crc >> 8)
+#define DO2CI(buf, i)   DO1CI(buf, i); DO1CI(buf, i + 1);
+#define DO4CI(buf, i)   DO2CI(buf, i); DO2CI(buf, i + 2);
+#define DO8CI(buf, i)   DO4CI(buf, i); DO4CI(buf, i + 4);
+#define DO16CI(buf, i)  DO8CI(buf, i); DO8CI(buf, i + 8);
+
+DWORD GetCaseCRC32(const char * buf, size_t len)
+{
+    DWORD crc = 0xffffffff;
+
+    if (16 <= len)
+    {
+        do
+        {
+            DO16CI(buf, 0);
+
+            buf += 16;
+            len -= 16;
+        } while (len >= 16);
+    }
+
+    if (0 != len)
+    {
+        do
+        {
+            DO1CI(buf, 0);
+
+            ++buf;
+            --len;
+        } while (len > 0);
+    }
+
+    crc ^= 0xffffffff;
+    return crc;
+}
+
+DWORD GetHFILECRC32(HANDLE hFile)
+{
+	DWORD dwRetCRC32=0;
+
+	DWORD dwFileSize = GetFileSize(hFile, NULL);
+
+	DWORD dataOffset=0;
+	DWORD mapSize=dwFileSize;
+
+	SYSTEM_INFO SysInfo;
+	GetSystemInfo(&SysInfo);
+	
+	DWORD dwSysGran = SysInfo.dwAllocationGranularity;
+	DWORD dwFileMapStart = (dataOffset / dwSysGran) * dwSysGran;
+	DWORD dwMapViewSize = (dataOffset % dwSysGran) + mapSize;
+	//INT iViewDelta = dataOffset - dwFileMapStart;
+
+	HANDLE hFM = CreateFileMapping(hFile,				// handle
+							  NULL,					// security
+							  PAGE_READONLY,		// flProtect
+							  0,					// high
+							  dataOffset + mapSize,	// low
+							  NULL);				// name
+	if (hFM)
+	{	
+		LPVOID lpMapData = MapViewOfFile(hFM,
+									FILE_MAP_READ,
+									0,
+									dwFileMapStart,							
+									dwMapViewSize);
+
+		dwRetCRC32=GetCRC32((const char*)lpMapData, dwFileSize);
+
+		
+		if (lpMapData)
+		{
+
+			UnmapViewOfFile(lpMapData);
+		}
+		
+		CloseHandle(hFM);
+	}
+
+	return dwRetCRC32;
+}
+
+DWORD GetFileCRC32(const char* c_szFileName)
+{
+	HANDLE hFile = CreateFile(c_szFileName,					// name of the file
+						 GENERIC_READ,					// desired access
+						 FILE_SHARE_READ,			// share mode
+						 NULL,						// security attributes
+						 OPEN_EXISTING,			// creation disposition
+						 FILE_ATTRIBUTE_NORMAL,		// flags and attr
+						 NULL);						// template file
+
+	if (INVALID_HANDLE_VALUE == hFile)
+		return 0;
+
+	
+	DWORD dwRetCRC32=GetHFILECRC32(hFile);
+	
+	CloseHandle(hFile);
+
+	return dwRetCRC32;
+}
+
+DWORD GetFileSize(const char* c_szFileName)
+{
+	HANDLE hFile = CreateFile(c_szFileName,					// name of the file
+						 GENERIC_READ,					// desired access
+						 FILE_SHARE_READ,			// share mode
+						 NULL,						// security attributes
+						 OPEN_EXISTING,			// creation disposition
+						 FILE_ATTRIBUTE_NORMAL,		// flags and attr
+						 NULL);						// template file
+
+	if (INVALID_HANDLE_VALUE == hFile)
+		return 0;
+
+	DWORD dwSize = GetFileSize(hFile, NULL);
+
+	CloseHandle(hFile);
+
+	return dwSize;
+}
+
+== 6. namespace eterpack ==
+source/EterPack/EterPack.h:20:namespace eterpack
+source/EterPack/EterPack.h-21-{
+source/EterPack/EterPack.h-22-	const DWORD	c_PackCC = MAKEFOURCC('E', 'P', 'K', 'D');
+source/EterPack/EterPack.h-23-	const DWORD	c_IndexCC = MAKEFOURCC('E', 'P', 'K', 'D');
+source/EterPack/EterPack.h-24-	const DWORD c_Version = 2;
+source/EterPack/EterPack.h-25-								// FourCC + Version + m_indexCount
+source/EterPack/EterPack.h-26-	const DWORD c_HeaderSize = sizeof(DWORD) + sizeof(DWORD) + sizeof(long);
+source/EterPack/EterPack.h-27-};
+source/EterPack/EterPack.h-28-
+source/EterPack/EterPack.h-29-enum EEterPackTypes
+source/EterPack/EterPack.h-30-{
+source/EterPack/EterPack.h-31-	DBNAME_MAX_LEN = 255,
+source/EterPack/EterPack.h-32-	FILENAME_MAX_LEN = 160,
+source/EterPack/EterPack.h-33-	FREE_INDEX_BLOCK_SIZE = 32768,
+source/EterPack/EterPack.h-34-	FREE_INDEX_MAX_SIZE = 512,
+source/EterPack/EterPack.h-35-	DATA_BLOCK_SIZE = 256,
+source/EterPack/EterPack.h-36-
+source/EterPack/EterPack.h-37-	COMPRESSED_TYPE_NONE = 0,
+source/EterPack/EterPack.h-38-	COMPRESSED_TYPE_COMPRESS = 1,
+source/EterPack/EterPack.h-39-	COMPRESSED_TYPE_SECURITY = 2,
+source/EterPack/EterPack.h-40-	COMPRESSED_TYPE_PANAMA = 3,
+source/EterPack/EterPack.h-41-	COMPRESSED_TYPE_HYBRIDCRYPT = 4,
+source/EterPack/EterPack.h-42-	COMPRESSED_TYPE_HYBRIDCRYPT_WITHSDB = 5,
+source/EterPack/EterPack.h-43-	COMPRESSED_TYPE_COUNT = 6,
+source/EterPack/EterPack.h-44-};
+source/EterPack/EterPack.h-45-
+source/EterPack/EterPack.h-46-#pragma pack(push, 4)
+source/EterPack/EterPack.h-47-typedef struct SEterPackIndex
+source/EterPack/EterPack.h-48-{
+source/EterPack/EterPack.h-49-	long			id;
+source/EterPack/EterPack.h-50-	char			filename[FILENAME_MAX_LEN + 1];
+source/EterPack/EterPack.h-51-	DWORD			filename_crc;
+source/EterPack/EterPack.h-52-	long			real_data_size;
+source/EterPack/EterPack.h-53-	long			data_size;
+source/EterPack/EterPack.h-54-#ifdef CHECKSUM_CHECK_MD5
+source/EterPack/EterPack.h-55-	BYTE			MD5Digest[16];	
+source/EterPack/EterPack.h-56-#else
+source/EterPack/EterPack.h-57-	DWORD			data_crc;
+source/EterPack/EterPack.h-58-#endif
+source/EterPack/EterPack.h-59-	long			data_position;
+source/EterPack/EterPack.h-60-	char			compressed_type;

@@ -1,0 +1,4 @@
+# Normalizar finales de línea: el repo se usa en Windows y Linux
+* text=auto eol=lf
+*.png binary
+*.ico binary

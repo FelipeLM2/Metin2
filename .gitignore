@@ -1,0 +1,50 @@
+# --- Datos del juego y binarios (NUNCA al repo) ---
+*.epk
+*.eix
+*.pma
+*.exe
+*.dll
+*.so
+*.so.*
+*.a
+*.o
+*.obj
+*.pyd
+*.vdi
+*.qcow2
+*.iso
+*.img
+*.zip
+*.7z
+*.rar
+*.tar.gz
+
+# --- Bases de datos y logs ---
+*.sql
+*.log
+syserr
+syslog
+stdout
+PTS
+packet_info.txt
+p2p_packet_info.txt
+
+# --- Configuración con credenciales ---
+CONFIG
+conf.txt
+my.cnf
+user_map.conf
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- Editores / sistema ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

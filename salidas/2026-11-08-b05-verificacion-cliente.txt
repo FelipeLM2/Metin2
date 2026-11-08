@@ -1,0 +1,5 @@
+== 0. hashes del pack parcheado (host) ==
+a3d02f6caf8c0073f3448124f8645ca0c43d853826fb7e5cc84f4d07164d58e3  /home/deadivine/metin2lab/work/b04/root.eix
+0396d0be9f2f702b7f0198542dfb1cbcaebaf93acb62728c7df77a7ca18e1053  /home/deadivine/metin2lab/work/b04/root.epk
+
+== 1. informe del cliente ==

@@ -22,27 +22,35 @@ salidas/2026-11-07-b02-fuente-eterpack.txt):
     offset 20  stream LZO de compressed_size bytes
   O sea, el stream LZO empieza en el offset 20, no en el 16. Cuando el blob
   está cifrado, TEA cubre desde el offset 16 (incluido el 'MCOZ' interno)
-  durante encrypt_size bytes; GetSize() = 16 + 4 + encrypt_size.
+  durante encrypt_size bytes. El fuente calcula GetSize() = 16 + 4 +
+  encrypt_size, pero el root.eix real de TMP4 mide 16 + encrypt_size; m2pack
+  lee siempre por cabecera y no depende de ese detalle.
 
   TEterPackIndex (192 bytes, little endian, #pragma pack(4)):
     u32  id
     char filename[161]
     u32  filename_crc      = CRC32(filename en minúsculas, '\\' -> '/')
-    i32  real_data_size    = hueco reservado en el .epk (múltiplo de 256)
-    i32  data_size         = bytes que ocupa el blob en el .epk
-    u32  data_crc          = CRC32(blob almacenado); solo se comprueba en tipo 2/3
+    i32  size_a            = offset 172
+    i32  size_b            = offset 176
+    u32  data_crc          = CRC32(blob almacenado)
     i32  data_position     = offset absoluto en el .epk
     u8   compressed_type
+
+  Ojo con size_a/size_b: el fuente de ClientVS22 declara primero
+  `real_data_size` (hueco) y luego `data_size` (blob), pero el pack real de
+  TMP4 los guarda al revés. m2pack no asume el orden: el menor de los dos es
+  el tamaño real del blob (`actual_size`) y el mayor el hueco (`block_size`).
 
 Uso:
     python3 m2pack.py info
     python3 m2pack.py ls
     python3 m2pack.py cat serverinfo.py
     python3 m2pack.py verify
-    python3 m2pack.py set serverinfo.py nuevo.py [--type none|compress]
+    python3 m2pack.py set serverinfo.py nuevo.py [--type compress|none]
 
-`set` escribe con tipo 0 por defecto (datos crudos, sin LZO ni cifrado):
-el cliente lo lee igual y evita tener que reproducir el cifrado.
+`set` comprime con LZO por defecto (tipo 1, como el pack original). Con
+`--type none` guarda el archivo crudo (tipo 0); en ese caso iguala los dos
+campos de tamaño para que cualquier interpretación lea el tamaño exacto.
 """
 
 from __future__ import annotations
@@ -202,6 +210,15 @@ class Lzo:
             ctypes.c_void_p,
         ]
 
+        self.lib.lzo1x_1_compress.restype = ctypes.c_int
+        self.lib.lzo1x_1_compress.argtypes = [
+            ctypes.c_char_p,
+            ctypes.c_size_t,
+            ctypes.c_void_p,
+            ctypes.POINTER(ctypes.c_size_t),
+            ctypes.c_void_p,
+        ]
+
     def decompress(self, src: bytes, out_size: int) -> bytes:
         if out_size <= 0:
             return b""
@@ -217,6 +234,20 @@ class Lzo:
                 f"LZO devolvió {dst_len.value} bytes, se esperaban {out_size}"
             )
         return bytes(dst)
+
+    def compress(self, src: bytes) -> bytes:
+        """Comprime con lzo1x_1 (el mismo algoritmo que usa CLZObject)."""
+        out_cap = len(src) + len(src) // 16 + 64 + 3
+        dst = (ctypes.c_ubyte * out_cap)()
+        dst_len = ctypes.c_size_t(out_cap)
+        # LZO1X_1_MEM_COMPRESS es ~128 KiB en 64 bits; 1 MiB sobra.
+        work = ctypes.create_string_buffer(1024 * 1024)
+        rc = self.lib.lzo1x_1_compress(
+            src, len(src), dst, ctypes.byref(dst_len), work
+        )
+        if rc != 0:
+            raise PackError(f"lzo1x_1_compress falló (código {rc})")
+        return bytes(dst[:dst_len.value])
 
 
 _lzo: Lzo | None = None
@@ -238,8 +269,12 @@ class Entry:
     id: int
     filename: str
     filename_crc: int
-    real_data_size: int
-    data_size: int
+    # Los dos `long` del índice. En el pack real de TMP4 el primero es el
+    # tamaño del blob y el segundo el hueco reservado (múltiplo de 256); el
+    # fuente de ClientVS22 los declara al revés. m2pack no depende del orden:
+    # el menor es el tamaño real y el mayor el hueco.
+    size_a: int
+    size_b: int
     data_crc: int
     data_position: int
     ctype: int
@@ -251,6 +286,17 @@ class Entry:
     @property
     def type_name(self) -> str:
         return TYPE_NAMES.get(self.ctype, f"desconocido({self.ctype})")
+
+    @property
+    def actual_size(self) -> int:
+        """Bytes que ocupa el blob de verdad (sin el relleno del hueco)."""
+        vals = [v for v in (self.size_a, self.size_b) if v > 0]
+        return min(vals) if vals else 0
+
+    @property
+    def block_size(self) -> int:
+        """Hueco reservado en el .epk (siempre >= actual_size)."""
+        return max(self.size_a, self.size_b, self.actual_size)
 
 
 @dataclass
@@ -319,8 +365,8 @@ def _parse_index(body: bytes) -> list[Entry]:
                 id=raw[0],
                 filename=name,
                 filename_crc=raw[2],
-                real_data_size=raw[3],
-                data_size=raw[4],
+                size_a=raw[3],
+                size_b=raw[4],
                 data_crc=raw[5],
                 data_position=raw[6],
                 ctype=raw[7],
@@ -466,12 +512,58 @@ def decode_blob(pack: Pack, entry: Entry, blob: bytes) -> bytes:
     )
 
 
+def blob_extent(pack: Pack, entry: Entry) -> int:
+    """Bytes del .epk que hay que leer para decodificar esta entrada.
+
+    Se deduce de la cabecera CLZO, no de los campos de tamaño del índice:
+      * tipo 1: 16 + 4 ('MCOZ' interno) + compressed_size
+      * tipo 2: 16 + encrypt_size (el área cifrada ya incluye el 'MCOZ')
+      * tipo 0: el tamaño real del índice
+    """
+    pos = entry.data_position
+    if entry.ctype in (1, 2):
+        head = pack.data[pos:pos + CLZO_HEADER_SIZE]
+        if len(head) < CLZO_HEADER_SIZE:
+            raise PackError(f"{entry.filename}: cabecera CLZO fuera del .epk")
+        _, enc, comp, _ = struct.unpack(CLZO_HEADER_FMT, head)
+        if entry.ctype == 1:
+            return max(entry.actual_size, CLZO_HEADER_SIZE + 4 + comp)
+        return max(entry.actual_size, CLZO_HEADER_SIZE + enc)
+    return entry.actual_size
+
+
+def encode_blob(data: bytes, pack_type: int) -> bytes:
+    """Construye el blob que se guarda en el .epk.
+
+    tipo 0: datos crudos.
+    tipo 1: CLZO sin cifrar = THeader + 'MCOZ' interno + stream LZO.
+    """
+    if pack_type == 0:
+        return data
+    if pack_type == 1:
+        comp = lzo().compress(data)
+        return (
+            struct.pack(
+                CLZO_HEADER_FMT,
+                int.from_bytes(MAGIC_LZO, "little"),
+                0,
+                len(comp),
+                len(data),
+            )
+            + MAGIC_LZO
+            + comp
+        )
+    raise PackError(f"tipo de escritura {pack_type} no soportado")
+
+
 def read_entry(pack: Pack, entry: Entry) -> bytes:
     pos = entry.data_position
-    size = entry.data_size
-    if pos < 0 or size < 0 or pos + size > len(pack.data):
+    if pos < 0 or pos > len(pack.data):
+        raise PackError(f"{entry.filename}: posición fuera del .epk ({pos})")
+    size = blob_extent(pack, entry)
+    if size < 0 or pos + size > len(pack.data):
         raise PackError(
-            f"{entry.filename}: posición/tamaño fuera del .epk "
+            f"{entry.filename}: tamaño fuera del .epk "
             f"({pos}+{size} > {len(pack.data)})"
         )
     return decode_blob(pack, entry, pack.data[pos:pos + size])
@@ -498,8 +590,8 @@ def serialize_index(entries: list[Entry]) -> bytes:
             e.id,
             name,
             e.filename_crc,
-            e.real_data_size,
-            e.data_size,
+            e.size_a,
+            e.size_b,
             e.data_crc,
             e.data_position,
             e.ctype,
@@ -526,14 +618,16 @@ def cmd_info(pack: Pack, args) -> int:
     reales = [e for e in pack.entries if not e.is_free]
     print(f"  con datos: {len(reales)}")
     print(f"  libres   : {len(pack.entries) - len(reales)}")
-    used = sum(e.data_size for e in reales)
-    print(f"  bytes usados en blobs: {used}")
+    used = sum(e.actual_size for e in reales)
+    hole = sum(e.block_size for e in reales)
+    print(f"  blobs ocupados: {used} bytes")
+    print(f"  huecos reservados: {hole} bytes")
     return 0
 
 
 def cmd_ls(pack: Pack, args) -> int:
     show_all = args.all
-    print(f"{'id':>3}  {'tipo':<10} {'posición':>10} {'real':>8} {'blob':>8}  nombre")
+    print(f"{'id':>3}  {'tipo':<10} {'posición':>10} {'tamaño':>8} {'hueco':>8}  nombre")
     print("-" * 78)
     for e in pack.entries:
         if e.is_free and not show_all:
@@ -541,7 +635,7 @@ def cmd_ls(pack: Pack, args) -> int:
         name = e.filename or "<libre>"
         print(
             f"{e.id:>3}  {e.type_name:<10} {e.data_position:>10} "
-            f"{e.real_data_size:>8} {e.data_size:>8}  {name}"
+            f"{e.actual_size:>8} {e.block_size:>8}  {name}"
         )
     if not show_all:
         print(f"\n({sum(1 for e in pack.entries if e.is_free)} entradas libres ocultas; usa --all)")
@@ -568,37 +662,40 @@ def cmd_verify(pack: Pack, args) -> int:
         if pack_name_crc(e.filename) != e.filename_crc:
             print(f"  ! {e.filename}: filename_crc no coincide")
             problems += 1
-        if e.data_position < 0 or e.data_size < 0 \
-                or e.data_position + e.data_size > len(pack.data):
+        if e.data_position < 0 or e.block_size < 0 \
+                or e.data_position + e.block_size > len(pack.data):
             print(f"  ! {e.filename}: fuera del .epk")
             problems += 1
             continue
-        blob = pack.data[e.data_position:e.data_position + e.data_size]
-        # En tipo 2/3 el CRC lo comprueba decode_blob (como hace el cliente).
-        if e.ctype not in (2, 3) and crc32(blob) != e.data_crc:
+        try:
+            size = blob_extent(pack, e)
+        except PackError as exc:
+            print(f"  ! {e.filename}: {exc}")
+            problems += 1
+            continue
+        if e.data_position + size > len(pack.data):
+            print(f"  ! {e.filename}: blob fuera del .epk")
+            problems += 1
+            continue
+        blob = pack.data[e.data_position:e.data_position + size]
+        # El empaquetador calculó el CRC sobre el blob real, no sobre el hueco.
+        if crc32(blob[:e.actual_size]) != e.data_crc:
             print(f"  ! {e.filename}: data_crc no coincide")
             problems += 1
         if e.ctype in (1, 2):
             try:
-                out = decode_blob(pack, e, blob)
-                if len(out) != e.real_data_size:
-                    print(f"  ! {e.filename}: descomprime {len(out)} != real {e.real_data_size}")
-                    problems += 1
+                decode_blob(pack, e, blob)
             except PackError as exc:
                 print(f"  ! {e.filename}: {exc}")
                 problems += 1
-        elif e.ctype == 0:
-            if e.data_size > e.real_data_size:
-                print(f"  ! {e.filename}: datos ({e.data_size}) > hueco ({e.real_data_size})")
-                problems += 1
-        else:
+        elif e.ctype != 0:
             print(f"  . {e.filename}: tipo {e.ctype} no comprobado")
 
     print("\n== solapes ==")
     occupied = sorted(
-        (e.data_position, e.data_position + e.real_data_size, e.filename)
+        (e.data_position, e.data_position + e.block_size, e.filename)
         for e in pack.entries
-        if not e.is_free and e.real_data_size > 0
+        if not e.is_free and e.block_size > 0
     )
     last_end = 0
     last_name = "<inicio>"
@@ -622,46 +719,56 @@ def cmd_set(pack: Pack, args) -> int:
     new = Path(args.file).read_bytes()
 
     pack_type = {"none": 0, "compress": 1}[args.type]
-    if pack_type == 1:
-        raise PackError("tipo 1 no implementado todavía; usa --type none")
+    blob = encode_blob(new, pack_type)
+    size = len(blob)
 
     data = bytearray(pack.data)
 
     # ¿Cabe en el hueco reservado sin pisar otra entrada?
     fits = (
-        len(new) <= entry.real_data_size
+        size <= entry.block_size
         and entry.data_position >= 0
-        and entry.data_position + entry.real_data_size <= len(data)
+        and entry.data_position + entry.block_size <= len(data)
     )
     if fits:
         for other in pack.entries:
-            if other is entry or other.is_free or other.real_data_size <= 0:
+            if other is entry or other.is_free or other.block_size <= 0:
                 continue
-            a0, a1 = entry.data_position, entry.data_position + entry.real_data_size
-            b0, b1 = other.data_position, other.data_position + other.real_data_size
+            a0, a1 = entry.data_position, entry.data_position + entry.block_size
+            b0, b1 = other.data_position, other.data_position + other.block_size
             if a0 < b1 and b0 < a1:
                 fits = False
                 break
 
     if fits:
         pos = entry.data_position
-        end = pos + entry.real_data_size
-        data[pos:pos + len(new)] = new
-        data[pos + len(new):end] = b"\0" * (end - pos - len(new))
-        real = entry.real_data_size
-        how = f"en su hueco ({pos}, {real} bytes)"
+        block = entry.block_size
+        how = f"en su hueco ({pos}, {block} bytes)"
     else:
         pos = len(data)
-        real = len(new) + (-len(new) % 256)
-        data += new
-        data += b"\0" * (real - len(new))
-        how = f"al final del .epk ({pos}, hueco nuevo de {real} bytes)"
+        block = size + (-size % 256)
+        how = f"al final del .epk ({pos}, hueco nuevo de {block} bytes)"
+
+    # El hueco se rellena con ceros; el blob va delante.
+    room = max(block, size)
+    if pos + room > len(data):
+        data += b"\0" * (pos + room - len(data))
+    data[pos:pos + size] = blob
+    data[pos + size:pos + room] = b"\0" * (room - size)
+
+    # En el pack real el primer campo es el tamaño y el segundo el hueco.
+    # Para tipo 1 se mantienen distintos (como el original); para tipo 0 se
+    # igualan para que cualquier interpretación lea exactamente `size` bytes.
+    if pack_type == 0:
+        size_a = size_b = size
+    else:
+        size_a, size_b = size, block
 
     updated = replace(
         entry,
-        real_data_size=real,
-        data_size=len(new),
-        data_crc=crc32(new),
+        size_a=size_a,
+        size_b=size_b,
+        data_crc=crc32(blob),
         data_position=pos,
         ctype=pack_type,
     )
@@ -678,7 +785,8 @@ def cmd_set(pack: Pack, args) -> int:
     pack.data_path.write_bytes(bytes(data))
     pack.index_path.write_bytes(serialize_index(entries))
 
-    print(f"{entry.filename}: {len(new)} bytes, tipo 0, {how}")
+    print(f"{entry.filename}: {len(new)} bytes -> blob de {size} "
+          f"(tipo {pack_type}), {how}")
     print(f"índice reescrito plano: {pack.index_path} "
           f"({INDEX_HEADER_SIZE + len(entries) * ENTRY_SIZE} bytes)")
     print(f"backups: {bak_i.name}, {bak_d.name}")
@@ -719,8 +827,8 @@ def main(argv=None) -> int:
     p_set.add_argument("name")
     p_set.add_argument("file")
     p_set.add_argument(
-        "--type", choices=["none", "compress"], default="none",
-        help="tipo con el que se guarda (por defecto none)",
+        "--type", choices=["compress", "none"], default="compress",
+        help="tipo con el que se guarda (por defecto compress/LZO)",
     )
 
     args = parser.parse_args(argv)

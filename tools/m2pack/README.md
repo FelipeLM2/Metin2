@@ -28,8 +28,9 @@ Escribir (siempre sobre una copia):
 python3 m2pack.py -p copia/ set serverinfo.py nuevo_serverinfo.py
 ```
 
-`set` escribe el archivo como tipo 0 (sin LZO ni cifrado) y reescribe el `.eix`
-en forma plana. Deja `root.eix.bak` y `root.epk.bak` la primera vez.
+`set` comprime con LZO (tipo 1, como todos los archivos del `root` original) y
+reescribe el `.eix` en forma plana. Con `--type none` guarda los datos crudos
+(tipo 0). Deja `root.eix.bak` y `root.epk.bak` la primera vez.
 
 ## Qué soporta
 
@@ -38,11 +39,21 @@ en forma plana. Deja `root.eix.bak` y `root.epk.bak` la primera vez.
 | listar | todos |
 | extraer | 0 (ninguno), 1 (LZO), 2 (LZO+TEA) |
 | verificar | 0, 1, 2 |
-| reemplazar | escribe tipo 0 |
+| reemplazar | escribe tipo 1 (LZO) o 0 |
 
 Los tipos 3 (Panama) y 4/5 (CSHybridCrypt) se listan pero no se descifran: no
 hacen falta para cambiar `serverinfo.py` y reproducirlos sería mucho más
 código y más riesgo.
+
+## Los dos campos de tamaño
+
+`SEterPackIndex` tiene dos `long` seguidos (`size_a` y `size_b`). El fuente de
+`ClientVS22` los declara como `real_data_size` (hueco) y `data_size` (blob),
+pero el pack real de TMP4 los guarda **al revés**. `m2pack` no asume el orden:
+toma el menor como tamaño real del blob y el mayor como hueco reservado.
+
+Ese detalle era el que hacía fallar `verify` en B03 bis: se estaba hasheando el
+hueco entero (768 B) en vez del blob real (636 B) de `serverinfo.py`.
 
 ## Por qué el índice se escribe plano
 

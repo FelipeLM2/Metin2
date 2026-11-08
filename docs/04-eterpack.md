@@ -79,13 +79,13 @@ Ese orden importa: primero se comprime y luego se cifra; para leer, al revés.
 
 Al cifrar, `CLZObject::Encrypt` llama a `tea_encrypt` **desde el offset 16** y
 con `dwCompressedSize + 19` bytes; `tea_encrypt` redondea a múltiplo de 8 y
-devuelve ese tamaño como `dwEncryptSize`. Por eso:
+devuelve ese tamaño como `dwEncryptSize`. El fuente de `ClientVS22` calcula
+`GetSize() = 16 + 4 + dwEncryptSize`, pero el `root.eix` real de TMP4 mide
+**2968 = 16 + 2952** (sin el `+4` extra). La diferencia no afecta a la lectura:
+`m2pack` usa los campos de la cabecera y nunca el tamaño del archivo.
 
-```
-tamaño del blob en el .epk = 16 + 4 + dwEncryptSize
-```
-
-El `+4` cuenta el `MCOZ` interno, que también va cifrado.
+El `+4` del fuente cuenta el `MCOZ` interno, que también va cifrado; por eso el
+stream LZO está en el offset 20 aunque el área cifrada empiece en el 16.
 
 ## El índice
 
@@ -124,8 +124,8 @@ escriba el índice en claro sin tocar el cifrado.
 | 4 | 161 | `filename` | ASCII, acabado en `\0` |
 | 165 | 3 | *padding* | por `pack(4)` |
 | 168 | 4 | `filename_crc` | CRC32 del nombre normalizado; **0 = entrada libre** |
-| 172 | 4 | `real_data_size` | hueco reservado en el `.epk` (múltiplo de 256) |
-| 176 | 4 | `data_size` | bytes que ocupa el blob de verdad |
+| 172 | 4 | tamaño del blob | bytes reales que ocupa el blob (sin relleno) |
+| 176 | 4 | hueco | espacio reservado en el `.epk` (múltiplo de 256) |
 | 180 | 4 | `data_crc` | CRC32 del blob almacenado |
 | 184 | 4 | `data_position` | offset absoluto dentro del `.epk` |
 | 188 | 1 | `compressed_type` | 0–5 |
@@ -135,9 +135,16 @@ Los 161 bytes del nombre (160 + `\0`) más el padding son la razón de que una
 entrada mida 192 y no 186. Por eso `17292 = 12 + 90 × 192`: el `root.eix`
 original tiene 90 entradas.
 
-`real_data_size ≥ data_size`: el empaquetador reserva bloques de 256 bytes
-redondeando hacia arriba y deja el resto a cero. Ese hueco es lo que permite
-reemplazar un archivo por otro algo más grande sin mover nada.
+**Ojo con el orden de los dos tamaños.** El fuente de `ClientVS22` declara en
+`SEterPackIndex` primero `real_data_size` (hueco) y después `data_size` (blob).
+Pero el pack real de TMP4 los guarda al revés: en `serverinfo.py`, el campo del
+offset 172 vale **636** (blob real = `16 + 4 + compressed_size`) y el del 176
+vale **768** (hueco redondeado a 256). Por eso `m2pack` no asume el orden: usa
+el menor como tamaño real y el mayor como hueco.
+
+El hueco se reserva redondeando a 256 bytes y se rellena con ceros. Ese hueco
+es lo que permite reemplazar un archivo por otro algo más grande sin mover
+nada.
 
 ## Las claves
 
@@ -194,12 +201,14 @@ Leer es obligatorio; escribir, lo mínimo:
 
 1. **Leer**: descifrar el índice (o leerlo plano), listar entradas y extraer
    archivos de tipo 0/1/2.
-2. **Escribir**: reemplazar un archivo con **tipo 0** (bytes crudos), en su
-   hueco si cabe, y reescribir el `.eix` en forma **plana**.
+2. **Escribir**: reemplazar un archivo con **tipo 1** (LZO, como el original)
+   o con tipo 0 (crudo), en su hueco si cabe, y reescribir el `.eix` en forma
+   **plana**.
 
-No hace falta reproducir LZO al escribir ni TEA al escribir: el tipo 0 no
-comprime ni cifra, y el índice plano está soportado por el cliente. Cuanto
-menos criptografía propia, menos formas de romper el pack.
+Escribir tipo 1 solo necesita `lzo1x_1_compress` (la misma función que usa
+`CLZObject`), no TEA: la clave solo cifra el índice y los archivos de tipo 2.
+Elegir tipo 1 mantiene el pack igual que el original y hace que el cliente
+ignore el relleno del hueco, porque el tamaño lo manda la cabecera CLZO.
 
 Lo que **no** se toca: los archivos de tipo 3/4/5. Para reemplazar uno de esos
 habría que reproducir Panama o Camellia/Twofish/XTEA-CTR y sus claves, y no

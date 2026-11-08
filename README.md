@@ -66,6 +66,26 @@ marcha atrás en [`docs/03-build.md`](docs/03-build.md).
 
 Bitácora: [`docs/bitacora.md`](docs/bitacora.md).
 
+## Flujo de trabajo
+
+El repo es el puente entre las VMs y el agente, que no comparten portapapeles
+ni carpetas.
+
+| Carpeta | Quién escribe | Para qué |
+|---|---|---|
+| `docs/` | agente | documentación estable y explicaciones de conceptos |
+| `pasos/` | agente | instrucciones accionables, listas para copiar en CachyOS |
+| `salidas/` | usuario | volcados de comandos que el agente lee |
+
+Ciclo:
+
+1. El agente sube `pasos/YYYY-MM-DD-bNN-tema.md`.
+2. En CachyOS: `cd ~/metin2-docs && git pull`.
+3. Se copian los bloques del documento y se ejecutan en la VM indicada.
+4. La salida se guarda en `salidas/` (el propio paso trae el comando).
+5. `tools/sanitize.sh`, `git add`, `commit`, `push`.
+6. El agente lee la salida del repo y escribe el paso siguiente.
+
 ## Reglas del repo
 
 - Solo texto propio: documentación, scripts y notas.

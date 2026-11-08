@@ -3,15 +3,30 @@
 Scripts propios del proyecto. Todos se escriben desde cero y se auditan antes
 de ejecutarse; nada de binarios de terceros.
 
-## Previsto
+## `m2pack/`
 
-- **`m2pack/`** — lector/escritor de packs EterPack (`root.eix` + `root.epk`):
-  - `ls`: listar los archivos del pack con tamaño y tipo de compresión.
-  - `cat`: extraer un archivo concreto.
-  - `set`: reemplazar un archivo (por ejemplo `serverinfo.py`).
+Lector/escritor de packs EterPack (`root.eix` + `root.epk`), en Python 3 con
+`liblzo2` por `ctypes`.
 
-  Dependencias: Python 3 y `liblzo2` vía `ctypes` (LlZO solo hace falta para
-  leer los archivos comprimidos del pack original).
+```bash
+python3 m2pack/m2pack.py -p /ruta/al/pack info
+python3 m2pack/m2pack.py -p /ruta/al/pack ls
+python3 m2pack/m2pack.py -p /ruta/al/pack cat serverinfo.py
+python3 m2pack/m2pack.py -p /ruta/al/pack verify
+```
+
+- `ls`: lista los archivos del pack con tamaño, posición y tipo de compresión.
+- `cat`: extrae un archivo concreto.
+- `verify`: recomputa CRC, tamaños y solapes. Es la prueba de que la lectura es
+  correcta antes de escribir nada.
+- `set`: reemplaza un archivo (escribe tipo 0 y el índice plano).
+
+Detalle del formato: [`../docs/04-eterpack.md`](../docs/04-eterpack.md).
+
+## `sanitize.sh`
+
+Redactor de secretos para las salidas que se suben al repo público. **No es
+infalible**: siempre revisar `git diff` antes del commit.
 
 ## Reglas
 

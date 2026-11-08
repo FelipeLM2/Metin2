@@ -1,0 +1,831 @@
+== 0. pack localizado ==
+/home/deadivine/metin2lab/tmp4/Client/Client/pack
+
+== 1. inventario ==
+total 1375192
+-rw-r--r-- 1 deadivine deadivine      268 may 20  2014 BGM.eix
+-rw-r--r-- 1 deadivine deadivine  9334272 may 20  2014 BGM.epk
+-rw-r--r-- 1 deadivine deadivine    26476 may 20  2014 Effect.eix
+-rw-r--r-- 1 deadivine deadivine  3719424 may 20  2014 Effect.epk
+-rw-r--r-- 1 deadivine deadivine    36536 jul 30  2014 ETC.eix
+-rw-r--r-- 1 deadivine deadivine 37156586 jul 30  2014 Etc.epk
+-rw-r--r-- 1 deadivine deadivine     6292 may 20  2014 guild.eix
+-rw-r--r-- 1 deadivine deadivine  6400512 may 20  2014 guild.epk
+-rw-r--r-- 1 deadivine deadivine    53484 jul 10  2014 icon.eix
+-rw-r--r-- 1 deadivine deadivine  5232640 jul 10  2014 icon.epk
+-rw-r--r-- 1 deadivine deadivine     3414 jul 17  2021 Index
+-rw-r--r-- 1 deadivine deadivine     2340 may 20  2014 indoordeviltower1.eix
+-rw-r--r-- 1 deadivine deadivine    93184 may 20  2014 indoordeviltower1.epk
+-rw-r--r-- 1 deadivine deadivine     2516 may 20  2014 indoormonkeydungeon1.eix
+-rw-r--r-- 1 deadivine deadivine   113152 may 20  2014 indoormonkeydungeon1.epk
+-rw-r--r-- 1 deadivine deadivine     2492 may 20  2014 indoormonkeydungeon2.eix
+-rw-r--r-- 1 deadivine deadivine   129024 may 20  2014 indoormonkeydungeon2.epk
+-rw-r--r-- 1 deadivine deadivine     2532 may 20  2014 indoormonkeydungeon3.eix
+-rw-r--r-- 1 deadivine deadivine   127488 may 20  2014 indoormonkeydungeon3.epk
+-rw-r--r-- 1 deadivine deadivine     2396 may 20  2014 indoorspiderdungeon1.eix
+-rw-r--r-- 1 deadivine deadivine    64768 may 20  2014 indoorspiderdungeon1.epk
+-rw-r--r-- 1 deadivine deadivine    53404 may 20  2014 item.eix
+-rw-r--r-- 1 deadivine deadivine  5949440 may 20  2014 item.epk
+-rw-r--r-- 1 deadivine deadivine     6888 dic 28  2021 locale_cz.eix
+-rw-r--r-- 1 deadivine deadivine  3728128 dic 28  2021 locale_cz.epk
+-rw-r--r-- 1 deadivine deadivine     7040 dic 28  2021 locale_de.eix
+-rw-r--r-- 1 deadivine deadivine  3886848 dic 28  2021 locale_de.epk
+-rw-r--r-- 1 deadivine deadivine     6880 dic 28  2021 locale_dk.eix
+-rw-r--r-- 1 deadivine deadivine  3699968 dic 28  2021 locale_dk.epk
+-rw-r--r-- 1 deadivine deadivine     6856 dic 28  2021 locale_en.eix
+-rw-r--r-- 1 deadivine deadivine  3703296 dic 28  2021 locale_en.epk
+-rw-r--r-- 1 deadivine deadivine     6872 dic 28  2021 locale_es.eix
+-rw-r--r-- 1 deadivine deadivine  3715584 dic 28  2021 locale_es.epk
+-rw-r--r-- 1 deadivine deadivine     6960 dic 28  2021 locale_fr.eix
+-rw-r--r-- 1 deadivine deadivine  3753472 dic 28  2021 locale_fr.epk
+-rw-r--r-- 1 deadivine deadivine     6992 dic 28  2021 locale_gr.eix
+-rw-r--r-- 1 deadivine deadivine  3728128 dic 28  2021 locale_gr.epk
+-rw-r--r-- 1 deadivine deadivine     6856 dic 28  2021 locale_hu.eix
+-rw-r--r-- 1 deadivine deadivine  3702016 dic 28  2021 locale_hu.epk
+-rw-r--r-- 1 deadivine deadivine     6856 dic 28  2021 locale_it.eix
+-rw-r--r-- 1 deadivine deadivine  3723520 dic 28  2021 locale_it.epk
+-rw-r--r-- 1 deadivine deadivine     6888 dic 28  2021 locale_nl.eix
+-rw-r--r-- 1 deadivine deadivine  3768320 dic 28  2021 locale_nl.epk
+-rw-r--r-- 1 deadivine deadivine     6856 dic 28  2021 locale_pl.eix
+-rw-r--r-- 1 deadivine deadivine  3731200 dic 28  2021 locale_pl.epk
+-rw-r--r-- 1 deadivine deadivine     6864 dic 28  2021 locale_pt.eix
+-rw-r--r-- 1 deadivine deadivine  3719936 dic 28  2021 locale_pt.epk
+-rw-r--r-- 1 deadivine deadivine     6888 dic 28  2021 locale_ro.eix
+-rw-r--r-- 1 deadivine deadivine  3724544 dic 28  2021 locale_ro.epk
+-rw-r--r-- 1 deadivine deadivine     6880 dic 28  2021 locale_ru.eix
+-rw-r--r-- 1 deadivine deadivine  3728384 dic 28  2021 locale_ru.epk
+-rw-r--r-- 1 deadivine deadivine     6928 dic 28  2021 locale_tr.eix
+-rw-r--r-- 1 deadivine deadivine  3705088 dic 28  2021 locale_tr.epk
+-rw-r--r-- 1 deadivine deadivine     2568 jul 30  2014 metin2_patch_5th_armor.eix
+-rw-r--r-- 1 deadivine deadivine  7757795 jul 30  2014 metin2_patch_5th_armor.epk
+-rw-r--r-- 1 deadivine deadivine    15120 jul 30  2014 metin2_patch_costume_soccer.eix
+-rw-r--r-- 1 deadivine deadivine 91509599 jul 30  2014 metin2_patch_costume_soccer.epk
+-rw-r--r-- 1 deadivine deadivine     1000 jul 30  2014 metin2_patch_dance.eix
+-rw-r--r-- 1 deadivine deadivine  7745752 jul 30  2014 metin2_patch_dance.epk
+-rw-r--r-- 1 deadivine deadivine    43416 jul 30  2014 metin2_patch_dragon_rock.eix
+-rw-r--r-- 1 deadivine deadivine 55554921 jul 30  2014 metin2_patch_dragon_rock.epk
+-rw-r--r-- 1 deadivine deadivine    72456 jul 30  2014 metin2_patch_dragon_rock_mobs.eix
+-rw-r--r-- 1 deadivine deadivine 61838028 jul 30  2014 metin2_patch_dragon_rock_mobs.epk
+-rw-r--r-- 1 deadivine deadivine     8222 may 20  2014 metin2_patch_dragon_rock_mobs.rdch
+-rw-r--r-- 1 deadivine deadivine     4352 jul 30  2014 metin2_patch_dragon_rock_mobs_texcache.eix
+-rw-r--r-- 1 deadivine deadivine 17801408 jul 30  2014 metin2_patch_dragon_rock_mobs_texcache.epk
+-rw-r--r-- 1 deadivine deadivine    20559 may 20  2014 metin2_patch_dragon_rock.rdch
+-rw-r--r-- 1 deadivine deadivine    11840 jul 17  2021 metin2_patch_dragon_rock_texcache.eix
+-rw-r--r-- 1 deadivine deadivine 47697152 jul 17  2021 metin2_patch_dragon_rock_texcache.epk
+-rw-r--r-- 1 deadivine deadivine     5136 jul 30  2014 metin2_patch_ds.eix
+-rw-r--r-- 1 deadivine deadivine  1769171 jul 30  2014 metin2_patch_ds.epk
+-rw-r--r-- 1 deadivine deadivine     2720 jul 30  2014 metin2_patch_dss_box.eix
+-rw-r--r-- 1 deadivine deadivine   529060 jul 30  2014 metin2_patch_dss_box.epk
+-rw-r--r-- 1 deadivine deadivine     3184 nov  1  2021 metin2_patch_easter1.eix
+-rw-r--r-- 1 deadivine deadivine  7513344 nov  1  2021 metin2_patch_easter1.epk
+-rw-r--r-- 1 deadivine deadivine     7224 jul 30  2014 metin2_patch_etc_costume1.eix
+-rw-r--r-- 1 deadivine deadivine 16445038 jul 30  2014 metin2_patch_etc_costume1.epk
+-rw-r--r-- 1 deadivine deadivine    13408 jul 30  2014 metin2_patch_etc.eix
+-rw-r--r-- 1 deadivine deadivine  5842764 jul 30  2014 metin2_patch_etc.epk
+-rw-r--r-- 1 deadivine deadivine    40440 jul 19  2021 metin2_patch_eu3.eix
+-rw-r--r-- 1 deadivine deadivine 32184576 jul 19  2021 metin2_patch_eu3.epk
+-rw-r--r-- 1 deadivine deadivine     5112 jul 20  2021 metin2_patch_eu4.eix
+-rw-r--r-- 1 deadivine deadivine 10767104 jul 20  2021 metin2_patch_eu4.epk
+-rw-r--r-- 1 deadivine deadivine     5072 jul 30  2014 metin2_patch_flame_dungeon.eix
+-rw-r--r-- 1 deadivine deadivine 10628610 jul 30  2014 metin2_patch_flame_dungeon.epk
+-rw-r--r-- 1 deadivine deadivine    10120 jul 30  2014 metin2_patch_flame.eix
+-rw-r--r-- 1 deadivine deadivine 16641770 jul 30  2014 metin2_patch_flame.epk
+-rw-r--r-- 1 deadivine deadivine     2448 jul 30  2014 metin2_patch_halloween.eix
+-rw-r--r-- 1 deadivine deadivine  6723010 jul 30  2014 metin2_patch_halloween.epk
+-rw-r--r-- 1 deadivine deadivine      696 jul 30  2014 metin2_patch_mineral.eix
+-rw-r--r-- 1 deadivine deadivine   501767 jul 30  2014 metin2_patch_mineral.epk
+-rw-r--r-- 1 deadivine deadivine    15552 jul 30  2014 metin2_patch_mundi.eix
+-rw-r--r-- 1 deadivine deadivine 58156360 jul 30  2014 metin2_patch_mundi.epk
+-rw-r--r-- 1 deadivine deadivine     5248 jul 30  2014 metin2_patch_party.eix
+-rw-r--r-- 1 deadivine deadivine 13717291 jul 30  2014 metin2_patch_party.epk
+-rw-r--r-- 1 deadivine deadivine     6512 jul 30  2014 metin2_patch_pet1.eix
+-rw-r--r-- 1 deadivine deadivine  8774662 jul 30  2014 metin2_patch_pet1.epk
+-rw-r--r-- 1 deadivine deadivine     3160 jul 30  2014 metin2_patch_pet2.eix
+-rw-r--r-- 1 deadivine deadivine  3626211 jul 30  2014 metin2_patch_pet2.epk
+-rw-r--r-- 1 deadivine deadivine      928 jul 30  2014 metin2_patch_ramadan_costume.eix
+-rw-r--r-- 1 deadivine deadivine  2855300 jul 30  2014 metin2_patch_ramadan_costume.epk
+-rw-r--r-- 1 deadivine deadivine     7752 jul 30  2014 metin2_patch_sd.eix
+-rw-r--r-- 1 deadivine deadivine 13939014 jul 30  2014 metin2_patch_sd.epk
+-rw-r--r-- 1 deadivine deadivine     7472 jul 30  2014 metin2_patch_snow_dungeon.eix
+-rw-r--r-- 1 deadivine deadivine 16454147 jul 30  2014 metin2_patch_snow_dungeon.epk
+-rw-r--r-- 1 deadivine deadivine     9592 jul 30  2014 metin2_patch_snow.eix
+-rw-r--r-- 1 deadivine deadivine 14268853 jul 30  2014 metin2_patch_snow.epk
+-rw-r--r-- 1 deadivine deadivine      744 nov  6  2021 metin2_patch_w20_etc.eix
+-rw-r--r-- 1 deadivine deadivine   389376 nov  6  2021 metin2_patch_w20_etc.epk
+-rw-r--r-- 1 deadivine deadivine    27904 jul 30  2014 metin2_patch_w20_sound.eix
+-rw-r--r-- 1 deadivine deadivine 13982647 jul 30  2014 metin2_patch_w20_sound.epk
+-rw-r--r-- 1 deadivine deadivine      824 jul 30  2014 metin2_patch_w21_etc.eix
+-rw-r--r-- 1 deadivine deadivine   281488 jul 30  2014 metin2_patch_w21_etc.epk
+-rw-r--r-- 1 deadivine deadivine     4712 jul 30  2014 metin2_patch_w21_mobs.eix
+-rw-r--r-- 1 deadivine deadivine 10472540 jul 30  2014 metin2_patch_w21_mobs.epk
+-rw-r--r-- 1 deadivine deadivine     8592 jul 30  2014 metin2_patch_w21_mobs_m.eix
+-rw-r--r-- 1 deadivine deadivine   280794 jul 30  2014 metin2_patch_w21_mobs_m.epk
+-rw-r--r-- 1 deadivine deadivine    13056 jul 30  2014 metin2_patch_xmas.eix
+-rw-r--r-- 1 deadivine deadivine 21194603 jul 30  2014 metin2_patch_xmas.epk
+-rw-r--r-- 1 deadivine deadivine    42668 may 20  2014 monster2.eix
+-rw-r--r-- 1 deadivine deadivine 31736832 may 20  2014 monster2.epk
+-rw-r--r-- 1 deadivine deadivine    89196 may 20  2014 Monster.eix
+-rw-r--r-- 1 deadivine deadivine 65224960 may 20  2014 Monster.epk
+-rw-r--r-- 1 deadivine deadivine      524 may 20  2014 npc2.eix
+-rw-r--r-- 1 deadivine deadivine   301568 may 20  2014 npc2.epk
+-rw-r--r-- 1 deadivine deadivine    24708 may 20  2014 NPC.eix
+-rw-r--r-- 1 deadivine deadivine 21501440 may 20  2014 NPC.epk
+-rw-r--r-- 1 deadivine deadivine     5368 nov  1  2021 OutdoorA1.eix
+-rw-r--r-- 1 deadivine deadivine  1652736 nov  1  2021 OutdoorA1.epk
+-rw-r--r-- 1 deadivine deadivine    10180 may 20  2014 OutdoorA2.eix
+-rw-r--r-- 1 deadivine deadivine  2888704 may 20  2014 OutdoorA2.epk
+-rw-r--r-- 1 deadivine deadivine     4788 may 20  2014 OutdoorA3.eix
+-rw-r--r-- 1 deadivine deadivine  1303296 may 20  2014 OutdoorA3.epk
+-rw-r--r-- 1 deadivine deadivine     6524 may 20  2014 OutdoorB1.eix
+-rw-r--r-- 1 deadivine deadivine  1995264 may 20  2014 OutdoorB1.epk
+-rw-r--r-- 1 deadivine deadivine     5468 may 20  2014 OutdoorB3.eix
+-rw-r--r-- 1 deadivine deadivine  1964288 may 20  2014 OutdoorB3.epk
+-rw-r--r-- 1 deadivine deadivine     5780 may 20  2014 OutdoorC1.eix
+-rw-r--r-- 1 deadivine deadivine  1331456 may 20  2014 OutdoorC1.epk
+-rw-r--r-- 1 deadivine deadivine     4796 may 20  2014 OutdoorC3.eix
+-rw-r--r-- 1 deadivine deadivine  1254144 may 20  2014 OutdoorC3.epk
+-rw-r--r-- 1 deadivine deadivine    10116 may 20  2014 outdoordesert1.eix
+-rw-r--r-- 1 deadivine deadivine  2403328 may 20  2014 outdoordesert1.epk
+-rw-r--r-- 1 deadivine deadivine      580 may 20  2014 outdoorduel.eix
+-rw-r--r-- 1 deadivine deadivine    72192 may 20  2014 outdoorduel.epk
+-rw-r--r-- 1 deadivine deadivine     6452 may 20  2014 Outdoor.eix
+-rw-r--r-- 1 deadivine deadivine     2732 may 20  2014 outdoorempirebattle1.eix
+-rw-r--r-- 1 deadivine deadivine   761600 may 20  2014 outdoorempirebattle1.epk
+-rw-r--r-- 1 deadivine deadivine  2511360 may 20  2014 Outdoor.epk
+-rw-r--r-- 1 deadivine deadivine     1204 may 20  2014 outdoorfielddungeon1.eix
+-rw-r--r-- 1 deadivine deadivine   297728 may 20  2014 outdoorfielddungeon1.epk
+-rw-r--r-- 1 deadivine deadivine     9612 may 20  2014 outdoorflame1.eix
+-rw-r--r-- 1 deadivine deadivine  3019776 may 20  2014 outdoorflame1.epk
+-rw-r--r-- 1 deadivine deadivine      612 may 20  2014 outdoorgmguildbuild.eix
+-rw-r--r-- 1 deadivine deadivine   105216 may 20  2014 outdoorgmguildbuild.epk
+-rw-r--r-- 1 deadivine deadivine     1388 may 20  2014 outdoorguild1.eix
+-rw-r--r-- 1 deadivine deadivine   317184 may 20  2014 outdoorguild1.epk
+-rw-r--r-- 1 deadivine deadivine     1412 may 20  2014 outdoorguild2.eix
+-rw-r--r-- 1 deadivine deadivine   412160 may 20  2014 outdoorguild2.epk
+-rw-r--r-- 1 deadivine deadivine     1356 may 20  2014 outdoorguild3.eix
+-rw-r--r-- 1 deadivine deadivine   334080 may 20  2014 outdoorguild3.epk
+-rw-r--r-- 1 deadivine deadivine     4692 may 20  2014 outdoormilgyo1.eix
+-rw-r--r-- 1 deadivine deadivine  1072640 may 20  2014 outdoormilgyo1.epk
+-rw-r--r-- 1 deadivine deadivine     9980 may 20  2014 OutdoorSnow1.eix
+-rw-r--r-- 1 deadivine deadivine  2994176 may 20  2014 OutdoorSnow1.epk
+-rw-r--r-- 1 deadivine deadivine     2764 may 20  2014 outdoort1.eix
+-rw-r--r-- 1 deadivine deadivine  1157888 may 20  2014 outdoort1.epk
+-rw-r--r-- 1 deadivine deadivine      628 may 20  2014 outdoort2.eix
+-rw-r--r-- 1 deadivine deadivine   161792 may 20  2014 outdoort2.epk
+-rw-r--r-- 1 deadivine deadivine      548 may 20  2014 outdoort3.eix
+-rw-r--r-- 1 deadivine deadivine    86272 may 20  2014 outdoort3.epk
+-rw-r--r-- 1 deadivine deadivine      564 may 20  2014 outdoort4.eix
+-rw-r--r-- 1 deadivine deadivine    84224 may 20  2014 outdoort4.epk
+-rw-r--r-- 1 deadivine deadivine     4324 may 20  2014 outdoortrent02.eix
+-rw-r--r-- 1 deadivine deadivine   863488 may 20  2014 outdoortrent02.epk
+-rw-r--r-- 1 deadivine deadivine     1596 may 20  2014 outdoortrent.eix
+-rw-r--r-- 1 deadivine deadivine   754176 may 20  2014 outdoortrent.epk
+-rw-r--r-- 1 deadivine deadivine      524 may 20  2014 outdoorwedding.eix
+-rw-r--r-- 1 deadivine deadivine    89344 may 20  2014 outdoorwedding.epk
+-rw-r--r-- 1 deadivine deadivine    16012 dic  4  2012 patch1.eix
+-rw-r--r-- 1 deadivine deadivine 92664320 dic  4  2012 patch1.epk
+-rw-r--r-- 1 deadivine deadivine    35736 jul 31  2014 patch2.eix
+-rw-r--r-- 1 deadivine deadivine 26139762 jul 31  2014 patch2.epk
+-rw-r--r-- 1 deadivine deadivine    55644 may 20  2014 pc2.eix
+-rw-r--r-- 1 deadivine deadivine 62856192 may 20  2014 pc2.epk
+-rw-r--r-- 1 deadivine deadivine    79840 nov  1  2021 PC.eix
+-rw-r--r-- 1 deadivine deadivine 67204864 nov  1  2021 PC.epk
+-rw-r--r-- 1 deadivine deadivine    36816 nov  1  2021 Property.eix
+-rw-r--r-- 1 deadivine deadivine   340992 nov  1  2021 Property.epk
+-rw-r--r-- 1 deadivine deadivine      116 feb 26  2013 Psyco.eix
+-rw-r--r-- 1 deadivine deadivine        0 feb 26  2013 Psyco.epk
+-rw-r--r-- 1 deadivine deadivine     2968 ago  5  2023 root.eix
+-rw-r--r-- 1 deadivine deadivine   520704 ago  5  2023 root.epk
+-rw-r--r-- 1 deadivine deadivine   520704 nov  5 18:00 root.epk.orig
+-rw-r--r-- 1 deadivine deadivine   109008 nov  6  2021 season1.eix
+-rw-r--r-- 1 deadivine deadivine 54050048 nov  6  2021 season1.epk
+-rw-r--r-- 1 deadivine deadivine    78564 may 20  2014 season2.eix
+-rw-r--r-- 1 deadivine deadivine 20960768 may 20  2014 season2.epk
+-rw-r--r-- 1 deadivine deadivine    36188 may 20  2014 season3_eu.eix
+-rw-r--r-- 1 deadivine deadivine 29648896 may 20  2014 season3_eu.epk
+-rw-r--r-- 1 deadivine deadivine    36732 may 20  2014 sound2.eix
+-rw-r--r-- 1 deadivine deadivine 31777280 may 20  2014 sound2.epk
+-rw-r--r-- 1 deadivine deadivine    32100 may 20  2014 Sound.eix
+-rw-r--r-- 1 deadivine deadivine 50380544 may 20  2014 Sound.epk
+-rw-r--r-- 1 deadivine deadivine    36660 may 20  2014 sound_m.eix
+-rw-r--r-- 1 deadivine deadivine   378368 may 20  2014 sound_m.epk
+-rw-r--r-- 1 deadivine deadivine     9004 may 20  2014 Terrain.eix
+-rw-r--r-- 1 deadivine deadivine 10716416 may 20  2014 Terrain.epk
+-rw-r--r-- 1 deadivine deadivine     1340 may 20  2014 textureset.eix
+-rw-r--r-- 1 deadivine deadivine    21248 may 20  2014 textureset.epk
+-rw-r--r-- 1 deadivine deadivine     4588 may 20  2014 Tree.eix
+-rw-r--r-- 1 deadivine deadivine  3719424 may 20  2014 Tree.epk
+-rw-r--r-- 1 deadivine deadivine     1552 jul 19  2021 uiloading.eix
+-rw-r--r-- 1 deadivine deadivine 10192384 jul 19  2021 uiloading.epk
+-rw-r--r-- 1 deadivine deadivine     4136 jul 30  2014 uiscript.eix
+-rw-r--r-- 1 deadivine deadivine    85592 jul 30  2014 uiscript.epk
+-rw-r--r-- 1 deadivine deadivine    96244 may 20  2014 Zone.eix
+-rw-r--r-- 1 deadivine deadivine 93092608 may 20  2014 Zone.epk
+61f06d272ce8077038e3f0c02ce23640718bfa9a392dd22bd0ccfbfd7c43f692  /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.eix
+0c2a037e0b31742a8e9711775e552c4c35dc7065c95e9a188986ae1c8eb6763c  /home/deadivine/metin2lab/tmp4/Client/Client/pack/root.epk
+
+== 2. m2pack info ==
+error: no se pudo descifrar el 챠ndice con ninguna variante TEA:
+  ref: lzo1x_decompress_safe fall처 (c처digo -6)
+  classic: lzo1x_decompress_safe fall처 (c처digo -6)
+
+== 3. m2pack ls (con entradas libres) ==
+error: no se pudo descifrar el 챠ndice con ninguna variante TEA:
+  ref: lzo1x_decompress_safe fall처 (c처digo -6)
+  classic: lzo1x_decompress_safe fall처 (c처digo -6)
+
+== 4. serverinfo.py ==
+error: no existe /home/deadivine/metin2lab/tmp4/Client/Client/pack/serverinfo.py.eix
+
+== 5. m2pack verify ==
+error: no se pudo descifrar el 챠ndice con ninguna variante TEA:
+  ref: lzo1x_decompress_safe fall처 (c처digo -6)
+  classic: lzo1x_decompress_safe fall처 (c처digo -6)
+
+== 6. fuente LZO (por si hay que ajustar) ==
+#include "StdAfx.h"
+#include <stdlib.h>
+#include <lzo/lzoLibLink.h>
+
+#include "lzo.h"
+#include "tea.h"
+#include "debug.h"
+
+#define dbg_printf
+
+static class LZOFreeMemoryMgr
+{
+public:
+	enum
+	{
+		REUSING_CAPACITY = 64*1024,
+	};
+public:
+	~LZOFreeMemoryMgr()
+	{
+		std::vector<BYTE*>::iterator i;
+		for (i = m_freeVector.begin(); i != m_freeVector.end(); ++i)
+			delete *i;
+
+		m_freeVector.clear();
+	}
+	BYTE* Alloc(unsigned capacity)
+	{
+		assert(capacity > 0);
+		if (capacity < REUSING_CAPACITY)
+		{
+			if (!m_freeVector.empty())
+			{
+				BYTE* freeMem = m_freeVector.back();
+				m_freeVector.pop_back();
+
+				dbg_printf("lzo.reuse_alloc\t%p(%d) free\n", freeMem, capacity);
+				return freeMem;
+			}
+			BYTE* newMem = new BYTE[REUSING_CAPACITY];
+			dbg_printf("lzo.reuse_alloc\t%p(%d) real\n", newMem, capacity);
+			return newMem;
+		}
+		BYTE* newMem = new BYTE[capacity];
+		dbg_printf("lzo.real_alloc\t%p(%d)\n", newMem, capacity);
+		return newMem;
+	}
+	void Free(BYTE* ptr, unsigned capacity)
+	{
+		assert(ptr != NULL);
+		assert(capacity > 0);
+		if (capacity < REUSING_CAPACITY)
+		{
+			dbg_printf("lzo.reuse_free\t%p(%d)\n", ptr, capacity);
+			m_freeVector.push_back(ptr);
+			return;
+		}
+
+		dbg_printf("lzo.real_free\t%p(%d)\n", ptr, capacity);
+		delete [] ptr;
+	}
+private:
+	std::vector<BYTE*> m_freeVector;
+} gs_freeMemMgr;
+
+
+
+DWORD CLZObject::ms_dwFourCC = MAKEFOURCC('M', 'C', 'O', 'Z');
+
+CLZObject::CLZObject()
+{
+    Initialize();
+}
+
+void CLZObject::Initialize()
+{
+	m_bInBuffer = false;
+    m_pbBuffer = NULL;
+    m_dwBufferSize = 0;
+
+    m_pHeader = NULL;
+    m_pbIn = NULL;
+    m_bCompressed = false;
+}
+
+void CLZObject::Clear()
+{
+    if (m_pbBuffer && !m_bInBuffer)
+		gs_freeMemMgr.Free(m_pbBuffer, m_dwBufferSize);
+	
+	if (m_dwBufferSize > 0)
+	{
+		dbg_printf("lzo.free %d\n", m_dwBufferSize);
+	}
+
+    Initialize();
+}
+
+CLZObject::~CLZObject()
+{
+    Clear();
+}
+
+DWORD CLZObject::GetSize()
+{
+	assert(m_pHeader);
+
+	if (m_bCompressed)
+	{
+		if (m_pHeader->dwEncryptSize)
+			return sizeof(THeader) + sizeof(DWORD) + m_pHeader->dwEncryptSize;
+		else
+			return sizeof(THeader) + sizeof(DWORD) + m_pHeader->dwCompressedSize;
+	}
+	else
+		return m_pHeader->dwRealSize;
+}
+
+void CLZObject::BeginCompress(const void * pvIn, UINT uiInLen)
+{
+    m_pbIn = (const BYTE *) pvIn;
+	
+    // sizeof(SHeader) +
+    // 암호화를 위한 fourCC 4바이트
+    // 압축된 후 만들어질 수 있는 최대 용량 +
+    // 암호화를 위한 8 바이트
+    m_dwBufferSize = sizeof(THeader) + sizeof(DWORD) + (uiInLen + uiInLen / 64 + 16 + 3) + 8;
+	
+    m_pbBuffer = gs_freeMemMgr.Alloc(m_dwBufferSize);
+    memset(m_pbBuffer, 0, m_dwBufferSize);
+	
+    m_pHeader = (THeader *) m_pbBuffer;
+    m_pHeader->dwFourCC = ms_dwFourCC;
+    m_pHeader->dwEncryptSize = m_pHeader->dwCompressedSize = m_pHeader->dwRealSize = 0;
+    m_pHeader->dwRealSize = uiInLen;
+}
+
+void CLZObject::BeginCompressInBuffer(const void * pvIn, UINT uiInLen, void * /*pvOut*/)
+{
+    m_pbIn = (const BYTE *) pvIn;
+	
+    // sizeof(SHeader) +
+    // 암호화를 위한 fourCC 4바이트
+    // 압축된 후 만들어질 수 있는 최대 용량 +
+    // 암호화를 위한 8 바이트
+    m_dwBufferSize = sizeof(THeader) + sizeof(DWORD) + (uiInLen + uiInLen / 64 + 16 + 3) + 8;
+	
+    m_pbBuffer = gs_freeMemMgr.Alloc(m_dwBufferSize);
+    memset(m_pbBuffer, 0, m_dwBufferSize);
+	
+    m_pHeader = (THeader *) m_pbBuffer;
+    m_pHeader->dwFourCC = ms_dwFourCC;
+    m_pHeader->dwEncryptSize = m_pHeader->dwCompressedSize = m_pHeader->dwRealSize = 0;
+    m_pHeader->dwRealSize = uiInLen;
+	m_bInBuffer = true;
+}
+
+bool CLZObject::Compress()
+{
+    UINT	iOutLen;
+    BYTE *	pbBuffer;
+	
+    pbBuffer = m_pbBuffer + sizeof(THeader);
+    *(DWORD *) pbBuffer = ms_dwFourCC;
+    pbBuffer += sizeof(DWORD);
+
+#if defined( LZO1X_999_MEM_COMPRESS )
+    int r = lzo1x_999_compress((BYTE *) m_pbIn, m_pHeader->dwRealSize, pbBuffer, (lzo_uint*) &iOutLen, CLZO::Instance().GetWorkMemory());
+#else
+    int r = lzo1x_1_compress((BYTE *) m_pbIn, m_pHeader->dwRealSize, pbBuffer, (lzo_uint*) &iOutLen, CLZO::Instance().GetWorkMemory());
+#endif
+	
+    if (LZO_E_OK != r)
+    {
+		TraceError("LZO: lzo1x_999_compress failed");
+		return false;
+    }
+	
+    m_pHeader->dwCompressedSize = iOutLen;
+    m_bCompressed = true;
+    return true;
+}
+
+bool CLZObject::BeginDecompress(const void * pvIn)
+{
+    THeader * pHeader = (THeader *) pvIn;
+
+    if (pHeader->dwFourCC != ms_dwFourCC)
+    {
+		TraceError("LZObject: not a valid data");
+		return false;
+    }
+	
+    m_pHeader	= pHeader;
+    m_pbIn	= (const BYTE *) pvIn + (sizeof(THeader) + sizeof(DWORD));
+
+	/*
+	static unsigned sum = 0;
+	static unsigned count = 0;
+	sum += pHeader->dwRealSize;
+	count++;
+	printf("decompress cur: %d, ave: %d\n", pHeader->dwRealSize, sum/count);
+	*/
+	m_dwBufferSize = pHeader->dwRealSize;
+	m_pbBuffer = gs_freeMemMgr.Alloc(m_dwBufferSize);
+    memset(m_pbBuffer, 0, pHeader->dwRealSize);
+    return true;
+}
+
+class DecryptBuffer
+{
+public:
+	enum
+	{
+		LOCAL_BUF_SIZE = 8 * 1024,
+	};
+public:
+	DecryptBuffer(unsigned size)
+	{
+		static unsigned count = 0;
+		static unsigned sum = 0;
+		static unsigned maxSize = 0;
+
+		sum += size;
+		count++;
+
+		maxSize = max(size, maxSize);
+		if (size >= LOCAL_BUF_SIZE)
+		{
+			m_buf = new char[size];
+			dbg_printf("DecryptBuffer - AllocHeap %d max(%d) ave(%d)\n", size, maxSize/1024, sum/count);
+		}
+		else
+		{
+			dbg_printf("DecryptBuffer - AllocStack %d max(%d) ave(%d)\n", size, maxSize/1024, sum/count);
+			m_buf = m_local_buf;
+		}
+	}
+	~DecryptBuffer()
+	{
+		if (m_local_buf != m_buf)
+		{
+			dbg_printf("DecruptBuffer - FreeHeap\n");
+			delete [] m_buf;
+		}
+		else
+		{
+			dbg_printf("DecruptBuffer - FreeStack\n");
+		}
+	}
+	void* GetBufferPtr()
+	{
+		return m_buf;
+	}
+
+private:
+	char*	m_buf;
+	char	m_local_buf[LOCAL_BUF_SIZE];
+};
+
+bool CLZObject::Decompress(DWORD * pdwKey)
+{
+    UINT uiSize;
+    int r;
+	
+    if (m_pHeader->dwEncryptSize)
+    {
+		DecryptBuffer buf(m_pHeader->dwEncryptSize);
+
+		BYTE* pbDecryptedBuffer = (BYTE*)buf.GetBufferPtr();
+			
+		__Decrypt(pdwKey, pbDecryptedBuffer);
+		
+		if (*(DWORD *) pbDecryptedBuffer != ms_dwFourCC)
+		{
+			TraceError("LZObject: key incorrect");
+			return false;
+		}
+		
+		if (LZO_E_OK != (r = lzo1x_decompress(pbDecryptedBuffer + sizeof(DWORD), m_pHeader->dwCompressedSize, m_pbBuffer, (lzo_uint*) &uiSize, NULL)))
+		{
+			TraceError("LZObject: Decompress failed(decrypt) ret %d\n", r);
+			return false;
+		}
+    }
+    else
+    {
+		uiSize = m_pHeader->dwRealSize;
+		
+		//if (LZO_E_OK != (r = lzo1x_decompress_safe(m_pbIn, m_pHeader->dwCompressedSize, m_pbBuffer, (lzo_uint*) &uiSize, NULL)))
+		if (LZO_E_OK != (r = lzo1x_decompress(m_pbIn, m_pHeader->dwCompressedSize, m_pbBuffer, (lzo_uint*) &uiSize, NULL)))
+		{
+			TraceError("LZObject: Decompress failed : ret %d, CompressedSize %d\n", r, m_pHeader->dwCompressedSize);
+			return false;
+		}
+    }
+	
+    if (uiSize != m_pHeader->dwRealSize)
+    {
+		TraceError("LZObject: Size differs");
+		return false;
+    }
+	
+    return true;
+}
+
+bool CLZObject::Encrypt(DWORD * pdwKey)
+{
+    if (!m_bCompressed)
+    {
+		assert(!"not compressed yet");
+		return false;
+    }
+	
+    BYTE * pbBuffer = m_pbBuffer + sizeof(THeader);
+    m_pHeader->dwEncryptSize = tea_encrypt((DWORD *) pbBuffer, (const DWORD *) pbBuffer, pdwKey, m_pHeader->dwCompressedSize + 19);
+    return true;
+}
+
+bool CLZObject::__Decrypt(DWORD * key, BYTE* data)
+{
+    assert(m_pbBuffer);
+		
+    tea_decrypt((DWORD *) data, (const DWORD *) (m_pbIn - sizeof(DWORD)), key, m_pHeader->dwEncryptSize);
+    return true;
+}
+
+void CLZObject::AllocBuffer(DWORD dwSrcSize)
+{
+    if (m_pbBuffer && !m_bInBuffer)
+		gs_freeMemMgr.Free(m_pbBuffer, m_dwBufferSize);
+    
+    m_pbBuffer = gs_freeMemMgr.Alloc(dwSrcSize);
+	m_dwBufferSize = dwSrcSize;
+}
+/*
+void CLZObject::CopyBuffer(const char* pbSrc, DWORD dwSrcSize)
+{
+	AllocBuffer(dwSrcSize);
+	memcpy(m_pbBuffer, pbSrc, dwSrcSize);
+}
+*/
+
+CLZO::CLZO() : m_pWorkMem(NULL)
+{
+    if (lzo_init() != LZO_E_OK)
+    {
+		TraceError("LZO: cannot initialize");
+		return;
+    }
+
+#if defined( LZO1X_999_MEM_COMPRESS )
+    m_pWorkMem = (BYTE *) malloc(LZO1X_999_MEM_COMPRESS);
+#else
+    m_pWorkMem = (BYTE *) malloc(LZO1X_1_MEM_COMPRESS);
+#endif
+
+    if (NULL == m_pWorkMem)
+    {
+		TraceError("LZO: cannot alloc memory");
+		return;
+    }
+}
+
+CLZO::~CLZO()
+{
+    if (m_pWorkMem)
+    {
+		free(m_pWorkMem);
+		m_pWorkMem = NULL;
+    }
+}
+
+bool CLZO::CompressMemory(CLZObject & rObj, const void * pIn, UINT uiInLen)
+{
+    rObj.BeginCompress(pIn, uiInLen);
+    return rObj.Compress();
+}
+
+bool CLZO::CompressEncryptedMemory(CLZObject & rObj, const void * pIn, UINT uiInLen, DWORD * pdwKey)
+{
+    rObj.BeginCompress(pIn, uiInLen);
+	
+    if (rObj.Compress())
+    {
+		if (rObj.Encrypt(pdwKey))
+			return true;
+		
+		return false;
+    }   
+	
+    return false;
+}   
+
+bool CLZO::Decompress(CLZObject & rObj, const BYTE * pbBuf, DWORD * pdwKey)
+{
+    if (!rObj.BeginDecompress(pbBuf))
+		return false;
+	
+    if (!rObj.Decompress(pdwKey))
+		return false;
+	
+    return true;
+}
+
+
+BYTE * CLZO::GetWorkMemory()
+{   
+    return m_pWorkMem;
+}
+
+
+== 7. fuente TEA (por si hay que ajustar) ==
+/*
+*    Filename: tea.c
+* Description: TEA 암호화 모듈
+*
+*      Author: 김한주 (aka. 비엽, Cronan), 송영진 (aka. myevan, 빗자루)
+*/
+#include "StdAfx.h"
+#include "tea.h"
+#include <memory.h>
+
+/*
+* TEA Encryption Module Instruction
+*					Edited by 김한주 aka. 비엽, Cronan
+*
+* void tea_code(const unsigned long sz, const unsigned long sy, const unsigned long *key, unsigned long *dest)
+* void tea_decode(const unsigned long sz, const unsigned long sy, const unsigned long *key, unsigned long *dest)
+*   8바이트를 암호/복호화 할때 사용된다. key 는 16 바이트여야 한다.
+*   sz, sy 는 8바이트의 역순으로 대입한다. 
+* 
+* int tea_decrypt(unsigned long *dest, const unsigned long *src, const unsigned long *key, int size);
+* int tea_encrypt(unsigned long *dest, const unsigned long *src, const unsigned long *key, int size);
+*   한꺼번에 8 바이트 이상을 암호/복호화 할때 사용한다. 만약 size 가
+*   8의 배수가 아니면 8의 배수로 크기를 "늘려서" 암호화 한다. 
+*
+* ex. tea_code(pdwSrc[1], pdwSrc[0], pdwKey, pdwDest);
+*     tea_decrypt(pdwDest, pdwSrc, pdwKey, nSize);
+*/
+
+#define TEA_ROUND		32		// 32 를 권장하며, 높을 수록 결과가 난해해 진다.
+#define DELTA			0x9E3779B9	// DELTA 값 바꾸지 말것.
+
+void tea_code(const unsigned long sz, const unsigned long sy, const unsigned long *key, unsigned long *dest)
+{
+	unsigned long y = sy, z = sz, sum = 0;
+	unsigned long		n = TEA_ROUND;
+	
+	while (n-- > 0)
+	{
+		y	+= ((z << 4 ^ z >> 5) + z) ^ (sum + key[sum & 3]);
+		sum	+= DELTA;
+		z	+= ((y << 4 ^ y >> 5) + y) ^ (sum + key[sum >> 11 & 3]);
+	}
+	
+	*(dest++)	= y;
+	*dest	= z;
+}
+
+void tea_decode(const unsigned long sz, const unsigned long sy, const unsigned long *key, unsigned long *dest)
+{
+#pragma warning(disable:4307)
+	unsigned long y = sy, z = sz, sum = DELTA * TEA_ROUND;
+#pragma warning(default:4307)
+
+	unsigned long		n = TEA_ROUND;
+	
+	while (n-- > 0)
+	{
+		z -= ((y << 4 ^ y >> 5) + y) ^ (sum + key[sum >> 11 & 3]);
+		sum -= DELTA;
+		y -= ((z << 4 ^ z >> 5) + z) ^ (sum + key[sum & 3]);
+	}
+	
+	*(dest++)	= y;
+	*dest	= z;
+}
+
+int tea_encrypt(unsigned long *dest, const unsigned long *src, const unsigned long * key, int size)
+{
+	int		i;
+	int		resize;
+	
+	if (size % 8 != 0)
+	{
+		resize = size + 8 - (size % 8);
+		memset((char *) src + size, 0, resize - size);
+	}
+	else
+		resize = size;
+	
+	for (i = 0; i < resize >> 3; i++, dest += 2, src += 2)
+		tea_code(*(src + 1), *src, key, dest);
+	
+	return (resize);
+}
+
+int tea_decrypt(unsigned long *dest, const unsigned long *src, const unsigned long * key, int size)
+{
+	int		i;
+	int		resize;
+	
+	if (size % 8 != 0)
+		resize = size + 8 - (size % 8);
+	else
+		resize = size;
+	
+	for (i = 0; i < resize >> 3; i++, dest += 2, src += 2)
+		tea_decode(*(src + 1), *src, key, dest);
+	
+	return (resize);
+}
+
+
+== 8. claves en EterPack.cpp ==
+325:static DWORD s_adwEterPackKey[] =
+326-{
+327-	45129401,
+328-	92367215,
+329-	681285731,
+330-	1710201,
+331-};
+--
+333:static DWORD s_adwEterPackSecurityKey[] =
+334-{
+335-	78952482,
+336-	527348324,
+337-	1632942,
+338-	486274726,
+339-};
+--
+357:	if (!CLZO::Instance().CompressEncryptedMemory(zObj, pbData, file.Size(), s_adwEterPackKey))
+358-	{
+359-		TraceError("EncryptIndex: Cannot encrypt! %s", m_dbName);
+360-		SAFE_DELETE_ARRAY(pbData);
+361-		return false;
+362-	}
+363-
+--
+427:		if (!CLZO::Instance().Decompress(zObj, (const BYTE *) pvData, s_adwEterPackKey))
+428-			return false;
+429-
+430-		if (zObj.GetSize() < eterpack::c_HeaderSize)
+431-			return false;
+432-
+433-		pbData = zObj.GetBuffer();
+--
+570:		if (!CLZO::Instance().Decompress(*zObj, static_cast<const BYTE *>(*data), s_adwEterPackSecurityKey))
+571-		{
+572-			TraceError("Failed to encrypt : %s", filename);
+573-			delete zObj;
+574-			return false;
+575-		}
+576-
+--
+690:		if (!CLZO::Instance().Decompress(*zObj, static_cast<const BYTE *>(*data), s_adwEterPackSecurityKey))
+691-		{
+692-			TraceError("Failed to encrypt : %s", filename);
+693-			delete zObj;
+694-			return false;
+695-		}
+696-
+--
+805:			if (!CLZO::Instance().Decompress(zObj, (const BYTE *) data + index->data_position, s_adwEterPackSecurityKey))
+806-			{
+807-				printf("cannot decompress");
+808-				return false;
+809-			}
+810-
+811-			writeFile.Write(zObj.GetBuffer(), zObj.GetSize());
+--
+980:			if (!CLZO::Instance().CompressEncryptedMemory(zObj, data, len, s_adwEterPackSecurityKey))
+981-			{
+982-				return false;
+983-			}
+984-		}
+985-		else
+986-		{
+
+== 9. versiones ==
+Python 3.14.9
+	libminilzo.so.0 (libc6,x86-64) => /usr/lib/libminilzo.so.0
+	libminilzo.so (libc6,x86-64) => /usr/lib/libminilzo.so
+	liblzo2.so.2 (libc6,x86-64) => /usr/lib/liblzo2.so.2
+	liblzo2.so (libc6,x86-64) => /usr/lib/liblzo2.so

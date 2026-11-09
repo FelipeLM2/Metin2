@@ -1,0 +1,45 @@
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on em0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+2026-11-09 23:17:24.862524 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [S], seq 3152933833, win 64240, options [mss 1460,sackOK,TS val 434145741 ecr 0,nop,wscale 10], length 0
+2026-11-09 23:17:24.878442 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [S.], seq 4025397008, ack 3152933834, win 65535, options [mss 1460,nop,wscale 6,sackOK,TS val 3276224637 ecr 434145741], length 0
+2026-11-09 23:17:24.882070 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [.], ack 1, win 63, options [nop,nop,TS val 434145759 ecr 3276224637], length 0
+2026-11-09 23:17:24.937110 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [P.], seq 1:16, ack 1, win 1027, options [nop,nop,TS val 3276224698 ecr 434145759], length 15
+2026-11-09 23:17:24.937578 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [.], ack 16, win 63, options [nop,nop,TS val 434145818 ecr 3276224698], length 0
+2026-11-09 23:17:24.970314 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [P.], seq 1:14, ack 16, win 63, options [nop,nop,TS val 434145851 ecr 3276224698], length 13
+2026-11-09 23:17:25.006908 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [.], ack 14, win 1027, options [nop,nop,TS val 3276224768 ecr 434145851], length 0
+2026-11-09 23:17:25.017395 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [P.], seq 16:29, ack 14, win 1027, options [nop,nop,TS val 3276224778 ecr 434145851], length 13
+2026-11-09 23:17:25.035618 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [P.], seq 14:27, ack 29, win 63, options [nop,nop,TS val 434145916 ecr 3276224778], length 13
+2026-11-09 23:17:25.074331 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [.], ack 27, win 1027, options [nop,nop,TS val 3276224835 ecr 434145916], length 0
+2026-11-09 23:17:25.139369 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [P.], seq 29:290, ack 27, win 1027, options [nop,nop,TS val 3276224895 ecr 434145916], length 261
+2026-11-09 23:17:25.180155 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [.], ack 290, win 63, options [nop,nop,TS val 434146061 ecr 3276224895], length 0
+2026-11-09 23:17:25.201674 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [P.], seq 27:288, ack 290, win 63, options [nop,nop,TS val 434146082 ecr 3276224895], length 261
+2026-11-09 23:17:25.221983 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [P.], seq 290:294, ack 288, win 1027, options [nop,nop,TS val 3276224981 ecr 434146082], length 4
+2026-11-09 23:17:25.223321 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [.], ack 294, win 63, options [nop,nop,TS val 434146103 ecr 3276224981], length 0
+2026-11-09 23:17:25.261626 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [P.], seq 294:296, ack 288, win 1027, options [nop,nop,TS val 3276225022 ecr 434146103], length 2
+2026-11-09 23:17:25.261935 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [.], ack 296, win 63, options [nop,nop,TS val 434146142 ecr 3276225022], length 0
+2026-11-09 23:17:25.284005 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [P.], seq 288:354, ack 296, win 63, options [nop,nop,TS val 434146164 ecr 3276225022], length 66
+2026-11-09 23:17:25.315538 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [.], ack 354, win 1027, options [nop,nop,TS val 3276225076 ecr 434146164], length 0
+2026-11-09 23:17:25.581801 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [P.], seq 296:302, ack 354, win 1027, options [nop,nop,TS val 3276225342 ecr 434146164], length 6
+2026-11-09 23:17:25.598343 IP 10.10.10.20.55188 > 10.10.10.10.13000: Flags [S], seq 2662524775, win 64240, options [mss 1460,sackOK,TS val 1445512476 ecr 0,nop,wscale 10], length 0
+2026-11-09 23:17:25.598404 IP 10.10.10.10.13000 > 10.10.10.20.55188: Flags [S.], seq 2760229723, ack 2662524776, win 65535, options [mss 1460,nop,wscale 6,sackOK,TS val 3725507633 ecr 1445512476], length 0
+2026-11-09 23:17:25.598495 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [F.], seq 354, ack 302, win 63, options [nop,nop,TS val 434146479 ecr 3276225342], length 0
+2026-11-09 23:17:25.598532 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [.], ack 355, win 1027, options [nop,nop,TS val 3276225356 ecr 434146479], length 0
+2026-11-09 23:17:25.598946 IP 10.10.10.20.55188 > 10.10.10.10.13000: Flags [.], ack 1, win 63, options [nop,nop,TS val 1445512476 ecr 3725507633], length 0
+2026-11-09 23:17:25.661934 IP 10.10.10.10.11000 > 10.10.10.20.49546: Flags [F.], seq 302, ack 355, win 1027, options [nop,nop,TS val 3276225423 ecr 434146479], length 0
+2026-11-09 23:17:25.662457 IP 10.10.10.20.49546 > 10.10.10.10.11000: Flags [.], ack 303, win 63, options [nop,nop,TS val 434146543 ecr 3276225423], length 0
+2026-11-09 23:17:25.670820 IP 10.10.10.10.13000 > 10.10.10.20.55188: Flags [P.], seq 1:16, ack 1, win 1027, options [nop,nop,TS val 3725507708 ecr 1445512476], length 15
+2026-11-09 23:17:25.672296 IP 10.10.10.20.55188 > 10.10.10.10.13000: Flags [.], ack 16, win 63, options [nop,nop,TS val 1445512549 ecr 3725507708], length 0
+2026-11-09 23:17:25.713638 IP 10.10.10.20.55188 > 10.10.10.10.13000: Flags [P.], seq 1:14, ack 16, win 63, options [nop,nop,TS val 1445512591 ecr 3725507708], length 13
+2026-11-09 23:17:25.746868 IP 10.10.10.10.13000 > 10.10.10.20.55188: Flags [.], ack 14, win 1027, options [nop,nop,TS val 3725507785 ecr 1445512591], length 0
+2026-11-09 23:17:25.790207 IP 10.10.10.10.13000 > 10.10.10.20.55188: Flags [P.], seq 16:29, ack 14, win 1027, options [nop,nop,TS val 3725507828 ecr 1445512591], length 13
+2026-11-09 23:17:25.790738 IP 10.10.10.20.55188 > 10.10.10.10.13000: Flags [.], ack 29, win 63, options [nop,nop,TS val 1445512668 ecr 3725507828], length 0
+2026-11-09 23:17:25.812009 IP 10.10.10.20.55188 > 10.10.10.10.13000: Flags [P.], seq 14:27, ack 29, win 63, options [nop,nop,TS val 1445512689 ecr 3725507828], length 13
+2026-11-09 23:17:25.846881 IP 10.10.10.10.13000 > 10.10.10.20.55188: Flags [.], ack 27, win 1027, options [nop,nop,TS val 3725507885 ecr 1445512689], length 0
+2026-11-09 23:17:25.870188 IP 10.10.10.10.13000 > 10.10.10.20.55188: Flags [P.], seq 29:42, ack 27, win 1027, options [nop,nop,TS val 3725507908 ecr 1445512689], length 13
+2026-11-09 23:17:25.894060 IP 10.10.10.20.55188 > 10.10.10.10.13000: Flags [P.], seq 27:40, ack 42, win 63, options [nop,nop,TS val 1445512771 ecr 3725507908], length 13
+2026-11-09 23:17:25.924390 IP 10.10.10.10.13000 > 10.10.10.20.55188: Flags [.], ack 40, win 1027, options [nop,nop,TS val 3725507962 ecr 1445512771], length 0
+2026-11-09 23:17:25.990789 IP 10.10.10.10.13000 > 10.10.10.20.55188: Flags [P.], seq 42:303, ack 40, win 1027, options [nop,nop,TS val 3725508022 ecr 1445512771], length 261
+2026-11-09 23:17:26.017909 IP 10.10.10.20.55188 > 10.10.10.10.13000: Flags [P.], seq 40:301, ack 303, win 63, options [nop,nop,TS val 1445512895 ecr 3725508022], length 261
+40 packets captured
+76 packets received by filter
+0 packets dropped by kernel

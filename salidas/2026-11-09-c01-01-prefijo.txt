@@ -1,0 +1,88 @@
+== comprobaciones ==
+root.eix=17292  root.epk=520704
+== creando prefijo win32 (puede tardar) ==
+wine: created the configuration directory '/home/deadivine/metin2lab/wine/prefix'
+002c:fixme:actctx:parse_depend_manifests Could not find dependent assembly L"Microsoft.Windows.Common-Controls" (6.0.0.0)
+004c:fixme:actctx:parse_depend_manifests Could not find dependent assembly L"Microsoft.Windows.Common-Controls" (6.0.0.0)
+0054:fixme:actctx:parse_depend_manifests Could not find dependent assembly L"Microsoft.Windows.Common-Controls" (6.0.0.0)
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+pci id for fd 34: 10de:1f82, driver (null)
+pci id for fd 35: 10de:1f82, driver (null)
+MESA-EGL: warning: egl: failed to create dri2 screen
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+pci id for fd 34: 10de:1f82, driver (null)
+pci id for fd 34: 10de:1f82, driver (null)
+pci id for fd 35: 10de:1f82, driver (null)
+MESA-EGL: warning: egl: failed to create dri2 screen
+pci id for fd 35: 10de:1f82, driver (null)
+MESA-EGL: warning: egl: failed to create dri2 screen
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+pci id for fd 34: 10de:1f82, driver (null)
+pci id for fd 35: 10de:1f82, driver (null)
+MESA-EGL: warning: egl: failed to create dri2 screen
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+004c:err:ole:StdMarshalImpl_MarshalInterface Failed to create ifstub, hr 0x80004002
+004c:err:ole:CoMarshalInterface Failed to marshal the interface {6d5140c1-7436-11ce-8034-00aa006009fa}, hr 0x80004002
+004c:err:ole:apartment_get_local_server_stream Failed: 0x80004002
+0054:err:ole:StdMarshalImpl_MarshalInterface Failed to create ifstub, hr 0x80004002
+0054:err:ole:CoMarshalInterface Failed to marshal the interface {6d5140c1-7436-11ce-8034-00aa006009fa}, hr 0x80004002
+0054:err:ole:apartment_get_local_server_stream Failed: 0x80004002
+0054:err:ole:start_rpcss Failed to open RpcSs service
+00d8:fixme:msg:pack_message msg 14 (WM_ERASEBKGND) not supported yet
+002c:err:setupapi:do_file_copyW Unsupported style(s) 0x10
+002c:err:setupapi:do_file_copyW Unsupported style(s) 0x10
+00fc:err:setupapi:do_file_copyW Unsupported style(s) 0x10
+00fc:err:setupapi:do_file_copyW Unsupported style(s) 0x10
+002c:err:setupapi:do_file_copyW Unsupported style(s) 0x10
+== quitando unidades ajenas a C: (incluida Z: -> /) ==
+  quito z: -> /
+unidades ahora:
+total 132
+drwxr-xr-x 1 deadivine deadivine 306 nov  9 16:30 .
+drwxr-xr-x 1 deadivine deadivine 126 nov  9 16:30 ..
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 c: -> ../drive_c
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 com1 -> /dev/ttyS0
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 com10 -> /dev/ttyS9
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com11 -> /dev/ttyS10
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com12 -> /dev/ttyS11
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com13 -> /dev/ttyS12
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com14 -> /dev/ttyS13
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com15 -> /dev/ttyS14
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com16 -> /dev/ttyS15
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com17 -> /dev/ttyS16
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com18 -> /dev/ttyS17
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com19 -> /dev/ttyS18
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 com2 -> /dev/ttyS1
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com20 -> /dev/ttyS19
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com21 -> /dev/ttyS20
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com22 -> /dev/ttyS21
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com23 -> /dev/ttyS22
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com24 -> /dev/ttyS23
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com25 -> /dev/ttyS24
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com26 -> /dev/ttyS25
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com27 -> /dev/ttyS26
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com28 -> /dev/ttyS27
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com29 -> /dev/ttyS28
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 com3 -> /dev/ttyS2
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com30 -> /dev/ttyS29
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com31 -> /dev/ttyS30
+lrwxrwxrwx 1 deadivine deadivine  11 nov  9 16:30 com32 -> /dev/ttyS31
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 com4 -> /dev/ttyS3
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 com5 -> /dev/ttyS4
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 com6 -> /dev/ttyS5
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 com7 -> /dev/ttyS6
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 com8 -> /dev/ttyS7
+lrwxrwxrwx 1 deadivine deadivine  10 nov  9 16:30 com9 -> /dev/ttyS8
+== copiando cliente a /home/deadivine/metin2lab/wine/prefix/drive_c/Games/Metin2 ==
+== instalando pack parcheado ==
+17292 /home/deadivine/metin2lab/wine/prefix/drive_c/Games/Metin2/pack/root.eix
+520704 /home/deadivine/metin2lab/wine/prefix/drive_c/Games/Metin2/pack/root.epk
+a3d02f6caf8c0073f3448124f8645ca0c43d853826fb7e5cc84f4d07164d58e3  /home/deadivine/metin2lab/wine/prefix/drive_c/Games/Metin2/pack/root.eix
+0396d0be9f2f702b7f0198542dfb1cbcaebaf93acb62728c7df77a7ca18e1053  /home/deadivine/metin2lab/wine/prefix/drive_c/Games/Metin2/pack/root.epk
+== ejecutables en la raiz del cliente ==
+  config.exe (258048 bytes)
+  Metin2Distribute.exe (2844160 bytes)
+
+OK. Siguiente: bash tools/c01/15-dxvk.sh

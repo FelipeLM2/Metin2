@@ -1,0 +1,28 @@
+== buscando la ultima version de DXVK en GitHub ==
+URL: https://github.com/doitsujin/dxvk/releases/download/v3.1.1/dxvk-3.1.1.tar.gz
+== descargando ==
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0  0      0   0      0   0      0      0      0                              0  0      0   0      0   0      0      0      0                              0
+  0      0   0      0   0      0      0      0                              0100 17.20M 100 17.20M   0      0 20.05M      0                              0100 17.20M 100 17.20M   0      0 20.05M      0                              0100 17.20M 100 17.20M   0      0 20.05M      0                              0
+DXVK: /home/deadivine/metin2lab/wine/dxvk/dxvk-3.1.1
+== copiando DLLs de 32 bits al prefijo ==
+== fijando overrides (native,builtin) ==
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+pci id for fd 34: 10de:1f82, driver (null)
+pci id for fd 35: 10de:1f82, driver (null)
+MESA-EGL: warning: egl: failed to create dri2 screen
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+pci id for fd 34: 10de:1f82, driver (null)
+pci id for fd 35: 10de:1f82, driver (null)
+MESA-EGL: warning: egl: failed to create dri2 screen
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+reg: La operaci¢n finaliz¢ con ‚xito
+reg: La operaci¢n finaliz¢ con ‚xito
+== comprobacion ==
+-rw-r--r-- 1 deadivine deadivine 7856142 nov  9 16:38 /home/deadivine/metin2lab/wine/prefix/drive_c/windows/system32/d3d9.dll
+-rw-r--r-- 1 deadivine deadivine 5877774 nov  9 16:38 /home/deadivine/metin2lab/wine/prefix/drive_c/windows/system32/dxgi.dll
+265888c31ca78dffa290c39cb7e50bfb02762590e41927906e46fb32f01497fa  /home/deadivine/metin2lab/wine/prefix/drive_c/windows/system32/d3d9.dll
+abd1449dc28d536a4289c256ae7f4b6bbd15fa552792b7170c2ddece473c8bda  /home/deadivine/metin2lab/wine/prefix/drive_c/windows/system32/dxgi.dll
+
+OK. Siguiente: bash tools/c01/20-netns-up.sh

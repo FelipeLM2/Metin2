@@ -1,0 +1,15 @@
+== rutas (no debe haber 'default') ==
+10.10.10.10 dev veth-m2 scope link 
+
+== direcciones ==
+lo               UNKNOWN        127.0.0.1/8 
+veth-m2@if10     UP             10.10.10.20/32 
+
+== conexiones del cliente (solo deberia aparecer 10.10.10.10) ==
+State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+
+== intento a Internet (debe fallar) ==
+OK: sin salida a Internet
+
+== DNS (debe fallar) ==
+PELIGRO: resuelve nombres

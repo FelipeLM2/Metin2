@@ -1,0 +1,161 @@
+
+== sistema ==
+Linux 7.3.1-1-cachyos x86_64
+NAME="CachyOS Linux"
+usuario: deadivine (uid 1000)
+
+== sesion grafica ==
+XDG_SESSION_TYPE=wayland
+DISPLAY=:0
+WAYLAND_DISPLAY=wayland-1
+XAUTHORITY=/run/user/1000/xauth_EzhZAi
+XDG_RUNTIME_DIR=/run/user/1000
+
+== GPU ==
+01:00.0 VGA compatible controller [0300]: NVIDIA Corporation TU117 [GeForce GTX 1650] [10de:1f82] (rev a1)
+NVIDIA GeForce GTX 1650, 615.78.08, 4096 MiB
+
+== vulkan 64 bits ==
+==========
+VULKANINFO
+==========
+
+Vulkan Instance Version: 1.4.363
+
+
+Instance Extensions: count = 25
+-------------------------------
+VK_EXT_acquire_drm_display             : extension revision 1
+VK_EXT_acquire_xlib_display            : extension revision 1
+VK_EXT_debug_report                    : extension revision 10
+VK_EXT_debug_utils                     : extension revision 2
+VK_EXT_direct_mode_display             : extension revision 1
+VK_EXT_display_surface_counter         : extension revision 1
+VK_EXT_surface_maintenance1            : extension revision 1
+VK_EXT_swapchain_colorspace            : extension revision 5
+VK_KHR_device_group_creation           : extension revision 1
+VK_KHR_display                         : extension revision 23
+VK_KHR_external_fence_capabilities     : extension revision 1
+VK_KHR_external_memory_capabilities    : extension revision 1
+VK_KHR_external_semaphore_capabilities : extension revision 1
+VK_KHR_get_display_properties2         : extension revision 1
+VK_KHR_get_physical_device_properties2 : extension revision 2
+VK_KHR_get_surface_capabilities2       : extension revision 1
+VK_KHR_portability_enumeration         : extension revision 1
+VK_KHR_surface                         : extension revision 25
+VK_KHR_surface_maintenance1            : extension revision 1
+VK_KHR_surface_protected_capabilities  : extension revision 1
+VK_KHR_wayland_surface                 : extension revision 6
+VK_KHR_xcb_surface                     : extension revision 6
+VK_KHR_xlib_surface                    : extension revision 6
+VK_LUNARG_direct_driver_loading        : extension revision 1
+VK_NV_display_stereo                   : extension revision 1
+
+Instance Layers: count = 9
+--------------------------
+VK_LAYER_FROG_gamescope_wsi_x86_64 Gamescope WSI (XWayland Bypass) Layer (x86_64) 1.3.221  version 1
+VK_LAYER_MANGOHUD_overlay_x86      Vulkan Hud Overlay                             1.3.0    version 1
+VK_LAYER_MANGOHUD_overlay_x86_64   Vulkan Hud Overlay                             1.3.0    version 1
+VK_LAYER_NV_optimus                NVIDIA Optimus layer                           1.4.351  version 1
+VK_LAYER_NV_present                NVIDIA Presentation Layer                      1.4.351  version 1
+VK_LAYER_VALVE_steam_fossilize_32  Steam Pipeline Caching Layer                   1.3.207  version 1
+VK_LAYER_VALVE_steam_fossilize_64  Steam Pipeline Caching Layer                   1.3.207  version 1
+VK_LAYER_VALVE_steam_overlay_32    Steam Overlay Layer                            1.3.207  version 1
+VK_LAYER_VALVE_steam_overlay_64    Steam Overlay Layer                            1.3.207  version 1
+
+Devices:
+========
+GPU0:
+	apiVersion         = 1.4.351
+	driverVersion      = 615.78.8.0
+	vendorID           = 0x10de
+	deviceID           = 0x1f82
+	deviceType         = PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
+	deviceName         = NVIDIA GeForce GTX 1650
+	driverID           = DRIVER_ID_NVIDIA_PROPRIETARY
+	driverName         = NVIDIA
+	driverInfo         = 615.78.08
+	conformanceVersion = 1.4.3.3
+	deviceUUID         = 515ad0ca-3aea-8ee1-e931-c0245a5df10b
+	driverUUID         = ad632510-8a66-58c8-aa0c-9ffd3f6f97fe
+
+== vulkan 32 bits (lo necesita DXVK para un .exe de 32 bits) ==
+lrwxrwxrwx 1 root root     14 sep 29 11:39 /usr/lib32/libvulkan.so -> libvulkan.so.1
+lrwxrwxrwx 1 root root     20 sep 29 11:39 /usr/lib32/libvulkan.so.1 -> libvulkan.so.1.4.363
+-rwxr-xr-x 1 root root 669064 sep 29 11:39 /usr/lib32/libvulkan.so.1.4.363
+lrwxrwxrwx 1 root root       18 oct  8 10:03 /usr/lib32/libGLX_nvidia.so -> libGLX_nvidia.so.0
+lrwxrwxrwx 1 root root       26 oct  8 10:03 /usr/lib32/libGLX_nvidia.so.0 -> libGLX_nvidia.so.615.78.08
+-rwxr-xr-x 1 root root  1246980 oct  8 10:03 /usr/lib32/libGLX_nvidia.so.615.78.08
+lrwxrwxrwx 1 root root       29 oct  8 10:03 /usr/lib32/libnvidia-glcore.so -> libnvidia-glcore.so.615.78.08
+-rwxr-xr-x 1 root root 31971812 oct  8 10:03 /usr/lib32/libnvidia-glcore.so.615.78.08
+
+== wine ==
+wine-11.21
+winetricks: 20260125 - sha256sum: 431f82fc74000e6c864409f1d8fb495d696c03928808e3e8acffc45179312a7b
+
+== espacio en disco ==
+S.ficheros     Tamaño Usados  Disp Uso% Montado en
+/dev/sda2        462G   377G   83G  83% /home
+
+== cliente TMP4 (origen) ==
+origen: /home/deadivine/metin2lab/tmp4/Client/Client
+d        758 BGM
+f          5 channel.inf
+f     258048 config.exe
+f     269312 devil.dll
+d        658 Eternexus
+f     672256 granny2.dll
+d        834 lib
+f         15 locale.cfg
+f         15 locale_cz.cfg
+f         15 locale_de.cfg
+f         15 locale_dk.cfg
+f         15 locale_es.cfg
+f         15 locale_fr.cfg
+f         11 locale_gr.cfg
+f         15 locale_hu.cfg
+f         15 locale_it.cfg
+f         15 locale_nl.cfg
+f         15 locale_pl.cfg
+f         15 locale_pt.cfg
+f         15 locale_ro.cfg
+f         15 locale_ru.cfg
+f         15 locale_tr.cfg
+d         16 mark
+f        343 metin2.cfg
+f    2844160 Metin2Distribute.exe
+d        206 miles
+f          3 mouse.cfg
+f     349696 MSS32.DLL
+d       7426 pack
+f        536 puertos.bat
+f     845868 python27.dll
+d          0 screenshot
+f    1806336 SpeedTreeRT.dll
+f          0 syserr.txt
+d       1184 upload
+
+ejecutables .exe en la raiz:
+  config.exe (258048 bytes)
+  Metin2Distribute.exe (2844160 bytes)
+
+d3d9.dll / dxgi.dll locales (si hay, hay que revisarlos):
+(vacio = bien, usaremos el DXVK del prefijo)
+
+== posible anti-cheat ==
+(vacio = no se ve anti-cheat por nombre)
+
+== pack parcheado (debe ser 17292 / 520704) ==
+17292 /home/deadivine/metin2lab/work/b04/root.eix
+520704 /home/deadivine/metin2lab/work/b04/root.epk
+a3d02f6caf8c0073f3448124f8645ca0c43d853826fb7e5cc84f4d07164d58e3  /home/deadivine/metin2lab/work/b04/root.eix
+0396d0be9f2f702b7f0198542dfb1cbcaebaf93acb62728c7df77a7ca18e1053  /home/deadivine/metin2lab/work/b04/root.epk
+
+== puente del laboratorio ==
+virbr-lab        UP             10.10.10.1/24 
+
+== servidor FreeBSD ==
+root@10.10.10.10: Permission denied (publickey,keyboard-interactive).
+no se pudo entrar por SSH (¿VM encendida?)
+
+== fin ==

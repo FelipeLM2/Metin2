@@ -54,7 +54,7 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   89 archivos.
 - Pendiente: reconocimiento de la fuente en CachyOS.
 
-## 2026-11-08 — B04: pack parcheado y cliente sin portproxy
+## 2026-11-08 — Fase B: pack propio y cliente sin portproxy
 
 - `m2pack` ya lee y **escribe** el pack real: el `set` comprime con LZO (tipo 1,
   como el original) y reescribe el índice en claro.
@@ -82,3 +82,12 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   montada), y el login de entonces fue por el `portproxy`. **Lección**: las
   copias al cliente se hacen con Explorer y se comprueban a ojo (17.292 B);
   los scripts mudos esconden el fallo.
+- **B07 cierra la Fase B.** Copia manual por Explorer (17.292 B), `portproxy`
+  vacío y login correcto. La captura en `em0` muestra la sesión establecida
+  `10.10.10.20 ↔ 10.10.10.10:13002` durante 14 s (80 paquetes, 0 perdidos).
+- **La lista de servidores fue la prueba inesperada**: antes entraba solo
+  *Test* (`SERVER_IP_TEST = 127.0.0.1` + `portproxy`) y la primera entrada
+  (`192.168.0.122`) no; ahora entra la primera (`10.10.10.10`) y *Test* no. Los
+  papeles se invirtieron exactamente como debían.
+- La entrada *Test* se queda como está: es el recordatorio de que el segundo
+  servidor apunta a loopback. Documentado en `docs/02-entorno.md`.

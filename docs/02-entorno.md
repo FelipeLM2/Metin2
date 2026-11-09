@@ -77,14 +77,29 @@ xorriso -as mkisofs -J -R -V M2PACK -o packfix.iso Client/Client/pack/root.eix C
 Regla: **snapshot antes de cada cambio estructural**, no después de que algo
 falle.
 
-## El parche temporal del cliente
+## Las dos entradas de servidor del cliente
 
-El pack del cliente apunta a `127.0.0.1`. Mientras no reescribamos el pack
-(Fase B), en Windows se usa un redirector de puertos:
+`serverinfo.py` trae **dos** regiones y dos nombres. En el cliente se ven como
+dos servidores en la lista:
+
+| Entrada | IP usada | Puerto | Resultado |
+|---|---|---|---|
+| `Metin2` (la primera) | `SERVER_IP` | `PORT_AUTH` / `PORT_1` | el servidor real |
+| `Test` (la segunda) | `SERVER_IP_TEST` | `PORT_AUTH` / `PORT_1` | apunta a loopback |
+
+Hasta B07 eso explicaba el apaño: la primera entrada llevaba
+`192.168.0.122` (inalcanzable desde `10.10.10.20`) y la segunda
+`127.0.0.1`, así que solo se entraba por **Test** con el redirector:
 
 ```powershell
 netsh interface portproxy add v4tov4 listenaddress=127.0.0.1 listenport=11000 connectaddress=10.10.10.10 connectport=11000
 ```
 
-Es un apaño: se elimina con `netsh interface portproxy reset` cuando el pack
-lleve la IP real. Sirve además como prueba de que el cliente usa loopback.
+Desde B07 el pack lleva `SERVER_IP = "10.10.10.10"` y el redirector ya no
+existe. Por eso ahora **entra la primera** y **Test falla**: su
+`SERVER_IP_TEST` sigue en `127.0.0.1`, y sin `portproxy` no hay nada
+escuchando ahí. Es el comportamiento esperado, no un fallo.
+
+Si algún día molesta ver una entrada que no funciona, se puede borrar la región
+2 de `serverinfo.py` y volver a empaquetar con `m2pack`; no aporta nada al
+laboratorio.

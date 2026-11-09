@@ -114,6 +114,10 @@ El cliente acepta **las dos**: si el primer DWORD es `EPKD`, lo lee directo; si
 es `MCOZ`, lo descomprime y descifra. Esto es lo que permite que `m2pack`
 escriba el índice en claro sin tocar el cifrado.
 
+Comprobado en B04/B07 (2026-11-08): un `set` que reescribe el `.eix` en claro
+(2968 → 17 292 B) lo acepta el cliente de TMP4 sin problema y el juego entra
+normal. No hace falta reproducir TEA para escribir.
+
 ### La entrada: 192 bytes
 
 `SEterPackIndex` con `#pragma pack(4)`:

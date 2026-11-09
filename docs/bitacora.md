@@ -91,3 +91,32 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   papeles se invirtieron exactamente como debían.
 - La entrada *Test* se queda como está: es el recordatorio de que el segundo
   servidor apunta a loopback. Documentado en `docs/02-entorno.md`.
+
+## 2026-11-09 — C01: cliente Wine + DXVK enjaulado
+
+- **Problema**: el lag del cliente no viene del servidor ni del pack, sino de
+  que la VM Windows no tiene GPU y el cliente dibuja con **WARP** (DirectX por
+  software). Cualquier cosa con aceleración real lo arregla.
+- **Decisión**: probar el cliente **nativo en CachyOS** con Wine + DXVK (la
+  GTX 1650 sí soporta Vulkan; el HD 4000 del portátil no). Sin comprar nada.
+- **Aislamiento elegido**: mismo usuario Linux + `ip netns` (no `firejail`,
+  que es SUID root y acumula CVEs de escalada). `ip netns` es kernel +
+  `iproute2`, no un binario privilegiado de terceros.
+- **Diseño de red**: `veth` colgada de `virbr-lab`, `10.10.10.20/32` y una
+  única ruta a `10.10.10.10/32`. Sin `default`, sin DNS (`resolv.conf` vacío)
+  e IPv6 desactivado. No es un firewall: dentro de la jaula **no existe** la
+  interfaz hacia Internet.
+- **Archivos**: se quita la unidad `Z:` (Wine mapea `/` por defecto) y el
+  cliente se copia dentro del prefijo, en `C:\Games\Metin2`. No hay carpeta
+  compartida, ni CD-ROM, ni portapapeles: el cliente vive en la misma máquina
+  que el host, así que se copia con `cp`.
+- **Internet**: solo durante la preparación (descargar DXVK). El juego se
+  ejecuta siempre dentro de la jaula, sin salida. Aprobado explícitamente.
+- **VM Windows**: se apaga durante la prueba (libera `10.10.10.20` y RAM); no
+  se borra, queda de respaldo. El cliente original de la VM no se toca.
+- **Riesgo residual aceptado**: al correr con el mismo usuario, un exploit
+  nativo podría leer archivos con rutas de Linux, y X11 permite inyectar teclas
+  o leer el portapapeles. Si C01 funciona, C01-bis añade un usuario `metin2`
+  con su propio `/home`. La red sí queda cerrada desde el primer intento.
+- Se documenta en `docs/05-seguridad.md` y se escriben los scripts en
+  `tools/c01/`.

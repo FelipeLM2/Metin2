@@ -6,7 +6,7 @@
 |---|---|
 | CPU | i5-7400 (4 núcleos) |
 | RAM | 12 GB |
-| GPU | GTX 1650 (no se usa para las VMs del lab) |
+| GPU | GTX 1650 (no se usa para las VMs del lab; sí para el cliente Wine de C01) |
 | Red física | un solo puerto Ethernet, ocupado por Internet |
 
 ## VMs
@@ -56,6 +56,10 @@ Como no hay carpetas compartidas, todo viaja por ISO:
 El ISO mini es la clave para iterar: montar, copiar dos archivos, expulsar,
 probar. 20 segundos por ciclo en lugar de reconstruir 1,3 GB.
 
+> C01 no usa ISO: el cliente Wine vive en la misma máquina que el host, así
+> que se copia con `cp` desde `~/metin2lab/tmp4/Client/Client`. La ISO solo
+> hace falta para mover archivos **entre VMs**.
+
 ```sh
 # ISO del cliente completo
 xorriso -as mkisofs -J -R -V M2CLIENT -o m2client.iso Client/Client
@@ -103,3 +107,22 @@ escuchando ahí. Es el comportamiento esperado, no un fallo.
 Si algún día molesta ver una entrada que no funciona, se puede borrar la región
 2 de `serverinfo.py` y volver a empaquetar con `m2pack`; no aporta nada al
 laboratorio.
+
+## Cliente Wine (C01, en pruebas)
+
+Para quitar el lag de la VM (WARP), C01 ejecuta el mismo cliente en CachyOS
+con Wine + DXVK y lo encierra en un *network namespace*:
+
+```
+virbr-lab 10.10.10.1/24
+  ├── FreeBSD  10.10.10.10        (servidor)
+  └── netns "metin2lab"           (cliente Wine)
+        veth-m2  10.10.10.20/32
+        ruta única: 10.10.10.10/32
+        sin gateway, sin DNS, sin IPv6
+```
+
+- El prefijo Wine vive en `~/metin2lab/wine/prefix`, sin la unidad `Z:`.
+- El cliente se copia a `C:\Games\Metin2` con el pack parcheado de B04.
+- La VM Windows se apaga durante la prueba (misma IP `.20`), pero no se borra.
+- Detalle operativo: `tools/c01/` y `pasos/2026-11-09-c01-wine-torre.md`.

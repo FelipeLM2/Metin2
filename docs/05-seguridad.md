@@ -75,3 +75,27 @@ El cliente Windows no se ha recompilado. Su aislamiento (red sin salida, sin
 datos) es lo que lo hace seguro de usar, no un análisis del binario. La vía
 para subir de nivel es compilar `ClientVS22` y comparar comportamiento, y eso
 es Fase D.
+
+## C01: el cliente nativo enjaulado
+
+Para quitar el lag de la VM (render por software, WARP) sin renunciar a la
+contención, C01 mueve el cliente a CachyOS con Wine + DXVK y lo mete en un
+*network namespace*. La jaula es del propio kernel (`ip netns`), no un binario
+SUID de terceros.
+
+| Aspecto | Antes (VM Windows) | C01 (Wine en el host) |
+|---|---|---|
+| Red | bridge `virbr-lab` sin forwarding | netns + `veth`: solo `10.10.10.20/32` y ruta a `10.10.10.10/32`, sin gateway ni DNS |
+| Disco | disco virtual aislado | prefijo Wine aparte, sin la unidad `Z:` (Wine no ve `/`) |
+| Ejecución | usuario de Windows | usuario Linux normal, **nunca root** |
+| GPU | WARP (software) | GTX 1650 vía Vulkan/DXVK |
+
+Lo que la jaula **sí** garantiza: aunque el `.exe` sea un troyano, no tiene
+interfaz ni ruta hacia Internet; solo puede hablar con `10.10.10.10`, que a su
+vez está en una red sin salida. Lo que **no** garantiza: aislamiento total del
+sistema de archivos (el proceso es del mismo usuario) ni de X11 (puede inyectar
+teclado o leer el portapapeles). Por eso, si C01 funciona, el endurecimiento
+siguiente es un usuario Linux `metin2` con su propio `/home`, y valorar Xephyr.
+
+El binario sigue en **nivel 0**: no se ha analizado. La diferencia es que ahora
+el daño posible está acotado por la jaula, no por la buena fe del `.exe`.

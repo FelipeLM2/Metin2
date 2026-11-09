@@ -3,6 +3,24 @@
 Scripts propios del proyecto. Todos se escriben desde cero y se auditan antes
 de ejecutarse; nada de binarios de terceros.
 
+## `c01/`
+
+Cliente Wine + DXVK en CachyOS dentro de un *network namespace* con una única
+ruta al servidor. Se ejecuta en este orden:
+
+```bash
+bash c01/00-diagnostico.sh      # solo lectura
+bash c01/10-prefix.sh           # prefijo win32, sin Z:, cliente + pack
+bash c01/15-dxvk.sh             # unica descarga (GitHub)
+bash c01/20-netns-up.sh         # jaula de red
+bash c01/30-run-client.sh       # lanza el cliente (no root)
+bash c01/35-check-isolation.sh  # con el juego abierto
+bash c01/90-netns-down.sh       # limpia la jaula
+```
+
+Detalle y límites: [`c01/README.md`](c01/README.md) y
+[`../pasos/2026-11-09-c01-wine-torre.md`](../pasos/2026-11-09-c01-wine-torre.md).
+
 ## `m2pack/`
 
 Lector/escritor de packs EterPack (`root.eix` + `root.epk`), en Python 3 con

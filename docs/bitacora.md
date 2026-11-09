@@ -76,3 +76,9 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   prueba se mueve al **servidor**: `tcpdump` en `em0` mientras el cliente
   entra, más `netsh portproxy reset` justo antes del login. Si el login
   funciona con el redirector vacío, el pack nuevo es el que se usa.
+- B06 lo confirmó al revés: `tcpdump` no vio **ni un paquete** y el `root.eix`
+  del cliente seguía en **2968 B**. El bloque de B04 se había abortado antes de
+  copiar (con `$ErrorActionPreference = "Stop"` y sin mirar si la ISO estaba
+  montada), y el login de entonces fue por el `portproxy`. **Lección**: las
+  copias al cliente se hacen con Explorer y se comprueban a ojo (17.292 B);
+  los scripts mudos esconden el fallo.

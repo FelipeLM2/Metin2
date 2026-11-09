@@ -70,5 +70,9 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   quitado, según el usuario. La transcripción del cliente se perdió por un
   fallo de `Start-Transcript` + `Read-Host`, así que la constancia queda
   pendiente en **B05**.
-- **Lección**: para capturar salida en el cliente, `*> $log` a un archivo y
-  copiarlo al disco FAT de retorno; nada de `Start-Transcript` con `Read-Host`.
+- B05 intentó la constancia con `*> $log`, pero el archivo tampoco llegó al
+  disco FAT de retorno. **Lección**: la salida del cliente no es un canal
+  fiable (ni portapapeles ni disco compartido), y no hace falta que lo sea. La
+  prueba se mueve al **servidor**: `tcpdump` en `em0` mientras el cliente
+  entra, más `netsh portproxy reset` justo antes del login. Si el login
+  funciona con el redirector vacío, el pack nuevo es el que se usa.

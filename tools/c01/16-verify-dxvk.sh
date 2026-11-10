@@ -57,7 +57,8 @@ if [ -f "$EXE" ]; then
   if command -v objdump >/dev/null 2>&1; then
     objdump -p "$EXE" 2>/dev/null \
       | sed -n 's/.*DLL Name: //p' \
-      | grep -iE 'd3d|dxgi|ddraw' || echo "(no veo d3d/dxgi/ddraw en la tabla de imports)"
+      | grep -iE 'd3d|dxgi|ddraw' \
+      || echo "(no veo d3d/dxgi/ddraw en los imports: puede cargarlos en tiempo de ejecucion)"
   elif command -v strings >/dev/null 2>&1; then
     strings -a "$EXE" 2>/dev/null \
       | grep -ioE 'd3d(8|9)\.dll|dxgi\.dll|ddraw\.dll' | sort -u \

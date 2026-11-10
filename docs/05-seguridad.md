@@ -97,6 +97,14 @@ sistema de archivos (el proceso es del mismo usuario) ni de X11 (puede inyectar
 teclado o leer el portapapeles). Por eso, si C01 funciona, el endurecimiento
 siguiente es un usuario Linux `metin2` con su propio `/home`, y valorar Xephyr.
 
+**C01-bis** da ese paso: el cliente pasa a un usuario `metin2` sin sudo (solo
+grupos `render`/`video` para la GPU), con `/home` propio (0700) y un **Xephyr**
+(`:7`) que solo muestra sus ventanas, así no ve el escritorio real ni el
+portapapeles. No se le pasa audio ni bus de sesión (sus sockets son 0600 del
+usuario real). Quedan fuera de alcance el **bus del sistema**
+(`/run/dbus/system_bus_socket`, 0666) y `/tmp` compartido; C02 decidirá si el
+bus se cierra con `bubblewrap` o si merece la pena volver a una VM.
+
 **Matiz aprendido en la primera ejecución (C01):** vaciar `resolv.conf` no
 desactiva la resolución de nombres si `nsswitch.conf` incluye `nss-resolve`:
 ese módulo pregunta al `systemd-resolved` **del host** por D-Bus y sí tiene

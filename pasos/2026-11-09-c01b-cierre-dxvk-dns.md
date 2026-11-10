@@ -120,8 +120,9 @@ Debe decir:
 - `syswow64: si`
 - arquitectura del cliente: `PE32 … Intel 80386` (32 bits)
 - `d3d9` y `dxgi` en `syswow64` con tamaño > 1 MB
-- en «DLLs que importa el cliente», `d3d9.dll` (o `d3d8.dll`; el script copia
-  las dos)
+- en «DLLs que importa el cliente» puede salir vacío: es normal, el cliente
+  carga `d3d8.dll` en tiempo de ejecución (el log muestra `D3D8Device`). La
+  prueba real es el HUD y `metin2client_d3d9.log`
 - `DXVK parece instalado en syswow64`
 
 **PARADA** si `syswow64/d3d9.dll` no existe o mide menos de 1 MB: publica la

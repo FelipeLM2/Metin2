@@ -144,3 +144,24 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   cliente. El HUD y el log de DXVK serán la prueba; `nvidia-smi` no basta.
 - El usuario prefirió no tocar nada durante la partida y reportar después. La
   salida y sus notas quedan en `salidas/2026-11-09-c01-*`.
+
+## 2026-11-09 — C01b: DXVK real, DNS cerrado; C01 queda cerrado
+
+- `15-dxvk.sh` reinstaló DXVK desde la caché (sin Internet): `d3d8`, `d3d9` y
+  `dxgi` a `syswow64` (32 bits) y `system32` (64 bits). `16` confirmó
+  `#arch=win64`, `syswow64` y DLLs de varios MB.
+- **El HUD apareció** con `NVIDIA GeForce GTX 1650`; el log
+  `metin2client_d3d9.log` dice `DXVK: v3.1.1` y
+  `Found device: NVIDIA GeForce GTX 1650 (NVIDIA 615.78.8)`. El juego usa
+  **D3D8** sobre DXVK (avisos `D3D8Device::SetRenderState`).
+- Los imports del `.exe` salen vacíos porque el cliente carga `d3d8.dll` de
+  forma dinámica. La prueba del renderer es el HUD y el log, no `objdump`.
+- `20` montó `hosts: files` y dijo `OK: sin DNS`. `35` mostró las conexiones
+  del cliente (`13000` y `13002`) desde `10.10.10.20`, con `OK` en Internet y
+  DNS. `nvidia-smi` vio 236 MiB en la GTX 1650.
+- El usuario nota **más fluidez** que en C01 y la ventana se maximiza. Tuvo que
+  crear la jaula desde cero (`20`); no hizo falta `90`.
+- **Decisión**: C01 queda cerrado. C01-bis mueve el cliente a un usuario Linux
+  `metin2` con Xephyr (display anidado), sin audio ni bus de sesión. El bus del
+  sistema seguirá visible como riesgo residual; C02 decidirá si se cierra con
+  `bubblewrap` o si se vuelve a una VM.

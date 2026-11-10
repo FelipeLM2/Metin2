@@ -123,6 +123,15 @@ virbr-lab 10.10.10.1/24
 ```
 
 - El prefijo Wine vive en `~/metin2lab/wine/prefix`, sin la unidad `Z:`.
+- Wine 11.21 con WoW64 no crea prefijos `win32` puros: el prefijo es **`win64`**
+  y el cliente de 32 bits corre dentro. Sus DLLs (`d3d8`, `d3d9`, `dxgi`) van a
+  `syswow64`; las de 64 bits, a `system32`. Copiarlas a `system32` hace que el
+  cliente caiga a `wined3d` sin avisar (el juego va, pero sin HUD de DXVK).
 - El cliente se copia a `C:\Games\Metin2` con el pack parcheado de B04.
 - La VM Windows se apaga durante la prueba (misma IP `.20`), pero no se borra.
-- Detalle operativo: `tools/c01/` y `pasos/2026-11-09-c01-wine-torre.md`.
+- **Sin DNS de verdad**: no basta con vaciar `resolv.conf`; `nss-resolve` puede
+  preguntar al `systemd-resolved` del host por D-Bus. La jaula monta un
+  `nsswitch.conf` con `hosts: files`. Sin ruta por defecto no hay conectividad,
+  pero así tampoco hay resolución de nombres.
+- Detalle operativo: `tools/c01/` y `pasos/2026-11-09-c01-wine-torre.md`. El
+  cierre de la prueba está en `pasos/2026-11-09-c01b-cierre-dxvk-dns.md`.

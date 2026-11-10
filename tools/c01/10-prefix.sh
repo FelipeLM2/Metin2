@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# C01 - Crea el prefijo Wine de 32 bits, quita Z: y copia el cliente con el pack.
+# C01 - Crea el prefijo Wine (win64 + WoW64), quita Z: y copia el cliente con el pack.
 # Uso: bash tools/c01/10-prefix.sh
 set -euo pipefail
 
@@ -24,11 +24,19 @@ echo "root.eix=$eix_size  root.epk=$epk_size"
 mkdir -p "$BASE/logs"
 
 if [ ! -d "$PREFIX" ]; then
-  echo "== creando prefijo win32 (puede tardar) =="
-  WINEARCH=win32 WINEPREFIX="$PREFIX" WINEDLLOVERRIDES="mscoree,mshtml=" wineboot -u
-  WINEARCH=win32 WINEPREFIX="$PREFIX" wineserver -w || true
+  # Wine 10+ con WoW64 ya no crea prefijos win32 puros. El cliente es de 32 bits,
+  # pero corre dentro de un prefijo win64 (sus DLLs de 32 bits van a syswow64).
+  echo "== creando prefijo win64/WoW64 (puede tardar) =="
+  WINEARCH=win64 WINEPREFIX="$PREFIX" WINEDLLOVERRIDES="mscoree,mshtml=" wineboot -u
+  WINEARCH=win64 WINEPREFIX="$PREFIX" wineserver -w || true
 else
   echo "== el prefijo ya existe, no se recrea =="
+fi
+
+if [ -d "$PREFIX/drive_c/windows/syswow64" ]; then
+  echo "syswow64: si (ahi van las DLLs de 32 bits)"
+else
+  echo "AVISO: no existe syswow64; revisa la arquitectura del prefijo"
 fi
 
 echo "== quitando unidades ajenas a C: (incluida Z: -> /) =="

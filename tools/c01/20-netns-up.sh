@@ -46,6 +46,17 @@ echo "== resolv.conf vacio para la jaula =="
 sudo mkdir -p "/etc/netns/$NS"
 sudo sh -c ": > /etc/netns/$NS/resolv.conf"
 
+echo "== nsswitch.conf para la jaula: hosts solo por files =="
+# Un resolv.conf vacio NO impide que glibc pregunte a nss-resolve por D-Bus al
+# systemd-resolved del host (que si tiene DNS). Con hosts:files, no hay modulo
+# que pueda resolver nombres fuera de /etc/hosts dentro de la jaula.
+if [ -f /etc/nsswitch.conf ] && grep -qE '^[[:space:]]*hosts:' /etc/nsswitch.conf; then
+  sed -E 's/^[[:space:]]*hosts:.*/hosts:      files/' /etc/nsswitch.conf \
+    | sudo tee "/etc/netns/$NS/nsswitch.conf" >/dev/null
+else
+  printf 'hosts:      files\n' | sudo tee "/etc/netns/$NS/nsswitch.conf" >/dev/null
+fi
+
 echo
 echo "== rutas dentro de la jaula (NO debe haber 'default') =="
 sudo ip netns exec "$NS" ip route
@@ -74,6 +85,17 @@ if sudo ip netns exec "$NS" curl -m 5 -sS https://1.1.1.1 -o /dev/null 2>/dev/nu
   exit 2
 else
   echo "OK: sin salida a Internet"
+fi
+
+echo
+echo "== DNS dentro de la jaula (DEBE fallar) =="
+echo "-- hosts en nsswitch:"
+sudo ip netns exec "$NS" sh -c "grep -E '^[[:space:]]*hosts:' /etc/nsswitch.conf || echo '(sin nsswitch)'"
+if sudo ip netns exec "$NS" getent hosts example.com >/dev/null 2>&1; then
+  echo "PELIGRO: resuelve nombres. NO sigas."
+  exit 2
+else
+  echo "OK: sin DNS"
 fi
 
 echo

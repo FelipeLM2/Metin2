@@ -35,6 +35,15 @@ echo
 
 cd "$GAME"
 
+# Si quedo un wineserver del prefijo fuera de la jaula, el cliente podria
+# nacer en la red del host. Lo matamos antes de lanzar el de dentro.
+WINEPREFIX="$PREFIX" WINEARCH=win64 wineserver -k 2>/dev/null || true
+
+# DXVK ve rutas de Windows (no de Linux) y el prefijo no tiene Z:.
+mkdir -p "$GAME/dxvk-logs" "$GAME/dxvk-state"
+
+# No pasamos DBUS_SESSION_BUS_ADDRESS a la jaula: no hace falta y evita darle
+# una via directa al bus del usuario. El DNS ya esta cerrado con nsswitch.
 set +e
 sudo ip netns exec "$NS" \
   sudo -u "$USER" \
@@ -43,18 +52,22 @@ sudo ip netns exec "$NS" \
       XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}" \
       WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-}" \
       XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}" \
-      DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-}" \
       WINEPREFIX="$PREFIX" \
-      WINEARCH=win32 \
+      WINEARCH=win64 \
       WINEDEBUG=-all \
-      WINEDLLOVERRIDES="mscoree,mshtml=;d3d9,dxgi=n,b" \
+      WINEDLLOVERRIDES="mscoree,mshtml=;d3d8,d3d9,dxgi=n,b" \
       DXVK_HUD="${DXVK_HUD:-fps,gpu,devinfo}" \
+      DXVK_LOG_LEVEL="${DXVK_LOG_LEVEL:-info}" \
+      DXVK_LOG_PATH='C:\Games\Metin2\dxvk-logs' \
+      DXVK_STATE_CACHE_PATH='C:\Games\Metin2\dxvk-state' \
       "$WINE_BIN" "$EXE" 2>&1 | tee "$LOG"
 launch_rc=${PIPESTATUS[0]}
 set -e
 
 echo
 echo "== el cliente termino con codigo $launch_rc =="
+echo "== log de DXVK (si existe, DXVK se cargo) =="
+ls -l "$GAME/dxvk-logs"/*_d3d*.log 2>/dev/null || echo "(no hay log de DXVK: no se cargo)"
 echo "== cerrando wineserver del prefijo =="
-WINEPREFIX="$PREFIX" WINEARCH=win32 wineserver -k 2>/dev/null || true
+WINEPREFIX="$PREFIX" WINEARCH=win64 wineserver -k 2>/dev/null || true
 echo "log guardado en: $LOG"

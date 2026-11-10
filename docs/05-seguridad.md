@@ -97,5 +97,15 @@ sistema de archivos (el proceso es del mismo usuario) ni de X11 (puede inyectar
 teclado o leer el portapapeles). Por eso, si C01 funciona, el endurecimiento
 siguiente es un usuario Linux `metin2` con su propio `/home`, y valorar Xephyr.
 
+**Matiz aprendido en la primera ejecución (C01):** vaciar `resolv.conf` no
+desactiva la resolución de nombres si `nsswitch.conf` incluye `nss-resolve`:
+ese módulo pregunta al `systemd-resolved` **del host** por D-Bus y sí tiene
+DNS. La comprobación `35` lo detectó como `PELIGRO`. No era una fuga de
+conectividad —la jaula no tiene ruta por defecto y `curl` a Internet falla—,
+pero sí permitía filtrar nombres. Se cierra montando dentro de la jaula un
+`nsswitch.conf` con `hosts: files`, así `getent` solo mira `/etc/hosts`. Lección:
+**una jaula de red se comprueba con conectividad y con resolución de nombres**;
+lo primero no implica lo segundo.
+
 El binario sigue en **nivel 0**: no se ha analizado. La diferencia es que ahora
 el daño posible está acotado por la jaula, no por la buena fe del `.exe`.

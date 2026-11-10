@@ -120,3 +120,27 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   con su propio `/home`. La red sí queda cerrada desde el primer intento.
 - Se documenta en `docs/05-seguridad.md` y se escriben los scripts en
   `tools/c01/`.
+
+## 2026-11-09 — C01 ejecutado: casi nativo, con dos cabos sueltos
+
+- **El cliente arranca y se juega.** Ventana, login y partida sin problemas;
+  el lag de la VM desaparece («casi nativo») y el ratón va bien. La captura de
+  FreeBSD ve la sesión desde `10.10.10.20` (auth `11000`, canal `13000`) y nada
+  más. La jaula de red aguanta: sin ruta por defecto y `curl` a Internet falla.
+- **Pero el HUD de DXVK nunca apareció.** `nvidia-smi` ve
+  `metin2client.exe` con 56 MiB en la GTX 1650, pero eso solo prueba que la
+  GPU trabaja, no qué renderer se usa.
+- **Causa**: Wine 11.21 con WoW64 ya no crea prefijos `win32`; el prefijo es
+  `win64`. `15-dxvk.sh` copió las DLL **de 32 bits** a `system32`, cuando en un
+  prefijo `win64` van a `syswow64`. El cliente de 32 bits no las encontró y
+  Wine usó su `wined3d` sobre OpenGL. De ahí el buen rendimiento sin HUD.
+- **Segundo hallazgo**: `35` dijo `PELIGRO` en DNS. No era salida a Internet
+  (sin ruta no hay conectividad): `getent` resolvía nombres por `nss-resolve`
+  contra el `systemd-resolved` del host, vía D-Bus. Vaciar `resolv.conf` no
+  desactiva los módulos de `nsswitch.conf`.
+- **Decisión**: no se rehace nada desde cero. C01b reinstala DXVK en
+  `syswow64`/`system32` desde la caché (sin Internet), monta un
+  `nsswitch.conf` con `hosts: files` dentro de la jaula y vuelve a lanzar el
+  cliente. El HUD y el log de DXVK serán la prueba; `nvidia-smi` no basta.
+- El usuario prefirió no tocar nada durante la partida y reportar después. La
+  salida y sus notas quedan en `salidas/2026-11-09-c01-*`.

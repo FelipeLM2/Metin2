@@ -22,7 +22,16 @@ sudo ip netns exec "$NS" ip -brief addr
 
 echo
 echo "== conexiones del cliente (solo deberia aparecer $SERVER_IP) =="
-sudo ip netns exec "$NS" ss -tnp 2>/dev/null || echo "ss no disponible"
+sudo ip netns exec "$NS" ss -tanp 2>/dev/null || echo "ss no disponible"
+
+echo
+echo "== procesos dentro de la jaula (deberia estar wine/metin2client) =="
+sudo ip netns pids "$NS" | while read -r pid; do
+  [ -n "$pid" ] && ps -o pid=,comm=,args= -p "$pid" 2>/dev/null
+done
+if [ -z "$(sudo ip netns pids "$NS")" ]; then
+  echo "PELIGRO: no hay ningun proceso dentro de la jaula"
+fi
 
 echo
 echo "== intento a Internet (debe fallar) =="
@@ -34,6 +43,12 @@ fi
 
 echo
 echo "== DNS (debe fallar) =="
+echo "-- resolv.conf en la jaula:"
+sudo ip netns exec "$NS" sh -c \
+  'if [ -s /etc/resolv.conf ]; then cat /etc/resolv.conf; else echo "(vacio)"; fi'
+echo "-- hosts en nsswitch:"
+sudo ip netns exec "$NS" sh -c \
+  "grep -E '^[[:space:]]*hosts:' /etc/nsswitch.conf || echo '(sin nsswitch)'"
 if sudo ip netns exec "$NS" getent hosts example.com >/dev/null 2>&1; then
   echo "PELIGRO: resuelve nombres"
 else

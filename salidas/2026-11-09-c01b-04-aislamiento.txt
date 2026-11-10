@@ -1,0 +1,36 @@
+== rutas (no debe haber 'default') ==
+10.10.10.10 dev veth-m2 scope link 
+
+== direcciones ==
+lo               UNKNOWN        127.0.0.1/8 
+veth-m2@if15     UP             10.10.10.20/32 
+
+== conexiones del cliente (solo deberia aparecer 10.10.10.10) ==
+State Recv-Q Send-Q Local Address:Port  Peer Address:Port Process
+ESTAB 0      0        10.10.10.20:52140  10.10.10.10:13002 users:(("metin2client.ex",pid=9640,fd=176),("wineserver",pid=9573,fd=246))
+ESTAB 0      0        10.10.10.20:58632  10.10.10.10:13000 users:(("metin2client.ex",pid=9640,fd=184),("wineserver",pid=9573,fd=828))
+
+== procesos dentro de la jaula (deberia estar wine/metin2client) ==
+   9568 sudo            sudo -u deadivine env HOME=/home/deadivine DISPLAY=:0 XAUTHORITY=/run/user/1000/xauth_EzhZAi WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1000 WINEPREFIX=/home/deadivine/metin2lab/wine/prefix WINEARCH=win64 WINEDEBUG=-all WINEDLLOVERRIDES=mscoree,mshtml=;d3d8,d3d9,dxgi=n,b DXVK_HUD=fps,gpu,devinfo DXVK_LOG_LEVEL=info DXVK_LOG_PATH=C:\Games\Metin2\dxvk-logs DXVK_STATE_CACHE_PATH=C:\Games\Metin2\dxvk-state /usr/bin/wine metin2client.exe
+   9570 sudo            sudo -u deadivine env HOME=/home/deadivine DISPLAY=:0 XAUTHORITY=/run/user/1000/xauth_EzhZAi WAYLAND_DISPLAY=wayland-1 XDG_RUNTIME_DIR=/run/user/1000 WINEPREFIX=/home/deadivine/metin2lab/wine/prefix WINEARCH=win64 WINEDEBUG=-all WINEDLLOVERRIDES=mscoree,mshtml=;d3d8,d3d9,dxgi=n,b DXVK_HUD=fps,gpu,devinfo DXVK_LOG_LEVEL=info DXVK_LOG_PATH=C:\Games\Metin2\dxvk-logs DXVK_STATE_CACHE_PATH=C:\Games\Metin2\dxvk-state /usr/bin/wine metin2client.exe
+   9571 start.exe       start.exe /exec
+   9573 wineserver      /usr/lib/wine/../../bin/wineserver
+   9579 services.exe    C:\windows\system32\services.exe
+   9582 winedevice.exe  C:\windows\system32\winedevice.exe
+   9591 plugplay.exe    C:\windows\system32\plugplay.exe
+   9593 explorer.exe    C:\windows\system32\explorer.exe /desktop
+   9599 svchost.exe     C:\windows\system32\svchost.exe -k LocalServiceNetworkRestricted
+   9605 winedevice.exe  C:\windows\system32\winedevice.exe
+   9628 rpcss.exe       C:\windows\system32\rpcss.exe
+   9638 conhost.exe     C:\windows\system32\conhost.exe --unix --width 0 --height 0 --server 0x34
+   9640 metin2client.ex C:\Games\Metin2\metin2client.exe
+
+== intento a Internet (debe fallar) ==
+OK: sin salida a Internet
+
+== DNS (debe fallar) ==
+-- resolv.conf en la jaula:
+(vacio)
+-- hosts en nsswitch:
+hosts:      files
+OK: sin DNS

@@ -1,0 +1,33 @@
+== creando jaula metin2lab ==
+== creando par veth y colgandolo del puente ==
+== IPv6 fuera ==
+== loopback y veth ==
+== IP /32 y ruta unica al servidor ==
+== resolv.conf vacio para la jaula ==
+== nsswitch.conf para la jaula: hosts solo por files ==
+
+== rutas dentro de la jaula (NO debe haber 'default') ==
+10.10.10.10 dev veth-m2 scope link 
+
+== direcciones ==
+lo               UNKNOWN        127.0.0.1/8 
+veth-m2@if15     UP             10.10.10.20/32 
+
+== prueba al servidor (debe responder) ==
+PING 10.10.10.10 (10.10.10.10) 56(84) bytes de datos.
+
+--- 10.10.10.10 estadísticas ping ---
+2 paquetes transmitidos, 0 recibidos, 100% packet loss, time 1060ms
+
+AVISO: no responde el ping. Puede ser normal si FreeBSD bloquea ICMP;
+lo importante es TCP. Se comprueba al lanzar el cliente.
+
+== prueba a Internet (DEBE fallar) ==
+OK: sin salida a Internet
+
+== DNS dentro de la jaula (DEBE fallar) ==
+-- hosts en nsswitch:
+hosts:      files
+OK: sin DNS
+
+OK. Siguiente: bash tools/c01/30-run-client.sh

@@ -1,0 +1,30 @@
+== arquitectura del prefijo ==
+#arch=win64
+
+== carpetas de DLLs ==
+system32: si
+syswow64: si
+
+== d3d8 / d3d9 / dxgi en el prefijo ==
+d3d8      1564686  windows/system32/d3d8.dll
+d3d8      1687566  windows/syswow64/d3d8.dll
+d3d9      7286798  windows/system32/d3d9.dll
+d3d9      7856142  windows/syswow64/d3d9.dll
+dxgi      5414926  windows/system32/dxgi.dll
+dxgi      5877774  windows/syswow64/dxgi.dll
+
+== overrides registrados ==
+    d3d8    REG_SZ    native,builtin
+    d3d9    REG_SZ    native,builtin
+    dxgi    REG_SZ    native,builtin
+
+== arquitectura del cliente ==
+/home/deadivine/metin2lab/wine/prefix/drive_c/Games/Metin2/metin2client.exe: PE32 executable for MS Windows 6.00 (GUI), Intel i386, 5 sections
+
+== DLLs que importa el cliente ==
+(no veo d3d/dxgi/ddraw en la tabla de imports)
+
+== pista rapida ==
+DXVK parece instalado en syswow64 (32 bits), que es lo correcto en win64.
+
+OK. Siguiente: bash tools/c01/20-netns-up.sh

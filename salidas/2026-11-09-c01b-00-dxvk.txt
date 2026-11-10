@@ -1,0 +1,30 @@
+== DXVK en cache: /home/deadivine/metin2lab/wine/dxvk/dxvk-3.1.1 (sin Internet) ==
+== prefijo: win64 ==
+== copiando DLLs a la carpeta que le toca ==
+  d3d8.dll -> windows/syswow64
+  d3d8.dll -> windows/system32
+  d3d9.dll -> windows/syswow64
+  d3d9.dll -> windows/system32
+  dxgi.dll -> windows/syswow64
+  dxgi.dll -> windows/system32
+== fijando overrides (native,builtin) ==
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+pci id for fd 34: 10de:1f82, driver (null)
+pci id for fd 35: 10de:1f82, driver (null)
+MESA-EGL: warning: egl: failed to create dri2 screen
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+pci id for fd 34: 10de:1f82, driver (null)
+pci id for fd 35: 10de:1f82, driver (null)
+MESA-EGL: warning: egl: failed to create dri2 screen
+MESA-EGL: warning: pci id for fd 33: 10de:1f82, driver (null)
+== comprobacion ==
+-rwxr-xr-x 1 deadivine deadivine 1564686 nov  9 18:21 /home/deadivine/metin2lab/wine/prefix/drive_c/windows/system32/d3d8.dll
+-rw-r--r-- 1 deadivine deadivine 1687566 nov  9 18:21 /home/deadivine/metin2lab/wine/prefix/drive_c/windows/syswow64/d3d8.dll
+-rw-r--r-- 1 deadivine deadivine 7286798 nov  9 18:21 /home/deadivine/metin2lab/wine/prefix/drive_c/windows/system32/d3d9.dll
+-rw-r--r-- 1 deadivine deadivine 7856142 nov  9 18:21 /home/deadivine/metin2lab/wine/prefix/drive_c/windows/syswow64/d3d9.dll
+-rw-r--r-- 1 deadivine deadivine 5414926 nov  9 18:21 /home/deadivine/metin2lab/wine/prefix/drive_c/windows/system32/dxgi.dll
+-rw-r--r-- 1 deadivine deadivine 5877774 nov  9 18:21 /home/deadivine/metin2lab/wine/prefix/drive_c/windows/syswow64/dxgi.dll
+c126316f7478eaff1ad8087702eda5930f2400187b9c8b3592219c34f6632780  /home/deadivine/metin2lab/wine/prefix/drive_c/windows/system32/d3d9.dll
+265888c31ca78dffa290c39cb7e50bfb02762590e41927906e46fb32f01497fa  /home/deadivine/metin2lab/wine/prefix/drive_c/windows/syswow64/d3d9.dll
+
+OK. Siguiente: bash tools/c01/16-verify-dxvk.sh

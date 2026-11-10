@@ -108,7 +108,7 @@ Si algún día molesta ver una entrada que no funciona, se puede borrar la regi�
 2 de `serverinfo.py` y volver a empaquetar con `m2pack`; no aporta nada al
 laboratorio.
 
-## Cliente Wine (C01, en pruebas)
+## Cliente Wine (C01 cerrado; C01-bis en pruebas)
 
 Para quitar el lag de la VM (WARP), C01 ejecuta el mismo cliente en CachyOS
 con Wine + DXVK y lo encierra en un *network namespace*:
@@ -120,18 +120,32 @@ virbr-lab 10.10.10.1/24
         veth-m2  10.10.10.20/32
         ruta única: 10.10.10.10/32
         sin gateway, sin DNS, sin IPv6
+
+netns "m2xephyr"                  (solo lo, sin rutas)
+  └── Xephyr :7  ←  cliente por /tmp/.X11-unix/X7
 ```
 
-- El prefijo Wine vive en `~/metin2lab/wine/prefix`, sin la unidad `Z:`.
+- El prefijo Wine vive en `~/metin2lab/wine/prefix` (C01) y, tras C01-bis, en
+  `/home/metin2/metin2lab/wine/prefix`, sin la unidad `Z:`.
+- En C01-bis el cliente corre como el usuario `metin2` (sin sudo; solo grupos
+  `render`/`video` para la GPU) y pinta en Xephyr `:7`, no en el escritorio
+  real. Xephyr corre como el usuario de la sesión pero dentro de `m2xephyr`,
+  un netns vacío: si lo comprometen, no tiene red. El socket X de `/tmp` sí
+  cruza netns, por eso el juego puede hablar con `:7`.
 - Wine 11.21 con WoW64 no crea prefijos `win32` puros: el prefijo es **`win64`**
   y el cliente de 32 bits corre dentro. Sus DLLs (`d3d8`, `d3d9`, `dxgi`) van a
   `syswow64`; las de 64 bits, a `system32`. Copiarlas a `system32` hace que el
   cliente caiga a `wined3d` sin avisar (el juego va, pero sin HUD de DXVK).
 - El cliente se copia a `C:\Games\Metin2` con el pack parcheado de B04.
-- La VM Windows se apaga durante la prueba (misma IP `.20`), pero no se borra.
+- La VM Windows se apaga durante la prueba (misma IP `.20`), pero no se borra:
+  se archivará como frontera real contra un exploit de kernel.
 - **Sin DNS de verdad**: no basta con vaciar `resolv.conf`; `nss-resolve` puede
   preguntar al `systemd-resolved` del host por D-Bus. La jaula monta un
   `nsswitch.conf` con `hosts: files`. Sin ruta por defecto no hay conectividad,
   pero así tampoco hay resolución de nombres.
-- Detalle operativo: `tools/c01/` y `pasos/2026-11-09-c01-wine-torre.md`. El
-  cierre de la prueba está en `pasos/2026-11-09-c01b-cierre-dxvk-dns.md`.
+- `/home` es btrfs: `tools/c01bis/80-snapshot.sh` convierte el laboratorio en
+  subvolumen y crea `metin2lab-golden`; `85-reset.sh` lo restaura. El progreso
+  del juego vive en MariaDB, no en el cliente.
+- Detalle operativo: `tools/c01/` y `pasos/2026-11-09-c01-wine-torre.md`; el
+  cierre está en `pasos/2026-11-09-c01b-cierre-dxvk-dns.md`; el usuario
+  dedicado y Xephyr, en `pasos/2026-11-09-c01bis-usuario-dedicado.md`.

@@ -38,11 +38,16 @@ Un cliente malicioso solo es peligroso si tiene **a dónde enviar** y **qué
 robar**. En este montaje:
 
 - Red aislada sin forwarding: no hay ruta a Internet ni a la LAN doméstica.
-- Cero datos personales, cuentas, correo o nube en la VM del cliente.
-- Sin carpetas compartidas, sin portapapeles, sin USB redirection.
-- Snapshots e imagen de disco para volver a cero.
+- Cero datos personales, cuentas, correo o nube en el entorno del cliente: la
+  VM no los tenía; en C01-bis el usuario `metin2` no puede leer el home real
+  (solo ve su propio home, `/tmp` y el bus del sistema, ya documentados).
+- Sin carpetas compartidas ni USB redirection. En C01-bis no se pasa audio y
+  Xephyr mantiene su portapapeles separado del host por defecto (no hay puente).
+- Snapshots para volver a cero: la VM antes; ahora el subvolumen btrfs dorado
+  del cliente, más los snapshots de la FreeBSD.
 
-Aunque el `.exe` fuese un troyano, no tiene salida. Regla mental:
+Aunque el `.exe` fuese un troyano, no tiene salida mientras no explote el
+kernel o Xephyr. Regla mental:
 **"limpio" no se demuestra; "sin consecuencias" se diseña.**
 
 ## Endurecimiento aplicado
@@ -101,9 +106,16 @@ siguiente es un usuario Linux `metin2` con su propio `/home`, y valorar Xephyr.
 grupos `render`/`video` para la GPU), con `/home` propio (0700) y un **Xephyr**
 (`:7`) que solo muestra sus ventanas, así no ve el escritorio real ni el
 portapapeles. No se le pasa audio ni bus de sesión (sus sockets son 0600 del
-usuario real). Quedan fuera de alcance el **bus del sistema**
-(`/run/dbus/system_bus_socket`, 0666) y `/tmp` compartido; C02 decidirá si el
-bus se cierra con `bubblewrap` o si merece la pena volver a una VM.
+usuario real). Además, Xephyr corre dentro de un netns vacío (`m2xephyr`, solo
+`lo`, sin rutas ni DNS): si lo comprometen, el código no tiene red. El juego
+sigue en `metin2lab` y se conecta a `:7` por el socket Unix
+`/tmp/.X11-unix/X7`, que los netns no aíslan. Quedan fuera de alcance el
+**bus del sistema** (`/run/dbus/system_bus_socket`, 0666), `/tmp` compartido y
+el hecho de que Xephyr corre como el usuario real, con la cookie de `:0` (sin
+red, pero con acceso a sus archivos y a su sesión X). Xephyr no comparte el
+portapapeles con `:0` por defecto; si algún día se añade un sincronizador, se
+abre ese puente. C02 decidirá si el bus se cierra con `bubblewrap` o si merece
+la pena volver a una VM.
 
 **Matiz aprendido en la primera ejecución (C01):** vaciar `resolv.conf` no
 desactiva la resolución de nombres si `nsswitch.conf` incluye `nss-resolve`:
@@ -117,3 +129,20 @@ lo primero no implica lo segundo.
 
 El binario sigue en **nivel 0**: no se ha analizado. La diferencia es que ahora
 el daño posible está acotado por la jaula, no por la buena fe del `.exe`.
+
+## Copias doradas del cliente (btrfs)
+
+El progreso del juego (personajes, cuentas, inventario) vive en MariaDB dentro
+de la FreeBSD. El cliente solo guarda el prefijo de Wine, DXVK y su
+configuración. Por eso una copia del cliente es una **instalación
+conocida-buena**, no una partida guardada.
+
+- `tools/c01bis/80-snapshot.sh` convierte `/home/metin2/metin2lab` en
+  subvolumen btrfs (si no lo es) y crea `metin2lab-golden` en modo read-only.
+  La conversión conserva la copia anterior en `metin2lab.pre-subvol`.
+- `tools/c01bis/85-reset.sh` aparta el laboratorio actual en
+  `metin2lab.roto-<fecha>` y crea uno nuevo desde `metin2lab-golden`. No borra
+  nada de forma silenciosa.
+
+Esto no sustituye a los snapshots de la VM FreeBSD: son cosas distintas. El
+cliente se puede reconstruir; la base de datos no.

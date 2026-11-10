@@ -36,6 +36,7 @@ Reglas:
 - La jaula solo tiene `10.10.10.20/32` y una ruta a `10.10.10.10/32`.
 - Si algo se rompe, `90-netns-down.sh` deshace la red y `rm -rf
   ~/metin2lab/wine` deshace el prefijo (el cliente original no se toca).
+  Desde C01-bis, `90` también cierra Xephyr `:7` y borra `m2xephyr`.
 
 C01 quedó cerrado el 2026-11-09 (HUD de DXVK + DNS sin salida). El
 endurecimiento con usuario Linux aparte está en `tools/c01bis/` y

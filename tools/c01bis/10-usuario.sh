@@ -8,6 +8,23 @@ U=metin2
 SRC="$HOME/metin2lab"
 DST="/home/$U/metin2lab"
 
+if [ "$(id -u)" -eq 0 ]; then
+  echo "ERROR: ejecuta este script como tu usuario normal, no como root."
+  echo "El script pide sudo cuando lo necesita; como root usaria /root como home."
+  exit 1
+fi
+
+# Mover el prefijo con el juego abierto lo rompe. La jaula debe estar cerrada.
+if ip netns list | awk '{print $1}' | grep -qx metin2lab; then
+  echo "ERROR: la jaula metin2lab sigue abierta."
+  echo "Ejecuta primero: bash tools/c01/90-netns-down.sh"
+  exit 1
+fi
+if pgrep -f 'metin2client.exe' >/dev/null 2>&1; then
+  echo "ERROR: hay un metin2client.exe en marcha. Cierralo antes de mover el laboratorio."
+  exit 1
+fi
+
 echo "== usuario $U =="
 if id "$U" >/dev/null 2>&1; then
   echo "ya existe (uid $(id -u "$U"))"
@@ -38,6 +55,11 @@ stat -c '%A %U %n' "$HOME"
 
 echo
 if [ -d "$DST" ]; then
+  if [ -d "$SRC" ]; then
+    echo "ERROR: existen $SRC y $DST. No se cual usar; no toco nada."
+    echo "Revisa los dos y decide cual conservar antes de repetir."
+    exit 1
+  fi
   echo "== $DST ya existe, no se mueve =="
 else
   [ -d "$SRC" ] || { echo "ERROR: no existe $SRC"; exit 1; }

@@ -165,3 +165,34 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   `metin2` con Xephyr (display anidado), sin audio ni bus de sesión. El bus del
   sistema seguirá visible como riesgo residual; C02 decidirá si se cierra con
   `bubblewrap` o si se vuelve a una VM.
+
+## 2026-11-09 — C01-bis escrito: Xephyr sin red y copia dorada
+
+- **Xephyr no es un sandbox**, pero sí cambia capacidades: el juego no ve las
+  ventanas del escritorio ni su portapapeles X. Es un proceso normal (no una
+  VM): a 1080p usa ~8 MB de framebuffer y algo de CPU por copia; la GPU la usa
+  DXVK directamente.
+- **Riesgo cerrado**: Xephyr corre como el usuario real (necesita pintar en
+  `:0`) pero dentro del netns `m2xephyr`, que solo tiene `lo` y DNS cerrado.
+  Si lo comprometen, no tiene LAN ni Internet. El juego sigue en `metin2lab` y
+  llega a `:7` por el socket Unix de `/tmp`, que cruza netns.
+- **Residual asumido**: un fallo de Xephyr sigue ejecutándose como el usuario
+  real (puede leer archivos y usar la cookie de `:0`, no red); el bus del
+  sistema y `/tmp` siguen visibles. Xephyr no comparte el portapapeles con `:0`
+  por defecto; el puente habría que añadirlo aparte. Contra un exploit de
+  kernel solo hay VM o hardware aparte.
+- **Pantalla completa 1080p**: `-screen 1920x1080 -fullscreen`. Xephyr no fija
+  los 144 Hz: la cadena DXVK → Xephyr → KWin → monitor decide; se mide con el
+  HUD (`DXVK_HUD=fps`). Si algún día vuelve a 1440p, `GEOM=2560x1440`.
+- **Snapshots**: `/home` es btrfs. `80-snapshot.sh` convierte
+  `/home/metin2/metin2lab` en subvolumen y crea `metin2lab-golden` read-only;
+  `85-reset.sh` restaura apartando el actual. El progreso del juego no está
+  ahí: vive en MariaDB dentro de la FreeBSD.
+- **Modo diario**: no se borran las jaulas por rutina. `15` reutiliza
+  `m2xephyr` y `20` reutiliza `metin2lab`; solo desaparecen al reiniciar o con
+  `90`. `30` mata el `wineserver` viejo antes de lanzar.
+- **VM Windows**: se archiva (disco + XML + notas), no se borra. Sigue siendo
+  la única frontera barata contra un exploit de kernel.
+- **Compilar el cliente**: más adelante, precedido de triage estático. «90% de
+  confianza» es alcanzable con build reproducible, hashes y lectura dirigida;
+  el 100% no existe.

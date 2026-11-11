@@ -66,8 +66,25 @@ set -e
 echo
 echo "== el cliente termino con codigo $launch_rc =="
 echo "== log de DXVK (si existe, DXVK se cargo) =="
-sudo ls -l "$GAME/dxvk-logs"/*_d3d*.log 2>/dev/null \
-  || echo "(no hay log de DXVK: no se cargo)"
+DXLOG_DIR="$GAME/dxvk-logs"
+# Ojo: un glob como "$DXLOG_DIR"/*.log lo expande TU shell, que no puede
+# atravesar /home/metin2 (0700); sudo llegaria tarde y el glob quedaria literal.
+# Por eso se busca con find ya con sudo.
+DXLOGS="$(sudo find "$DXLOG_DIR" -maxdepth 1 -type f -name '*_d3d*.log' -print 2>/dev/null || true)"
+if [ -n "$DXLOGS" ]; then
+  printf '%s\n' "$DXLOGS"
+  mkdir -p "$HOME/metin2lab/logs"
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    if sudo cp -f "$f" "$HOME/metin2lab/logs/" 2>/dev/null; then
+      sudo chown "$(id -u):$(id -g)" "$HOME/metin2lab/logs/$(basename "$f")" 2>/dev/null || true
+    fi
+  done <<< "$DXLOGS"
+  echo "-- copiado a $HOME/metin2lab/logs/ (para publicarlo junto al log del cliente)"
+else
+  echo "(no hay log de DXVK en $DXLOG_DIR)"
+  echo "Si arriba aparecen lineas 'info: DXVK: v...', DXVK si se cargo."
+fi
 echo "== cerrando wineserver del prefijo =="
 sudo -u "$U" env HOME="/home/$U" WINEPREFIX="$PREFIX" WINEARCH=win64 \
   wineserver -k 2>/dev/null || true

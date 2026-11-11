@@ -113,6 +113,17 @@ Para cerrar Xephyr sin depender de atajos:
 bash tools/c01bis/16-xephyr-stop.sh
 ```
 
+Si en juego la cámara del ratón da saltos, prueba a que Xephyr capture el
+puntero (por defecto **no** lo hace):
+
+```bash
+bash tools/c01bis/16-xephyr-stop.sh
+HOST_GRAB=1 bash tools/c01bis/15-xephyr.sh
+```
+
+Con `HOST_GRAB=1`, `Ctrl+Shift` suelta la captura y `16-xephyr-stop.sh` sigue
+siendo la salida segura.
+
 El juego se conecta a `:7` por el socket Unix `/tmp/.X11-unix/X7`, que los
 netns no aíslan: por eso funciona aunque Xephyr no tenga red.
 
@@ -229,13 +240,18 @@ la copia dorada. No borra nada. Cuando compruebes que todo va, puedes borrar
 ## Fase 7 — Cerrar y publicar
 
 1. Cierra el juego (la Terminal A vuelve y mata su `wineserver`).
-2. Copia el log de DXVK (está en el home de `metin2`, hace falta `sudo`) y
-   pégalo al final de la salida del cliente:
+2. El log de DXVK queda en el home de `metin2` (hace falta `sudo`).
+   `30-run-client.sh` ya lo copia a `~/metin2lab/logs/` al terminar; si por lo
+   que sea no está, cópialo así (el glob **no** puede expandirlo tu shell,
+   porque `/home/metin2` es `0700`):
 
 ```bash
 cd ~/metin2-docs
-sudo cp /home/metin2/metin2lab/wine/prefix/drive_c/Games/Metin2/dxvk-logs/*_d3d*.log ~/metin2lab/logs/ 2>/dev/null || true
-for f in ~/metin2lab/logs/*_d3d*.log; do
+sudo find /home/metin2/metin2lab/wine/prefix/drive_c/Games/Metin2/dxvk-logs \
+  -maxdepth 1 -type f -name '*_d3d*.log' \
+  -exec cp -f {} "$HOME/metin2lab/logs/" \; 2>/dev/null || true
+sudo chown "$(id -u):$(id -g)" "$HOME"/metin2lab/logs/*_d3d*.log 2>/dev/null || true
+for f in "$HOME"/metin2lab/logs/*_d3d*.log; do
   [ -f "$f" ] && { echo "== $f =="; cat "$f"; }
 done >> salidas/2026-11-09-c01bis-03-cliente.txt
 ```
@@ -284,15 +300,25 @@ qué se hace con el cliente Windows de la VM y con el portátil).
 
 ## Modo diario (después de C01-bis)
 
-No hay que repetir todo ni borrar las jaulas cada vez:
+El procedimiento completo está en **`docs/06-runbook-diario.md`**. Resumen:
 
-- `15-xephyr.sh` reutiliza `m2xephyr` y Xephyr si ya están levantados.
-- `20-netns-up.sh` reutiliza `metin2lab`; solo reescribe DNS.
-- `30-run-client.sh` mata el `wineserver` viejo y lanza el cliente dentro.
-- Las jaulas desaparecen al reiniciar o cuando ejecutas `90-netns-down.sh`.
+```bash
+# 1. jaula del juego
+bash tools/c01/20-netns-up.sh 2>&1 | tee salidas/dia-jaula.txt
+# 2. Xephyr
+bash tools/c01bis/15-xephyr.sh 2>&1 | tee salidas/dia-xephyr.txt
+# 3. cliente
+bash tools/c01bis/30-run-client.sh 2>&1 | tee salidas/dia-cliente.txt
+# 4. al terminar de jugar: cierre completo
+bash tools/c01/90-netns-down.sh 2>&1 | tee salidas/dia-cierre.txt
+```
 
-Orden normal: `15` (si no está Xephyr) → `20` (si no está la jaula) → `30`.
-`90` es limpieza, no parte de la rutina.
+- `20` reutiliza `metin2lab`; `15` reutiliza `m2xephyr` y Xephyr si ya están.
+- `30` mata el `wineserver` viejo y lanza el cliente dentro.
+- Las jaulas y Xephyr desaparecen al reiniciar.
+- `90` es el cierre normal (Xephyr + wineserver + las dos jaulas). `16` solo
+  cierra Xephyr, para cambiar de modo o como salida de emergencia.
+- `10-usuario.sh` y `80-snapshot.sh` **no** se repiten: son de una sola vez.
 
 ## Si falla
 

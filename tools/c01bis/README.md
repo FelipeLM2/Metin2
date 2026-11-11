@@ -40,10 +40,13 @@ Reglas que no cambian:
 - La jaula del juego sigue con una única ruta a `10.10.10.10/32` y sin DNS.
 - Xephyr corre como el usuario real (pinta en la pantalla), pero sin red.
 - Si `35-check-usuario.sh` imprime `PELIGRO`, para y avisa.
-- `90-netns-down.sh` cierra Xephyr y borra las dos jaulas; no se usa a diario.
+- `90-netns-down.sh` es el **cierre normal**: Xephyr + wineserver + las dos
+  jaulas. `16-xephyr-stop.sh` cierra solo Xephyr (cambio de modo o emergencia).
 - **Los discos de las VMs no viven en `metin2lab`.** Van en
   `/var/lib/libvirt/images`; `metin2` ejecuta un `.exe` sin auditar y no debe
   poder tocar la imagen del servidor. `10-usuario.sh` aborta si los encuentra.
 - Xephyr arranca en **ventana** y con `-no-host-grab`: no secuestra el
   teclado/ratón del host. `FULLSCREEN=1` es opcional; para salir,
   `16-xephyr-stop.sh`.
+- Si la cámara del juego va a saltos, `HOST_GRAB=1 bash tools/c01bis/15-xephyr.sh`
+  activa la captura del ratón (Ctrl+Shift la suelta).

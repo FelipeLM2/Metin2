@@ -45,6 +45,11 @@ sockstat -4 -l | grep -E ':11000|:13001|:15000'
 Deben aparecer `11000` (auth), `13001` (canal) y `15000` (db, en loopback).
 Detalle en [`docs/01-arquitectura.md`](docs/01-arquitectura.md).
 
+## Día a día
+
+Runbook corto (servidor → jaula → Xephyr → cliente → cierre):
+[`docs/06-runbook-diario.md`](docs/06-runbook-diario.md).
+
 ## Compilar
 
 ```sh

@@ -5,6 +5,7 @@
 # display. El juego se conecta a :7 por el socket Unix de /tmp, que si cruza
 # netns.
 # Uso: bash tools/c01bis/15-xephyr.sh                  # ventana (por defecto)
+#      HOST_GRAB=1 bash tools/c01bis/15-xephyr.sh      # ventana + captura raton/teclado
 #      FULLSCREEN=1 bash tools/c01bis/15-xephyr.sh     # pantalla completa opcional
 #      SIN_NETNS=1 bash tools/c01bis/15-xephyr.sh      # solo depuracion
 # Para cerrarlo: bash tools/c01bis/16-xephyr-stop.sh
@@ -14,6 +15,12 @@ NS=m2xephyr
 DISP=:7
 GEOM="${GEOM:-1920x1080}"
 FULLSCREEN="${FULLSCREEN:-0}"
+# Por defecto Xephyr NO captura el raton ni el teclado del host. El juego usa
+# un puntero relativo: si el cursor del host se escapa de la ventana, Xephyr
+# deja de recibir movimiento y la camara da saltos. Con HOST_GRAB=1 si captura
+# mientras juegas; Ctrl+Shift suelta la captura y 16-xephyr-stop.sh sigue
+# siendo la salida segura.
+HOST_GRAB="${HOST_GRAB:-0}"
 SOCK="/tmp/.X11-unix/X${DISP#:}"
 LOCK="/tmp/.X${DISP#:}-lock"
 LOGFILE="${LOGFILE:-/tmp/xephyr-c01bis.log}"
@@ -90,8 +97,12 @@ print_ready() {
   echo "$1"
   if [ "$FULLSCREEN" = "1" ]; then
     echo "Pantalla completa. Para salir: bash tools/c01bis/16-xephyr-stop.sh (o Ctrl+Alt+F3)."
+  elif [ "$HOST_GRAB" = "1" ]; then
+    echo "Modo ventana CON captura: al jugar, el raton queda dentro de Xephyr."
+    echo "Ctrl+Shift lo suelta; para cerrar: bash tools/c01bis/16-xephyr-stop.sh"
   else
     echo "Modo ventana: Alt+Tab funciona; Xephyr no captura teclado ni raton."
+    echo "Si la camara del juego va a saltos, prueba: HOST_GRAB=1 bash tools/c01bis/15-xephyr.sh"
     echo "Para cerrar Xephyr: bash tools/c01bis/16-xephyr-stop.sh"
   fi
 }
@@ -139,7 +150,8 @@ if display_ok; then
   fi
   if [ -n "$PID" ] && [ "$(proc_inode "$PID")" = "$(netns_inode)" ]; then
     echo "Xephyr ya esta en $DISP dentro de $NS"
-    echo "Para cambiar de modo (ventana/pantalla completa): bash tools/c01bis/16-xephyr-stop.sh"
+    echo "Para cambiar de modo o de captura (ventana/pantalla completa/raton):"
+    echo "  bash tools/c01bis/16-xephyr-stop.sh"
     exit 0
   fi
   kill_old_xephyr
@@ -155,15 +167,21 @@ else
   MODE="ventana"
   XARGS=()
 fi
-# -no-host-grab: Xephyr NO secuestra el teclado/raton del host (el fallo de la
-#   primera prueba fue quedarse sin salida en fullscreen).
 # -resizeable: la ventana se puede redimensionar como cualquier otra.
 # -nolisten tcp: no abre puerto TCP; dentro de m2xephyr no habria red igualmente.
 # -ac desactiva el control de acceso SOLO del display :7. El escritorio real
 # sigue siendo :0 y no se abre. Asi metin2 puede pintar sin cookie y sin ver
 # nada del usuario real.
-XARGS+=(-screen "$GEOM" -ac -noreset -no-host-grab -resizeable -nolisten tcp
+# -no-host-grab (por defecto): Xephyr no secuestra el teclado/raton del host.
+# Con HOST_GRAB=1 se omite y si los captura mientras hay un grab del juego.
+XARGS+=(-screen "$GEOM" -ac -noreset -resizeable -nolisten tcp
         -title "Metin2 (jaula C01-bis)")
+if [ "$HOST_GRAB" = "1" ]; then
+  echo "AVISO: HOST_GRAB=1: Xephyr capturara el raton/teclado al jugar."
+  echo "       Ctrl+Shift suelta la captura; 16-xephyr-stop.sh es la salida segura."
+else
+  XARGS+=(-no-host-grab)
+fi
 
 echo "== arrancando Xephyr en $DISP ($GEOM, $MODE) =="
 if [ "$FULLSCREEN" = "1" ]; then

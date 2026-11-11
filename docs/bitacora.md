@@ -189,9 +189,9 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   `/home/metin2/metin2lab` en subvolumen y crea `metin2lab-golden` read-only;
   `85-reset.sh` restaura apartando el actual. El progreso del juego no está
   ahí: vive en MariaDB dentro de la FreeBSD.
-- **Modo diario**: no se borran las jaulas por rutina. `15` reutiliza
-  `m2xephyr` y `20` reutiliza `metin2lab`; solo desaparecen al reiniciar o con
-  `90`. `30` mata el `wineserver` viejo antes de lanzar.
+- **Modo diario**: `15` reutiliza `m2xephyr` y `20` reutiliza `metin2lab`.
+  (Revisado el 2026-11-11: el cierre normal es `90`, que cierra Xephyr, el
+  `wineserver` y borra las dos jaulas; `16` solo cierra Xephyr.)
 - **VM Windows**: se archiva (disco + XML + notas), no se borra. Sigue siendo
   la única frontera barata contra un exploit de kernel.
 - **Compilar el cliente**: más adelante, precedido de triage estático. «90% de
@@ -216,3 +216,40 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
 - Xephyr: el `-fullscreen` sin salida segura queda retirado. Por defecto,
   ventana con `-no-host-grab -resizeable`; `FULLSCREEN=1` opcional y
   `16-xephyr-stop.sh` como salida.
+
+## 2026-11-11 — C01-bis completado y runbook diario
+
+- `10-usuario.sh` dejó `metin2` (uid 1001, grupos `render`/`video`, sin sudo),
+  `/home/metin2` en `0700`, el home real en `0700` y el laboratorio con el
+  cliente. Las salidas `02`–`08` confirman: sin Internet, sin DNS, el cliente
+  solo conecta a `10.10.10.10`, `metin2` no lee el home real, no usa el bus de
+  sesión ni el audio, y Xephyr corre dentro de `m2xephyr` (solo `lo`). El bus
+  del sistema sigue como `AVISO` residual.
+- GPU y render: `metin2client.exe` en la GTX 1650 con ~210 MiB; DXVK v3.1.1 por
+  D3D8. La copia dorada quedó hecha: `metin2lab` es el subvolumen 322 y
+  `metin2lab-golden` el 323 read-only.
+- **FPS**: el HUD marca ~25 dentro de Xephyr, frente a 50/60 del mismo cliente
+  en `:0` (C01b). El log muestra 1920×918 en ventana, 3 imágenes y
+  `VK_PRESENT_MODE_IMMEDIATE_KHR`, con `MESA-EGL: DRI3 error` en Xephyr; en
+  `:0` había 5 imágenes. Xephyr es un servidor X por software: añade copias de
+  fotograma completas (juego → Xephyr → Xwayland → KWin). Las líneas `FrameSkip` también
+  salían en C01b, así que no explican la caída por sí solas. La GPU no está
+  saturada (37 % en `nvidia-smi`).
+- **Ratón**: en juego la cámara daba saltos. Con `-no-host-grab`, cuando el
+  juego captura el puntero, el cursor del host puede salir de la ventana;
+  Xephyr deja de recibir movimiento y al volver salta. Se añadió
+  `HOST_GRAB=1` (opt-in) para capturar el ratón mientras se juega; `Ctrl+Shift`
+  lo suelta y `16-xephyr-stop.sh` sigue siendo la salida.
+- **Bugs encontrados en el cierre**: `90-netns-down.sh` comprobaba
+  `[ -d "$PREFIX" ]` como `deadivine`, que no puede atravesar `/home/metin2`
+  (`0700`): siempre decía «no existe» y no cerraba el `wineserver`. Ahora el
+  test se hace como `metin2` y, si quedan procesos en la jaula, los lista y los
+  cierra antes de borrarla. `30-run-client.sh` expandía
+  `"$GAME/dxvk-logs"/*_d3d*.log` en tu shell (mismo problema) y concluía «no
+  hay log de DXVK» aunque DXVK sí estaba: ahora busca con `find` bajo `sudo` y
+  copia el log a `~/metin2lab/logs/`.
+- **Decisión**: C01-bis cerrado. El procedimiento diario queda en
+  `docs/06-runbook-diario.md` (servidor → jaula → Xephyr → cliente → `90`).
+  Pendiente para C02: decidir si se cierra el bus del sistema con
+  `bubblewrap`, si se reduce la resolución de Xephyr por los FPS y si se
+  investiga la captura del ratón como modo por defecto.

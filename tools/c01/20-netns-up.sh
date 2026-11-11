@@ -99,4 +99,5 @@ else
 fi
 
 echo
-echo "OK. Siguiente: bash tools/c01/30-run-client.sh"
+echo "OK. Siguiente: bash tools/c01bis/15-xephyr.sh (si no esta abierto) y luego"
+echo "    bash tools/c01bis/30-run-client.sh"

@@ -40,12 +40,39 @@ fi
 
 echo
 echo "== cerrando el wineserver del cliente =="
-if id "$U" >/dev/null 2>&1 && [ -d "$PREFIX" ]; then
+# /home/metin2 es 0700: un `[ -d "$PREFIX" ]` como tu usuario siempre falla.
+# Por eso el test se hace como metin2 (o como root con sudo).
+if id "$U" >/dev/null 2>&1 && sudo -u "$U" test -d "$PREFIX"; then
   sudo -u "$U" env HOME="/home/$U" WINEPREFIX="$PREFIX" WINEARCH=win64 \
     wineserver -k 2>/dev/null || true
   echo "wineserver de $U cerrado (si estaba)"
 else
   echo "(el usuario $U o el prefijo no existen todavia; nada que cerrar)"
+fi
+
+# wineserver -k no siempre alcanza a todos los procesos. Si queda algo dentro
+# de la jaula, al borrarla seguiria vivo en un netns sin nombre (sin red, pero
+# consumiendo CPU y con el prefijo abierto).
+if ip netns list | awk '{print $1}' | grep -qx "$NS"; then
+  sleep 1
+  LEFT="$(sudo ip netns pids "$NS" 2>/dev/null || true)"
+  if [ -n "$LEFT" ]; then
+    echo "AVISO: quedan procesos dentro de $NS; los cierro:"
+    # shellcheck disable=SC2086
+    sudo ps -o pid=,user=,comm= -p "$(printf '%s' "$LEFT" | paste -sd, -)" 2>/dev/null || true
+    # shellcheck disable=SC2086
+    sudo kill $LEFT 2>/dev/null || true
+    sleep 1
+    LEFT="$(sudo ip netns pids "$NS" 2>/dev/null || true)"
+    if [ -n "$LEFT" ]; then
+      # shellcheck disable=SC2086
+      sudo kill -KILL $LEFT 2>/dev/null || true
+      sleep 1
+    fi
+    if [ -n "$(sudo ip netns pids "$NS" 2>/dev/null || true)" ]; then
+      echo "AVISO: aun quedan procesos en $NS; revisa: sudo ip netns pids $NS"
+    fi
+  fi
 fi
 
 echo

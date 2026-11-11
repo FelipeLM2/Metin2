@@ -71,6 +71,13 @@ Qué hace:
 
 Debe terminar mostrando `metin2client.exe` y `OK. Siguiente: ...`.
 
+> **Discos de VM**: `~/metin2lab` es solo del cliente. Los discos de libvirt
+> viven en `/var/lib/libvirt/images` (la FreeBSD, en
+> `/var/lib/libvirt/images/m2-server/`). `10-usuario.sh` aborta si encuentra
+> `vm/` o algún `*.qcow2` en el laboratorio: si pasa, mueve los discos a
+> `/var/lib/libvirt/images` antes de repetir. `metin2` no debe poder tocar la
+> imagen del servidor.
+
 **PARADA** si `sudo -l -U metin2` muestra algo permitido, o si el `.exe` no
 aparece. Publica la salida y avisa.
 
@@ -88,11 +95,23 @@ Qué hace:
    rutas y sin DNS.
 2. Arranca Xephyr **como tu usuario** (tiene que pintar en tu pantalla), pero
    dentro de esa jaula. Si lo comprometen, el código no tiene red.
-3. Lo pone a pantalla completa en `1920x1080`.
+3. Lo abre en una **ventana** de `1920x1080`, con `-no-host-grab -resizeable`:
+   no captura el teclado ni el ratón del host.
 
-Debe abrirse una ventana a pantalla completa titulada
-**Metin2 (jaula C01-bis)** y el script decir
+Debe abrirse una ventana titulada **Metin2 (jaula C01-bis)** y el script decir
 `OK: Xephyr listo en :7 dentro de m2xephyr`.
+
+Pantalla completa es **opcional** y ya no es el modo por defecto:
+
+```bash
+FULLSCREEN=1 bash tools/c01bis/15-xephyr.sh
+```
+
+Para cerrar Xephyr sin depender de atajos:
+
+```bash
+bash tools/c01bis/16-xephyr-stop.sh
+```
 
 El juego se conecta a `:7` por el socket Unix `/tmp/.X11-unix/X7`, que los
 netns no aíslan: por eso funciona aunque Xephyr no tenga red.
@@ -115,7 +134,10 @@ SIN_NETNS=1 bash tools/c01bis/15-xephyr.sh
 
 Eso deja Xephyr con red. No es el modo normal: avísame y lo investigamos.
 
-Detalle: para sacar el ratón de la ventana de Xephyr, pulsa **Ctrl+Shift**.
+Detalle: en ventana no hay que «sacar» el ratón; `-no-host-grab` deja que
+`Alt+Tab` y el resto del escritorio funcionen. Si arrancaste con
+`FULLSCREEN=1`, la salida segura es `16-xephyr-stop.sh` desde otra terminal o
+TTY (`Ctrl+Alt+F3`); no se vuelve a usar `Ctrl+Shift` como única salida.
 
 ---
 
@@ -248,8 +270,8 @@ Avisa: **«C01-bis subido»** y responde:
 
 ## Qué se considera éxito
 
-- El juego corre como `metin2`, en Xephyr a pantalla completa, con HUD de DXVK
-  y GTX 1650.
+- El juego corre como `metin2`, en Xephyr (ventana por defecto; `FULLSCREEN=1`
+  opcional), con HUD de DXVK y GTX 1650.
 - La red sigue cerrada: solo `10.10.10.10`, sin Internet ni DNS.
 - Xephyr está dentro de `m2xephyr`: solo `lo`, sin rutas ni DNS.
 - `metin2` no puede leer tu home, ni el bus de sesión, ni el audio.
@@ -282,7 +304,8 @@ Orden normal: `15` (si no está Xephyr) → `20` (si no está la jaula) → `30`
 | Xephyr no arranca dentro de `m2xephyr` | Prueba **solo para depurar** `SIN_NETNS=1 bash tools/c01bis/15-xephyr.sh`. Si así funciona, publica `01-xephyr.txt` y el log; no lo dejes como modo normal. |
 | `35-check-usuario` dice que Xephyr está fuera de `m2xephyr` | `bash tools/c01/90-netns-down.sh` y repite `15`. Si insiste, no sigas: publica la salida. |
 | La ventana de Xephyr sale negra | El juego aún no ha pintado. Espera o revisa `03-cliente.txt`. |
-| El ratón no sale de Xephyr | Ctrl+Shift. Si no, cierra el juego y `pkill -f 'Xephyr :7'`. |
+| El ratón no sale de Xephyr | No debería pasar: `15` arranca con `-no-host-grab`. Si pasó, `Ctrl+Alt+F3`, `bash tools/c01bis/16-xephyr-stop.sh` y comprueba que el script tiene esa opción. |
+| Xephyr se queda a pantalla completa sin salida | `Ctrl+Alt+F3`, inicia sesión en TTY, `bash tools/c01bis/16-xephyr-stop.sh`, y vuelve con `Ctrl+Alt+F1`. |
 | HUD ausente otra vez | No toques DXVK: mira el log `*_d3d*.log` y publica `03-cliente.txt` + el log. |
 | No hay sonido | Es lo esperado. No añadas el PipeWire del usuario sin hablarlo antes. |
 | `80-snapshot.sh` dice que no es btrfs | Comprueba `findmnt -no FSTYPE /home`. No fuerces la conversión: publica la salida. |

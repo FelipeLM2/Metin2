@@ -4,13 +4,16 @@
 # suyo no tiene red. El usuario metin2 no ve el escritorio real, solo este
 # display. El juego se conecta a :7 por el socket Unix de /tmp, que si cruza
 # netns.
-# Uso: bash tools/c01bis/15-xephyr.sh
-#      SIN_NETNS=1 bash tools/c01bis/15-xephyr.sh   # solo depuracion
+# Uso: bash tools/c01bis/15-xephyr.sh                  # ventana (por defecto)
+#      FULLSCREEN=1 bash tools/c01bis/15-xephyr.sh     # pantalla completa opcional
+#      SIN_NETNS=1 bash tools/c01bis/15-xephyr.sh      # solo depuracion
+# Para cerrarlo: bash tools/c01bis/16-xephyr-stop.sh
 set -euo pipefail
 
 NS=m2xephyr
 DISP=:7
 GEOM="${GEOM:-1920x1080}"
+FULLSCREEN="${FULLSCREEN:-0}"
 SOCK="/tmp/.X11-unix/X${DISP#:}"
 LOCK="/tmp/.X${DISP#:}-lock"
 LOGFILE="${LOGFILE:-/tmp/xephyr-c01bis.log}"
@@ -83,6 +86,16 @@ kill_old_xephyr() {
   fi
 }
 
+print_ready() {
+  echo "$1"
+  if [ "$FULLSCREEN" = "1" ]; then
+    echo "Pantalla completa. Para salir: bash tools/c01bis/16-xephyr-stop.sh (o Ctrl+Alt+F3)."
+  else
+    echo "Modo ventana: Alt+Tab funciona; Xephyr no captura teclado ni raton."
+    echo "Para cerrar Xephyr: bash tools/c01bis/16-xephyr-stop.sh"
+  fi
+}
+
 command -v Xephyr >/dev/null 2>&1 || {
   echo "ERROR: falta Xephyr."
   echo "Instalalo con: sudo pacman -S xorg-server-xephyr"
@@ -126,6 +139,7 @@ if display_ok; then
   fi
   if [ -n "$PID" ] && [ "$(proc_inode "$PID")" = "$(netns_inode)" ]; then
     echo "Xephyr ya esta en $DISP dentro de $NS"
+    echo "Para cambiar de modo (ventana/pantalla completa): bash tools/c01bis/16-xephyr-stop.sh"
     exit 0
   fi
   kill_old_xephyr
@@ -134,24 +148,38 @@ elif [ -z "$(xephyr_pid)" ]; then
   sudo rm -f "$LOCK" "$SOCK" 2>/dev/null || true
 fi
 
-echo "== arrancando Xephyr en $DISP ($GEOM, fullscreen) =="
+if [ "$FULLSCREEN" = "1" ]; then
+  MODE="pantalla completa (FULLSCREEN=1)"
+  XARGS=(-fullscreen)
+else
+  MODE="ventana"
+  XARGS=()
+fi
+# -no-host-grab: Xephyr NO secuestra el teclado/raton del host (el fallo de la
+#   primera prueba fue quedarse sin salida en fullscreen).
+# -resizeable: la ventana se puede redimensionar como cualquier otra.
+# -nolisten tcp: no abre puerto TCP; dentro de m2xephyr no habria red igualmente.
 # -ac desactiva el control de acceso SOLO del display :7. El escritorio real
 # sigue siendo :0 y no se abre. Asi metin2 puede pintar sin cookie y sin ver
 # nada del usuario real.
+XARGS+=(-screen "$GEOM" -ac -noreset -no-host-grab -resizeable -nolisten tcp
+        -title "Metin2 (jaula C01-bis)")
+
+echo "== arrancando Xephyr en $DISP ($GEOM, $MODE) =="
+if [ "$FULLSCREEN" = "1" ]; then
+  echo "AVISO: pantalla completa. Si algo se bloquea, abre otra TTY (Ctrl+Alt+F3)"
+  echo "       y ejecuta: bash tools/c01bis/16-xephyr-stop.sh"
+fi
 if [ "$SIN_NETNS" = "1" ]; then
   if [ "$(id -un)" = "$REAL_USER" ]; then
-    nohup env "${ENVV[@]}" Xephyr "$DISP" -screen "$GEOM" -fullscreen -ac -noreset \
-      -title "Metin2 (jaula C01-bis)" >"$LOGFILE" 2>&1 &
+    nohup env "${ENVV[@]}" Xephyr "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
   else
-    nohup sudo -u "$REAL_USER" env "${ENVV[@]}" Xephyr "$DISP" \
-      -screen "$GEOM" -fullscreen -ac -noreset \
-      -title "Metin2 (jaula C01-bis)" >"$LOGFILE" 2>&1 &
+    nohup sudo -u "$REAL_USER" env "${ENVV[@]}" Xephyr "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
   fi
 else
   nohup sudo ip netns exec "$NS" \
     sudo -u "$REAL_USER" env "${ENVV[@]}" \
-    Xephyr "$DISP" -screen "$GEOM" -fullscreen -ac -noreset \
-    -title "Metin2 (jaula C01-bis)" >"$LOGFILE" 2>&1 &
+    Xephyr "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
 fi
 
 for _ in $(seq 1 15); do
@@ -159,15 +187,13 @@ for _ in $(seq 1 15); do
   if display_ok; then
     PID="$(xephyr_pid)"
     if [ "$SIN_NETNS" = "1" ]; then
-      echo "OK: Xephyr listo en $DISP (sin jaula, SIN_NETNS=1)"
-      echo "Para sacar el raton de la ventana: Ctrl+Shift"
+      print_ready "OK: Xephyr listo en $DISP (sin jaula, SIN_NETNS=1)"
       exit 0
     fi
     if [ -z "$PID" ]; then
       echo "AVISO: $DISP responde pero no veo el proceso Xephyr; sigo esperando"
     elif [ "$(proc_inode "$PID")" = "$(netns_inode)" ]; then
-      echo "OK: Xephyr listo en $DISP dentro de $NS"
-      echo "Para sacar el raton de la ventana: Ctrl+Shift"
+      print_ready "OK: Xephyr listo en $DISP dentro de $NS"
       exit 0
     else
       echo "ERROR: Xephyr arranco fuera de $NS. No sigas."

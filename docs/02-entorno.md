@@ -23,6 +23,12 @@ Notas de hardware virtual:
 - El cliente no tiene GPU: DirectX 9 va por **software (WARP)**. Se nota en
   fluidez y en el ratón, no en jugabilidad básica.
 - 8 GB en FreeBSD solo para compilar; en convivencia con el cliente, 4 GB.
+- Los discos de las VMs viven en `/var/lib/libvirt/images/` (la cadena de la
+  FreeBSD, en `/var/lib/libvirt/images/m2-server/`), **nunca** dentro de
+  `/home/metin2/metin2lab`. Ese home es del usuario que ejecuta el cliente sin
+  auditar: si el disco del servidor estuviera ahí, podría renombrarlo o
+  sustituirlo. Además, libvirt corre como `libvirt-qemu` y no debe depender de
+  los permisos de un home.
 
 ## Red del laboratorio
 
@@ -132,6 +138,11 @@ netns "m2xephyr"                  (solo lo, sin rutas)
   real. Xephyr corre como el usuario de la sesión pero dentro de `m2xephyr`,
   un netns vacío: si lo comprometen, no tiene red. El socket X de `/tmp` sí
   cruza netns, por eso el juego puede hablar con `:7`.
+- Xephyr arranca por defecto en **ventana**, con `-no-host-grab -resizeable`:
+  no captura el teclado ni el ratón del host y `Alt+Tab` sigue funcionando.
+  `FULLSCREEN=1` es opcional; para cerrarlo sin depender de atajos,
+  `tools/c01bis/16-xephyr-stop.sh`. La primera prueba se quedó a pantalla
+  completa y sin salida: ese modo no vuelve a ser el de por defecto.
 - Wine 11.21 con WoW64 no crea prefijos `win32` puros: el prefijo es **`win64`**
   y el cliente de 32 bits corre dentro. Sus DLLs (`d3d8`, `d3d9`, `dxgi`) van a
   `syswow64`; las de 64 bits, a `system32`. Copiarlas a `system32` hace que el

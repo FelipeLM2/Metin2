@@ -43,6 +43,10 @@ robar**. En este montaje:
   (solo ve su propio home, `/tmp` y el bus del sistema, ya documentados).
 - Sin carpetas compartidas ni USB redirection. En C01-bis no se pasa audio y
   Xephyr mantiene su portapapeles separado del host por defecto (no hay puente).
+- Los discos de las VMs no viven en el home del cliente: la cadena qcow2 de la
+  FreeBSD está en `/var/lib/libvirt/images/m2-server`, propiedad de
+  `libvirt-qemu`. Así `metin2` no puede leerla, borrarla ni sustituirla, y
+  libvirt no depende de los permisos de `/home`.
 - Snapshots para volver a cero: la VM antes; ahora el subvolumen btrfs dorado
   del cliente, más los snapshots de la FreeBSD.
 

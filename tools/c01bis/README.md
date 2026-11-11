@@ -24,7 +24,8 @@ Scripts, en este orden, desde `~/metin2-docs`:
 | Script | Qué hace | ¿Internet? |
 |---|---|---|
 | `10-usuario.sh` | Crea `metin2`, mueve `~/metin2lab` a su home y protege el real | no |
-| `15-xephyr.sh` | Crea `m2xephyr` y arranca Xephyr `:7` a 1080p dentro de él | no |
+| `15-xephyr.sh` | Crea `m2xephyr` y arranca Xephyr `:7` en ventana (1080p) dentro de él | no |
+| `16-xephyr-stop.sh` | Cierra solo el Xephyr `:7` (salida de emergencia; no toca jaulas) | no |
 | `../c01/20-netns-up.sh` | Crea la jaula de red del juego (reutilizado) | no |
 | `30-run-client.sh` | Lanza el cliente como `metin2` en `:7` y en `metin2lab` | no |
 | `../c01/35-check-isolation.sh` | Red: rutas, conexiones, Internet, DNS | no |
@@ -40,3 +41,9 @@ Reglas que no cambian:
 - Xephyr corre como el usuario real (pinta en la pantalla), pero sin red.
 - Si `35-check-usuario.sh` imprime `PELIGRO`, para y avisa.
 - `90-netns-down.sh` cierra Xephyr y borra las dos jaulas; no se usa a diario.
+- **Los discos de las VMs no viven en `metin2lab`.** Van en
+  `/var/lib/libvirt/images`; `metin2` ejecuta un `.exe` sin auditar y no debe
+  poder tocar la imagen del servidor. `10-usuario.sh` aborta si los encuentra.
+- Xephyr arranca en **ventana** y con `-no-host-grab`: no secuestra el
+  teclado/ratón del host. `FULLSCREEN=1` es opcional; para salir,
+  `16-xephyr-stop.sh`.

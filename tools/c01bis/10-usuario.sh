@@ -25,6 +25,25 @@ if pgrep -f 'metin2client.exe' >/dev/null 2>&1; then
   exit 1
 fi
 
+# Los discos de las VMs NUNCA van dentro del laboratorio del cliente: metin2
+# ejecuta un .exe sin auditar y no debe poder renombrar ni sustituir la imagen
+# del servidor. Ademas libvirt corre como libvirt-qemu y no puede depender de
+# los permisos de /home/metin2. Si aparecen, se para antes de mover nada.
+echo "== comprobando que no hay discos de VM en $SRC =="
+VM_QC="$(sudo find "$SRC" -maxdepth 4 -type f -name '*.qcow2' -print 2>/dev/null | head -n 20 || true)"
+if [ -d "$SRC/vm" ] || [ -n "$VM_QC" ]; then
+  echo "ERROR: hay discos de VM dentro de $SRC."
+  if [ -d "$SRC/vm" ]; then
+    sudo find "$SRC/vm" -maxdepth 1 -type f -printf '  %p\n' 2>/dev/null || true
+  fi
+  if [ -n "$VM_QC" ]; then
+    printf '%s\n' "$VM_QC" | sed 's/^/  /'
+  fi
+  echo "Los discos viven en /var/lib/libvirt/images (ver docs/02-entorno.md)."
+  echo "Muevelos alli y repite; este script no mueve VMs."
+  exit 1
+fi
+
 echo "== usuario $U =="
 if id "$U" >/dev/null 2>&1; then
   echo "ya existe (uid $(id -u "$U"))"
@@ -47,6 +66,28 @@ echo
 echo "== grupos y sudo =="
 id "$U"
 sudo -l -U "$U" 2>&1 | head -n 5 || true
+
+echo
+echo "== comprobando que ninguna VM de libvirt use $HOME =="
+if command -v virsh >/dev/null 2>&1; then
+  DOMS="$(sudo virsh -c qemu:///system list --all --name 2>/dev/null || true)"
+  HOMEREFS=""
+  while IFS= read -r d; do
+    [ -n "$d" ] || continue
+    if sudo virsh -c qemu:///system dumpxml "$d" 2>/dev/null | grep -qF "$HOME/"; then
+      HOMEREFS+="  - $d"$'\n'
+    fi
+  done <<< "$DOMS"
+  if [ -n "$HOMEREFS" ]; then
+    echo "ERROR: estas VMs de libvirt usan archivos de $HOME:"
+    printf '%s' "$HOMEREFS"
+    echo "Mueve esos discos a /var/lib/libvirt/images antes de cerrar el home."
+    exit 1
+  fi
+  echo "ninguna VM usa $HOME"
+else
+  echo "(virsh no esta instalado; no hay VMs que comprobar)"
+fi
 
 echo
 echo "== protegiendo el home del usuario real =="

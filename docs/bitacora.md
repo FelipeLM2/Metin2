@@ -181,7 +181,8 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   sistema y `/tmp` siguen visibles. Xephyr no comparte el portapapeles con `:0`
   por defecto; el puente habría que añadirlo aparte. Contra un exploit de
   kernel solo hay VM o hardware aparte.
-- **Pantalla completa 1080p**: `-screen 1920x1080 -fullscreen`. Xephyr no fija
+- **Pantalla completa 1080p**: `-screen 1920x1080 -fullscreen` (revisado el
+  2026-11-10: pasa a ventana por defecto). Xephyr no fija
   los 144 Hz: la cadena DXVK → Xephyr → KWin → monitor decide; se mide con el
   HUD (`DXVK_HUD=fps`). Si algún día vuelve a 1440p, `GEOM=2560x1440`.
 - **Snapshots**: `/home` es btrfs. `80-snapshot.sh` convierte
@@ -196,3 +197,22 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
 - **Compilar el cliente**: más adelante, precedido de triage estático. «90% de
   confianza» es alcanzable con build reproducible, hashes y lectura dirigida;
   el 100% no existe.
+
+## 2026-11-10 — Incidencia: discos de VM movidos al home del cliente
+
+- `10-usuario.sh` movió `~/metin2lab` entero, incluida `vm/` con la cadena
+  qcow2 de la FreeBSD. El dominio `m2-server` siguió apuntando a
+  `/home/deadivine/metin2lab/vm/...` y dejó de arrancar; además `/home/metin2`
+  quedó en `0700` y libvirt (usuario `libvirt-qemu`) no podía atravesarlo.
+- Arreglo: la cadena (base `metin2-server.qcow2` y seis overlays hasta
+  `Credenciales-ok`, más la memoria de `pre-recompilacion`) se copió a
+  `/var/lib/libvirt/images/m2-server`, se rebasó a nombres relativos con
+  `qemu-img rebase -u`, se actualizaron el XML del dominio y los metadatos de
+  snapshots, y `/home/deadivine` volvió a `0700`. La VM arranca y responde por
+  SSH.
+- Lección: los discos de VM **no** van dentro de `metin2lab`. `10-usuario.sh`
+  ahora aborta si encuentra `*.qcow2` o `vm/` en el laboratorio, y comprueba
+  que ninguna VM de libvirt use archivos del home antes de cerrarlo.
+- Xephyr: el `-fullscreen` sin salida segura queda retirado. Por defecto,
+  ventana con `-no-host-grab -resizeable`; `FULLSCREEN=1` opcional y
+  `16-xephyr-stop.sh` como salida.

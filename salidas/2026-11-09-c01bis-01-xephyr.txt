@@ -1,0 +1,6 @@
+== jaula m2xephyr ya existe ==
+== cerrando DNS en m2xephyr ==
+== arrancando Xephyr en :7 (1920x1080, ventana) ==
+OK: Xephyr listo en :7 dentro de m2xephyr
+Modo ventana: Alt+Tab funciona; Xephyr no captura teclado ni raton.
+Para cerrar Xephyr: bash tools/c01bis/16-xephyr-stop.sh

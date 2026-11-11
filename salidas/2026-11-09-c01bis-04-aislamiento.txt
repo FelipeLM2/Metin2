@@ -1,0 +1,35 @@
+== rutas (no debe haber 'default') ==
+10.10.10.10 dev veth-m2 scope link 
+
+== direcciones ==
+lo               UNKNOWN        127.0.0.1/8 
+veth-m2@if14     UP             10.10.10.20/32 
+
+== conexiones del cliente (solo deberia aparecer 10.10.10.10) ==
+State Recv-Q Send-Q Local Address:Port  Peer Address:Port Process
+ESTAB 0      0        10.10.10.20:53052  10.10.10.10:13002 users:(("metin2client.ex",pid=4732,fd=137),("wineserver",pid=4681,fd=241))
+
+== procesos dentro de la jaula (deberia estar wine/metin2client) ==
+   4676 sudo            sudo -u metin2 env -u XAUTHORITY -u DBUS_SESSION_BUS_ADDRESS HOME=/home/metin2 DISPLAY=:7 XDG_RUNTIME_DIR=/run/user/1001 WINEPREFIX=/home/metin2/metin2lab/wine/prefix WINEARCH=win64 WINEDEBUG=-all WINEDLLOVERRIDES=mscoree,mshtml=;d3d8,d3d9,dxgi=n,b DXVK_HUD=fps,gpu,devinfo DXVK_LOG_LEVEL=info DXVK_LOG_PATH=C:\Games\Metin2\dxvk-logs DXVK_STATE_CACHE_PATH=C:\Games\Metin2\dxvk-state sh -c cd "$HOME/metin2lab/wine/prefix/drive_c/Games/Metin2" && exec "$0" metin2client.exe /usr/bin/wine
+   4678 sudo            sudo -u metin2 env -u XAUTHORITY -u DBUS_SESSION_BUS_ADDRESS HOME=/home/metin2 DISPLAY=:7 XDG_RUNTIME_DIR=/run/user/1001 WINEPREFIX=/home/metin2/metin2lab/wine/prefix WINEARCH=win64 WINEDEBUG=-all WINEDLLOVERRIDES=mscoree,mshtml=;d3d8,d3d9,dxgi=n,b DXVK_HUD=fps,gpu,devinfo DXVK_LOG_LEVEL=info DXVK_LOG_PATH=C:\Games\Metin2\dxvk-logs DXVK_STATE_CACHE_PATH=C:\Games\Metin2\dxvk-state sh -c cd "$HOME/metin2lab/wine/prefix/drive_c/Games/Metin2" && exec "$0" metin2client.exe /usr/bin/wine
+   4679 start.exe       start.exe /exec
+   4681 wineserver      /usr/lib/wine/../../bin/wineserver
+   4687 services.exe    C:\windows\system32\services.exe
+   4690 winedevice.exe  C:\windows\system32\winedevice.exe
+   4700 plugplay.exe    C:\windows\system32\plugplay.exe
+   4706 svchost.exe     C:\windows\system32\svchost.exe -k LocalServiceNetworkRestricted
+   4712 winedevice.exe  C:\windows\system32\winedevice.exe
+   4730 conhost.exe     C:\windows\system32\conhost.exe --unix --width 0 --height 0 --server 0x34
+   4732 metin2client.ex C:\Games\Metin2\metin2client.exe
+   4734 explorer.exe    C:\windows\system32\explorer.exe /desktop
+   4750 rpcss.exe       C:\windows\system32\rpcss.exe
+
+== intento a Internet (debe fallar) ==
+OK: sin salida a Internet
+
+== DNS (debe fallar) ==
+-- resolv.conf en la jaula:
+(vacio)
+-- hosts en nsswitch:
+hosts:      files
+OK: sin DNS

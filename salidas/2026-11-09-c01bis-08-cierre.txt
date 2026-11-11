@@ -1,0 +1,10 @@
+== cerrando Xephyr :7 ==
+Xephyr cerrado
+
+== cerrando el wineserver del cliente ==
+(el usuario metin2 o el prefijo no existen todavia; nada que cerrar)
+
+jaula metin2lab borrada
+limpio /etc/netns/metin2lab
+jaula m2xephyr borrada
+limpio /etc/netns/m2xephyr

@@ -1,0 +1,18 @@
+== usuario metin2 ==
+creado (uid 1001)
+
+== grupos y sudo ==
+uid=1001(metin2) gid=1001(metin2) grupos=1001(metin2),987(render),983(video)
+User metin2 is not allowed to run sudo on DeaDivine.
+
+== protegiendo el home del usuario real ==
+drwx------ deadivine /home/deadivine
+
+== moviendo /home/deadivine/metin2lab -> /home/metin2/metin2lab ==
+
+== XDG_RUNTIME_DIR de metin2 ==
+
+== comprobando el cliente en su nuevo sitio ==
+-rw-r--r-- 1 metin2 metin2 2844160 jun 11  2023 /home/metin2/metin2lab/wine/prefix/drive_c/Games/Metin2/metin2client.exe
+
+OK. Siguiente: bash tools/c01bis/15-xephyr.sh

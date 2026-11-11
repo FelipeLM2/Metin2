@@ -1,0 +1,37 @@
+== filesystem de /home/metin2/metin2lab: btrfs ==
+== cerrando el wineserver del cliente ==
+
+== convirtiendo /home/metin2/metin2lab en subvolumen ==
+Create subvolume '/home/metin2/metin2lab'
+copia antigua conservada en /home/metin2/metin2lab.pre-subvol (borrala cuando compruebes que todo va)
+== creando copia dorada read-only ==
+Create readonly snapshot of '/home/metin2/metin2lab' in '/home/metin2/metin2lab-golden'
+
+== resultado ==
+@home/metin2/metin2lab
+	Name: 			metin2lab
+	UUID: 			df7a46a3-6fea-534c-8329-6d9d36afe000
+	Parent UUID: 		-
+	Received UUID: 		-
+	Creation time: 		2026-11-11 12:17:54 -0500
+	Subvolume ID: 		322
+	Generation: 		40230
+	Gen at creation: 	40230
+	Parent ID: 		257
+	Top level ID: 		257
+	Flags: 			-
+
+@home/metin2/metin2lab-golden
+	Name: 			metin2lab-golden
+	UUID: 			10c614fe-2b96-d248-aec1-4dd86dcc9908
+	Parent UUID: 		df7a46a3-6fea-534c-8329-6d9d36afe000
+	Received UUID: 		-
+	Creation time: 		2026-11-11 12:17:55 -0500
+	Subvolume ID: 		323
+	Generation: 		40230
+	Gen at creation: 	40230
+	Parent ID: 		257
+	Top level ID: 		257
+	Flags: 			readonly
+
+OK. Para volver a esta copia si algo se rompe: bash tools/c01bis/85-reset.sh

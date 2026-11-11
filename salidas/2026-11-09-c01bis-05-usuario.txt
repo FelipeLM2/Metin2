@@ -1,0 +1,36 @@
+== identidad y sudo ==
+uid=1001(metin2) gid=1001(metin2) grupos=1001(metin2),987(render),983(video)
+User metin2 is not allowed to run sudo on DeaDivine.
+
+== home del usuario real ==
+drwx------ deadivine /home/deadivine
+-- intento de leer /home/deadivine (debe fallar):
+OK: sin acceso a /home/deadivine
+
+== laboratorio ==
+drwx------ metin2 /home/metin2
+drwxr-xr-x metin2 /home/metin2/metin2lab/wine/prefix
+
+== Xephyr en su propia jaula (m2xephyr, solo lo) ==
+-- interfaces:
+lo               UNKNOWN        127.0.0.1/8 
+-- rutas (debe estar vacio):
+OK: m2xephyr sin rutas
+OK: m2xephyr sin DNS
+OK: m2xephyr solo tiene lo
+-- procesos dentro (deberia estar Xephyr):
+    PID USER     COMMAND
+   4538 root     sudo
+   4540 root     sudo
+   4541 deadivi+ Xephyr
+OK: Xephyr corre dentro de m2xephyr
+OK: el Xephyr de :7 esta en m2xephyr
+
+== bus de sesion del usuario (debe estar fuera de alcance) ==
+OK: sin acceso al bus de sesion
+
+== bus del sistema (residual conocido) ==
+AVISO: metin2 puede leer el bus del sistema; queda como riesgo residual.
+
+== audio del usuario (debe estar fuera de alcance) ==
+OK: sin audio (el juego va en silencio a proposito)

@@ -1,0 +1,89 @@
+C01-bis - Xephyr: reenviar el warp del puntero al servidor real.
+
+Problema: el cliente Metin2 llama GetCursorPos cada frame y recentra con
+SetCursorPos al punto de la pulsacion. Xephyr solo mueve su puntero interno
+(ephyrWarpCursor -> miPointerWarpCursor), asi que el puntero fisico se queda
+donde esta y la camara recibe el salto absoluto.
+
+Arreglo: cuando Xephyr procesa un warp, mandar tambien XWarpPointer al
+servidor X real. El warp se aplica desde el hilo principal
+(ephyrScreenBlockHandler), porque la conexion xcb de Xephyr no es thread-safe.
+
+Se aplica sobre el tarball oficial xorg-server-<version> con: patch -p1
+
+--- a/hw/kdrive/ephyr/hostx.h
++++ b/hw/kdrive/ephyr/hostx.h
+@@ -168,6 +168,9 @@
+ 
+ int
+  hostx_get_window(int a_screen_number);
++
++void
++ hostx_warp_pointer(int a_screen_number, int x, int y);
+ 
+ int
+  hostx_get_window_attributes(int a_window, EphyrHostWindowAttributes * a_attr);
+--- a/hw/kdrive/ephyr/hostx.c
++++ b/hw/kdrive/ephyr/hostx.c
+@@ -1346,6 +1346,25 @@
+     scrpriv = HostX.screens[a_screen_number]->driver;
+     return scrpriv->win;
+ }
++
++/*
++ * C01-bis: mueve tambien el puntero del servidor real. Xephyr solo movia
++ * su puntero interno; el cliente Metin2 recentra con SetCursorPos cada
++ * frame y lee la posicion con GetCursorPos, asi que necesita que el
++ * puntero fisico vuelva de verdad al punto de la pulsacion.
++ * Se llama desde el hilo principal (ephyrScreenBlockHandler).
++ */
++void
++hostx_warp_pointer(int a_screen_number, int x, int y)
++{
++    int win = hostx_get_window(a_screen_number);
++
++    if (!HostX.conn || !win)
++        return;
++
++    xcb_warp_pointer(HostX.conn, XCB_NONE, win, 0, 0, 0, 0, x, y);
++    xcb_flush(HostX.conn);
++}
+ 
+ int
+ hostx_get_window_attributes(int a_window, EphyrHostWindowAttributes * a_attrs)
+--- a/hw/kdrive/ephyr/ephyr.c
++++ b/hw/kdrive/ephyr/ephyr.c
+@@ -366,6 +366,13 @@
+             FatalError("cannot queue event processing in ephyr block handler");
+         AdjustWaitForDelay(timeout, 0);
+     }
++
++    /* C01-bis: aplicar el warp al servidor real desde el hilo principal.
++       La conexion xcb de Xephyr no es thread-safe. */
++    if (ephyrHostWarpPending) {
++        ephyrHostWarpPending = FALSE;
++        hostx_warp_pointer(pScreen->myNum, ephyrHostWarpX, ephyrHostWarpY);
++    }
+ }
+ 
+ Bool
+@@ -820,12 +820,19 @@
+ 
+ ScreenPtr ephyrCursorScreen; /* screen containing the cursor */
+ 
++/* C01-bis: warp pendiente de aplicar al servidor real (hilo principal). */
++static Bool ephyrHostWarpPending = FALSE;
++static int ephyrHostWarpX, ephyrHostWarpY;
++
+ static void
+ ephyrWarpCursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
+ {
+     input_lock();
+     ephyrCursorScreen = pScreen;
+     miPointerWarpCursor(inputInfo.pointer, pScreen, x, y);
++    ephyrHostWarpX = x;
++    ephyrHostWarpY = y;
++    ephyrHostWarpPending = TRUE;
+ 
+     input_unlock();
+ }

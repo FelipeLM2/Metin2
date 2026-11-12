@@ -8,6 +8,9 @@
 #      HOST_GRAB=1 bash tools/c01bis/15-xephyr.sh      # ventana + captura raton/teclado
 #      FULLSCREEN=1 bash tools/c01bis/15-xephyr.sh     # pantalla completa opcional
 #      SIN_NETNS=1 bash tools/c01bis/15-xephyr.sh      # solo depuracion
+#      XEPHYR_BIN=/ruta/a/Xephyr bash ...             # usar otro binario
+# Si existe ~/.local/bin/Xephyr (14-xephyr-warp.sh), se usa ese: es el que
+# reenvia el warp del puntero al servidor real y arregla la camara.
 # Para cerrarlo: bash tools/c01bis/16-xephyr-stop.sh
 set -euo pipefail
 
@@ -102,16 +105,32 @@ print_ready() {
     echo "Ctrl+Shift lo suelta; para cerrar: bash tools/c01bis/16-xephyr-stop.sh"
   else
     echo "Modo ventana: Alt+Tab funciona; Xephyr no captura teclado ni raton."
-    echo "Si la camara del juego va a saltos, prueba: HOST_GRAB=1 bash tools/c01bis/15-xephyr.sh"
     echo "Para cerrar Xephyr: bash tools/c01bis/16-xephyr-stop.sh"
+  fi
+  if [ "$CAM_FIX" = "1" ]; then
+    echo "Camara: Xephyr parcheado (warp real). Arrastra con el boton derecho."
+  else
+    echo "Camara: si da saltos, compila el Xephyr parcheado:"
+    echo "  bash tools/c01bis/14-xephyr-warp.sh"
   fi
 }
 
-command -v Xephyr >/dev/null 2>&1 || {
+# Prefiere el Xephyr parcheado de 14-xephyr-warp.sh. El de pacman solo mueve
+# su puntero interno y ahi la camara del cliente da saltos.
+XEPHYR_BIN="${XEPHYR_BIN:-$REAL_HOME/.local/bin/Xephyr}"
+if [ ! -x "$XEPHYR_BIN" ]; then
+  XEPHYR_BIN="$(command -v Xephyr 2>/dev/null || true)"
+fi
+if [ -z "$XEPHYR_BIN" ]; then
   echo "ERROR: falta Xephyr."
   echo "Instalalo con: sudo pacman -S xorg-server-xephyr"
+  echo "O compila el parcheado: bash tools/c01bis/14-xephyr-warp.sh"
   exit 1
-}
+fi
+CAM_FIX=0
+if [ "$XEPHYR_BIN" = "$REAL_HOME/.local/bin/Xephyr" ]; then
+  CAM_FIX=1
+fi
 
 if [ "$SIN_NETNS" = "1" ]; then
   echo "AVISO: SIN_NETNS=1: Xephyr correra SIN jaula. Solo para depurar."
@@ -184,20 +203,21 @@ else
 fi
 
 echo "== arrancando Xephyr en $DISP ($GEOM, $MODE) =="
+echo "   binario: $XEPHYR_BIN"
 if [ "$FULLSCREEN" = "1" ]; then
   echo "AVISO: pantalla completa. Si algo se bloquea, abre otra TTY (Ctrl+Alt+F3)"
   echo "       y ejecuta: bash tools/c01bis/16-xephyr-stop.sh"
 fi
 if [ "$SIN_NETNS" = "1" ]; then
   if [ "$(id -un)" = "$REAL_USER" ]; then
-    nohup env "${ENVV[@]}" Xephyr "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
+    nohup env "${ENVV[@]}" "$XEPHYR_BIN" "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
   else
-    nohup sudo -u "$REAL_USER" env "${ENVV[@]}" Xephyr "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
+    nohup sudo -u "$REAL_USER" env "${ENVV[@]}" "$XEPHYR_BIN" "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
   fi
 else
   nohup sudo ip netns exec "$NS" \
     sudo -u "$REAL_USER" env "${ENVV[@]}" \
-    Xephyr "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
+    "$XEPHYR_BIN" "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
 fi
 
 for _ in $(seq 1 15); do

@@ -2,6 +2,8 @@
 # C01-bis - Lanza el cliente como el usuario metin2, dentro de la jaula de red
 # y en el display anidado de Xephyr.
 # Uso: bash tools/c01bis/30-run-client.sh
+#      WINEDEBUG=+winex11 bash tools/c01bis/30-run-client.sh   # traza raton/X11
+#      (la traza crece muy rapido: usala solo para pruebas cortas)
 set -euo pipefail
 
 NS=metin2lab
@@ -52,7 +54,7 @@ sudo ip netns exec "$NS" \
       XDG_RUNTIME_DIR="/run/user/$UID_M2" \
       WINEPREFIX="$PREFIX" \
       WINEARCH=win64 \
-      WINEDEBUG=-all \
+      WINEDEBUG="${WINEDEBUG:--all}" \
       WINEDLLOVERRIDES="mscoree,mshtml=;d3d8,d3d9,dxgi=n,b" \
       DXVK_HUD="${DXVK_HUD:-fps,gpu,devinfo}" \
       DXVK_LOG_LEVEL="${DXVK_LOG_LEVEL:-info}" \

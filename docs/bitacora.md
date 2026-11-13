@@ -253,3 +253,34 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   Pendiente para C02: decidir si se cierra el bus del sistema con
   `bubblewrap`, si se reduce la resolución de Xephyr por los FPS y si se
   investiga la captura del ratón como modo por defecto.
+
+## 2026-11-12 — C02: bus del sistema enmascarado (y cámara aparcada)
+
+- **Cámara: aparcada.** `14-xephyr-warp.sh` y su parche (`14-xephyr-warp.patch`,
+  commit `d8c8526`) se aplicaron, pero el arrastre con el botón derecho siguió
+  igual y **no está confirmado que el parche llegara a compilarse** (no se pidió
+  la salida del build). No se revierte ni se borra nada; se retoma cuando se
+  quiera, empezando por leer esa salida. Es un detalle menor frente al resto.
+- **Decisión**: cerrar el bus del sistema **sin paquetes nuevos**. Se descarta
+  `bubblewrap` (binario externo y SUID en algunos montajes) porque ya se usa
+  `sudo` para el netns: basta un mount namespace.
+- **Implementación**: `19-sin-bus.sh` (nuevo) hace
+  `mount --bind /dev/null /run/dbus/system_bus_socket` y luego
+  `exec sudo -u metin2`. `15-xephyr.sh` y `30-run-client.sh` lo invocan dentro
+  de `sudo ip netns exec … unshare --mount --propagation private`. El montaje
+  solo existe en ese namespace; al morir el proceso, desaparece. No hay cambios
+  persistentes ni servicios nuevos. Además se borra `DBUS_SYSTEM_BUS_ADDRESS`
+  del entorno para que nadie apunte el cliente a otra dirección.
+- **Red de seguridad**: si `unshare --mount` no funciona, `15` y `30` **paran**
+  en vez de arrancar con el bus visible. `SIN_BUS=1` es la única forma de
+  dejarlo visible, y avisa en el log; `SIN_NETNS=1` implica lo mismo.
+- **Chequeo**: `35-check-usuario.sh` ya no mira el host. Busca el proceso del
+  cliente (o Xephyr) y entra con `nsenter -t PID -m` para comprobar el socket
+  **dentro** de su namespace. Si no puede entrar, lo dice con `INFO` y cae al
+  chequeo del host; no lo marca como `PELIGRO` por un fallo de `nsenter`.
+- **Pendiente de validar en CachyOS**: que el montaje funcione
+  (`OK: bus del sistema enmascarado` en el log) y que Wine siga arrancando sin
+  D-Bus. Si algo se rompe, se revierte con `SIN_BUS=1` y se investiga.
+- Sigue fuera de alcance: `/tmp` compartido, la cookie de `:0` en manos de
+  Xephyr y un exploit de kernel. Contra lo último solo hay VM o hardware
+  aparte.

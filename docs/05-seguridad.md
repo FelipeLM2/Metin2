@@ -40,7 +40,7 @@ robar**. En este montaje:
 - Red aislada sin forwarding: no hay ruta a Internet ni a la LAN doméstica.
 - Cero datos personales, cuentas, correo o nube en el entorno del cliente: la
   VM no los tenía; en C01-bis el usuario `metin2` no puede leer el home real
-  (solo ve su propio home, `/tmp` y el bus del sistema, ya documentados).
+  (solo ve su propio home, `/tmp` y el display `:7`, ya documentados).
 - Sin carpetas compartidas ni USB redirection. En C01-bis no se pasa audio y
   Xephyr mantiene su portapapeles separado del host por defecto (no hay puente).
 - Los discos de las VMs no viven en el home del cliente: la cadena qcow2 de la
@@ -113,13 +113,24 @@ portapapeles. No se le pasa audio ni bus de sesión (sus sockets son 0600 del
 usuario real). Además, Xephyr corre dentro de un netns vacío (`m2xephyr`, solo
 `lo`, sin rutas ni DNS): si lo comprometen, el código no tiene red. El juego
 sigue en `metin2lab` y se conecta a `:7` por el socket Unix
-`/tmp/.X11-unix/X7`, que los netns no aíslan. Quedan fuera de alcance el
-**bus del sistema** (`/run/dbus/system_bus_socket`, 0666), `/tmp` compartido y
-el hecho de que Xephyr corre como el usuario real, con la cookie de `:0` (sin
-red, pero con acceso a sus archivos y a su sesión X). Xephyr no comparte el
-portapapeles con `:0` por defecto; si algún día se añade un sincronizador, se
-abre ese puente. C02 decidirá si el bus se cierra con `bubblewrap` o si merece
-la pena volver a una VM.
+`/tmp/.X11-unix/X7`, que los netns no aíslan.
+
+El **bus del sistema** (`/run/dbus/system_bus_socket`, 0666) era la última vía
+conocida hacia el host: cualquier proceso del cliente podía hablar con systemd,
+logind o NetworkManager. **C02 lo cierra sin paquetes nuevos:** `15-xephyr.sh` y
+`30-run-client.sh` se envuelven en `unshare --mount --propagation private` y
+`19-sin-bus.sh` hace `mount --bind /dev/null` sobre ese socket dentro del
+namespace. El montaje vive solo en ese proceso y desaparece al terminar; el host
+no cambia y no hace falta `bubblewrap` ni un binario SUID. Además se borra
+`DBUS_SYSTEM_BUS_ADDRESS` del entorno, para que nadie pueda apuntar el cliente a
+otra dirección. `35-check-usuario.sh` ya no comprueba el host: entra con
+`nsenter` en el mount namespace del cliente (o de Xephyr) y mira ahí, que es
+donde importa.
+
+Siguen fuera de alcance `/tmp` compartido y el hecho de que Xephyr corre como el
+usuario real, con la cookie de `:0` (sin red, pero con acceso a sus archivos y a
+su sesión X). Xephyr no comparte el portapapeles con `:0` por defecto; si algún
+día se añade un sincronizador, se abre ese puente.
 
 **Matiz aprendido en la primera ejecución (C01):** vaciar `resolv.conf` no
 desactiva la resolución de nombres si `nsswitch.conf` incluye `nss-resolve`:

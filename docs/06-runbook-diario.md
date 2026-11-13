@@ -78,6 +78,10 @@ bash tools/c01bis/15-xephyr.sh 2>&1 | tee salidas/dia-xephyr.txt
 Debe decir `OK: Xephyr listo en :7 dentro de m2xephyr` y abrir una ventana
 titulada **Metin2 (jaula C01-bis)**.
 
+- El bus del sistema se enmascara solo en el namespace de Xephyr
+  (`19-sin-bus.sh`): en el log debe aparecer
+  `OK: bus del sistema enmascarado`. Si el montaje no funciona, `15` para en
+  vez de arrancar sin él.
 - Por defecto va **en ventana** y no captura el teclado ni el ratón: `Alt+Tab`
   funciona.
 - Si la cámara del juego da saltos, prueba la captura de ratón:
@@ -112,8 +116,10 @@ bash tools/c01/35-check-isolation.sh 2>&1 | tee salidas/dia-aislamiento.txt
 bash tools/c01bis/35-check-usuario.sh 2>&1 | tee salidas/dia-usuario.txt
 ```
 
-Debe salir `OK` en red, home, bus de sesión, audio y `m2xephyr`; el **`AVISO`
-del bus del sistema** es el riesgo residual conocido.
+Debe salir `OK` en red, home, bus de sesión, **bus del sistema**, audio y
+`m2xephyr`. El bus del sistema se comprueba **dentro** del namespace del
+cliente; si `35` imprime `PELIGRO` ahí, es que el proceso se lanzó con
+`SIN_BUS=1` (mal) o el montaje no se aplicó.
 
 ---
 
@@ -207,6 +213,13 @@ Ideas para probar, **una cada vez** y apuntando el resultado:
 5. Si no necesitas al agente mientras juegas, apaga su VM Windows: son 2 vCPU
    y 4 GB que compiten con el host.
 
+> **Cámara: aparcada.** El primer intento (`14-xephyr-warp.sh`) no arregló el
+> arrastre con el botón derecho y no está confirmado que el parche compilara.
+> No se dedica más tiempo por ahora; se retomará pidiendo la salida completa del
+> build. Mientras tanto, la cámara sigue como en C01-bis y el `AVISO` de
+> `14` en `15` (**`Camara: si da saltos...`**) es esperado si no existe
+> `~/.local/bin/Xephyr`.
+
 ---
 
 ## Fallos rápidos
@@ -216,6 +229,7 @@ Ideas para probar, **una cada vez** y apuntando el resultado:
 | `20` dice que no existe `virbr-lab` | la VM FreeBSD no está arrancada: `sudo virsh start m2-server`. |
 | `30` dice que no existe la jaula | paso 1: `bash tools/c01/20-netns-up.sh`. |
 | `30` dice que no existe `:7` | paso 2: `bash tools/c01bis/15-xephyr.sh`. |
+| `15` o `30` dicen que `unshare --mount` no funciona | kernel sin permisos para mount ns: para y publica la salida. `SIN_BUS=1` solo para depurar. |
 | `15` dice que Xephyr ya está | ya está corriendo; sigue en `30`, o ciérralo con `16` para cambiar de modo. |
 | La ventana de Xephyr sale negra | el cliente aún no ha pintado; espera o mira `salidas/dia-cliente.txt`. |
 | El ratón se queda dentro de Xephyr | `Ctrl+Shift`; si no, `Ctrl+Alt+F3`, `bash tools/c01bis/16-xephyr-stop.sh`, vuelve con `Ctrl+Alt+F1`. |

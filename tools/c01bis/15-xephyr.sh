@@ -8,6 +8,7 @@
 #      HOST_GRAB=1 bash tools/c01bis/15-xephyr.sh      # ventana + captura raton/teclado
 #      FULLSCREEN=1 bash tools/c01bis/15-xephyr.sh     # pantalla completa opcional
 #      SIN_NETNS=1 bash tools/c01bis/15-xephyr.sh      # solo depuracion
+#      SIN_BUS=1 bash tools/c01bis/15-xephyr.sh        # no ocultar el bus (depurar)
 #      XEPHYR_BIN=/ruta/a/Xephyr bash ...             # usar otro binario
 # Si existe ~/.local/bin/Xephyr (14-xephyr-warp.sh), se usa ese: es el que
 # reenvia el warp del puntero al servidor real y arregla la camara.
@@ -28,6 +29,10 @@ SOCK="/tmp/.X11-unix/X${DISP#:}"
 LOCK="/tmp/.X${DISP#:}-lock"
 LOGFILE="${LOGFILE:-/tmp/xephyr-c01bis.log}"
 SIN_NETNS="${SIN_NETNS:-0}"
+# Por defecto se oculta el bus del sistema a Xephyr (19-sin-bus.sh). SIN_BUS=1
+# lo deja visible; solo para depurar un fallo del montaje.
+SIN_BUS="${SIN_BUS:-0}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Xephyr pinta en la pantalla real, asi que corre como el usuario de la sesion,
 # no como metin2. El netns lo pone root; despues se baja a este usuario.
@@ -132,8 +137,22 @@ if [ "$XEPHYR_BIN" = "$REAL_HOME/.local/bin/Xephyr" ]; then
   CAM_FIX=1
 fi
 
+# El cierre del bus usa unshare --mount (util-linux) y solo funciona como root,
+# dentro del netns. Si no esta disponible, mejor parar que arrancar sin el.
+if [ "$SIN_NETNS" != "1" ] && [ "$SIN_BUS" != "1" ]; then
+  command -v unshare >/dev/null 2>&1 || {
+    echo "ERROR: falta unshare (paquete util-linux)."
+    exit 1
+  }
+  if ! sudo unshare --mount --propagation private true 2>/dev/null; then
+    echo "ERROR: 'unshare --mount' no funciona en este sistema."
+    echo "No arranco Xephyr sin cerrar el bus. Para depurar: SIN_BUS=1 bash $0"
+    exit 1
+  fi
+fi
+
 if [ "$SIN_NETNS" = "1" ]; then
-  echo "AVISO: SIN_NETNS=1: Xephyr correra SIN jaula. Solo para depurar."
+  echo "AVISO: SIN_NETNS=1: Xephyr correra SIN jaula y sin cerrar el bus. Solo para depurar."
 else
   if netns_exists; then
     echo "== jaula $NS ya existe =="
@@ -204,19 +223,31 @@ fi
 
 echo "== arrancando Xephyr en $DISP ($GEOM, $MODE) =="
 echo "   binario: $XEPHYR_BIN"
+if [ "$SIN_NETNS" = "1" ]; then
+  echo "   bus del sistema: visible (SIN_NETNS=1, solo depuracion)"
+elif [ "$SIN_BUS" = "1" ]; then
+  echo "   bus del sistema: visible (SIN_BUS=1, solo depuracion)"
+else
+  echo "   bus del sistema: enmascarado (mount ns)"
+fi
 if [ "$FULLSCREEN" = "1" ]; then
   echo "AVISO: pantalla completa. Si algo se bloquea, abre otra TTY (Ctrl+Alt+F3)"
   echo "       y ejecuta: bash tools/c01bis/16-xephyr-stop.sh"
 fi
 if [ "$SIN_NETNS" = "1" ]; then
   if [ "$(id -un)" = "$REAL_USER" ]; then
-    nohup env "${ENVV[@]}" "$XEPHYR_BIN" "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
+    nohup env -u DBUS_SYSTEM_BUS_ADDRESS "${ENVV[@]}" \
+      "$XEPHYR_BIN" "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
   else
-    nohup sudo -u "$REAL_USER" env "${ENVV[@]}" "$XEPHYR_BIN" "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
+    nohup sudo -u "$REAL_USER" env -u DBUS_SYSTEM_BUS_ADDRESS "${ENVV[@]}" \
+      "$XEPHYR_BIN" "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
   fi
 else
   nohup sudo ip netns exec "$NS" \
-    sudo -u "$REAL_USER" env "${ENVV[@]}" \
+    env SIN_BUS="$SIN_BUS" \
+    unshare --mount --propagation private \
+    bash "$HERE/19-sin-bus.sh" "$REAL_USER" \
+    env -u DBUS_SYSTEM_BUS_ADDRESS "${ENVV[@]}" \
     "$XEPHYR_BIN" "$DISP" "${XARGS[@]}" >"$LOGFILE" 2>&1 &
 fi
 

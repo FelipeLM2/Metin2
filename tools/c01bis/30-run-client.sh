@@ -4,11 +4,14 @@
 # Uso: bash tools/c01bis/30-run-client.sh
 #      WINEDEBUG=+winex11 bash tools/c01bis/30-run-client.sh   # traza raton/X11
 #      (la traza crece muy rapido: usala solo para pruebas cortas)
+#      SIN_BUS=1 bash tools/c01bis/30-run-client.sh             # no ocultar el bus (depurar)
 set -euo pipefail
 
 NS=metin2lab
 DISP=:7
 U=metin2
+SIN_BUS="${SIN_BUS:-0}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE="/home/$U/metin2lab/wine"
 PREFIX="$BASE/prefix"
 GAME="$PREFIX/drive_c/Games/Metin2"
@@ -32,8 +35,22 @@ sudo install -d -m 700 -o "$U" -g "$U" "/run/user/$UID_M2"
 sudo -u "$U" mkdir -p "$ULOG"
 sudo -u "$U" mkdir -p "$GAME/dxvk-logs" "$GAME/dxvk-state"
 
+# El bus del sistema se oculta en un mount namespace (19-sin-bus.sh). Si el
+# montaje no es posible, mejor no lanzar el cliente que hacerlo con el bus.
+if [ "$SIN_BUS" != "1" ]; then
+  command -v unshare >/dev/null 2>&1 \
+    || { echo "ERROR: falta unshare (paquete util-linux)."; exit 1; }
+  sudo unshare --mount --propagation private true 2>/dev/null \
+    || { echo "ERROR: 'unshare --mount' no funciona. Para depurar: SIN_BUS=1 bash $0"; exit 1; }
+fi
+
 echo "== lanzando metin2client.exe como $U dentro de $NS, en $DISP =="
 echo "log: $LOG"
+if [ "$SIN_BUS" = "1" ]; then
+  echo "bus del sistema: visible (SIN_BUS=1, solo depuracion)"
+else
+  echo "bus del sistema: enmascarado (mount ns)"
+fi
 echo "Cuando aparezca la ventana, entra al juego. Deja esta terminal abierta."
 echo
 
@@ -42,13 +59,16 @@ echo
 sudo -u "$U" env HOME="/home/$U" WINEPREFIX="$PREFIX" WINEARCH=win64 \
   wineserver -k 2>/dev/null || true
 
-# Sin bus de sesion ni cookie de X del usuario real. El display :7 es anonimo
-# (-ac) y solo pinta las ventanas de este cliente. El cd va dentro del shell de
-# metin2 porque nuestro usuario no puede entrar en /home/metin2.
+# Sin bus de sesion, sin cookie de X del usuario real y con el bus del sistema
+# enmascarado por 19-sin-bus.sh. El display :7 es anonimo (-ac) y solo pinta las
+# ventanas de este cliente. El cd va dentro del shell de metin2 porque nuestro
+# usuario no puede entrar en /home/metin2.
 set +e
 sudo ip netns exec "$NS" \
-  sudo -u "$U" \
-  env -u XAUTHORITY -u DBUS_SESSION_BUS_ADDRESS \
+  env SIN_BUS="$SIN_BUS" \
+  unshare --mount --propagation private \
+  bash "$HERE/19-sin-bus.sh" "$U" \
+  env -u XAUTHORITY -u DBUS_SESSION_BUS_ADDRESS -u DBUS_SYSTEM_BUS_ADDRESS \
       HOME="/home/$U" \
       DISPLAY="$DISP" \
       XDG_RUNTIME_DIR="/run/user/$UID_M2" \

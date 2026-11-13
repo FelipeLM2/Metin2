@@ -96,11 +96,32 @@ else
 fi
 
 echo
-echo "== bus del sistema (residual conocido) =="
-if sudo -u "$U" test -r /run/dbus/system_bus_socket; then
-  echo "AVISO: $U puede leer el bus del sistema; queda como riesgo residual."
+echo "== bus del sistema (debe estar fuera de alcance) =="
+# 15 y 30 enmascaran el socket dentro del mount namespace de cada proceso. Por
+# eso se mira el namespace del cliente (o el de Xephyr), no el del host.
+BPID="$(sudo -u "$U" pgrep -f 'metin2client\.exe' 2>/dev/null | head -n 1 || true)"
+if [ -z "$BPID" ]; then
+  BPID="$(pgrep -x Xephyr 2>/dev/null | head -n 1 || true)"
+fi
+# Si no puedo entrar en su namespace (proceso ya muerto, permisos), no es un
+# PELIGRO: simplemente no hay nada que comprobar ahi.
+if [ -n "$BPID" ] && ! sudo nsenter -t "$BPID" -m -- true 2>/dev/null; then
+  echo "INFO: no pude entrar en el mount ns del proceso $BPID; sigo con el host."
+  BPID=""
+fi
+if [ -n "$BPID" ]; then
+  if sudo nsenter -t "$BPID" -m -- /bin/sh -c 'test -S /run/dbus/system_bus_socket'; then
+    echo "PELIGRO: el proceso $BPID ve el bus del sistema (¿lanzado con SIN_BUS=1?)."
+  else
+    echo "OK: el proceso $BPID no ve el bus del sistema (mount ns)"
+  fi
 else
-  echo "OK: sin acceso al bus del sistema"
+  echo "(ni cliente ni Xephyr en marcha; no hay namespace que comprobar)"
+  if sudo -u "$U" test -r /run/dbus/system_bus_socket; then
+    echo "INFO: $U si puede leerlo desde el host; 15/30 lo enmascaran al lanzar."
+  else
+    echo "OK: $U no puede leerlo ni desde el host"
+  fi
 fi
 
 echo

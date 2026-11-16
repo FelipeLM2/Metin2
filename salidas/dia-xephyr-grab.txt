@@ -1,0 +1,8 @@
+== jaula m2xephyr ya existe ==
+== cerrando DNS en m2xephyr ==
+AVISO: HOST_GRAB=1: Xephyr capturara el raton/teclado al jugar.
+       Ctrl+Shift suelta la captura; 16-xephyr-stop.sh es la salida segura.
+== arrancando Xephyr en :7 (1280x720, ventana) ==
+OK: Xephyr listo en :7 dentro de m2xephyr
+Modo ventana CON captura: al jugar, el raton queda dentro de Xephyr.
+Ctrl+Shift lo suelta; para cerrar: bash tools/c01bis/16-xephyr-stop.sh

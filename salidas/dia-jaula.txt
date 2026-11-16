@@ -1,0 +1,31 @@
+La jaula metin2lab ya existe; no la recreo.
+== resolv.conf vacio para la jaula ==
+== nsswitch.conf para la jaula: hosts solo por files ==
+
+== rutas dentro de la jaula (NO debe haber 'default') ==
+10.10.10.10 dev veth-m2 scope link 
+
+== direcciones ==
+lo               UNKNOWN        127.0.0.1/8 
+veth-m2@if20     UP             10.10.10.20/32 
+
+== prueba al servidor (debe responder) ==
+PING 10.10.10.10 (10.10.10.10) 56(84) bytes de datos.
+64 bytes desde 10.10.10.10: icmp_seq=1 ttl=64 tiempo=0.461 ms
+64 bytes desde 10.10.10.10: icmp_seq=2 ttl=64 tiempo=1.41 ms
+
+--- 10.10.10.10 estadísticas ping ---
+2 paquetes transmitidos, 2 recibidos, 0% packet loss, time 1010ms
+rtt min/avg/max/mdev = 0.461/0.933/1.406/0.472 ms
+OK: el servidor responde
+
+== prueba a Internet (DEBE fallar) ==
+OK: sin salida a Internet
+
+== DNS dentro de la jaula (DEBE fallar) ==
+-- hosts en nsswitch:
+hosts:      files
+OK: sin DNS
+
+OK. Siguiente: bash tools/c01bis/15-xephyr.sh (si no esta abierto) y luego
+    bash tools/c01bis/30-run-client.sh

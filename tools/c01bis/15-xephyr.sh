@@ -10,8 +10,9 @@
 #      SIN_NETNS=1 bash tools/c01bis/15-xephyr.sh      # solo depuracion
 #      SIN_BUS=1 bash tools/c01bis/15-xephyr.sh        # no ocultar el bus (depurar)
 #      XEPHYR_BIN=/ruta/a/Xephyr bash ...             # usar otro binario
-# Si existe ~/.local/bin/Xephyr (14-xephyr-warp.sh), se usa ese: es el que
-# reenvia el warp del puntero al servidor real y arregla la camara.
+# Si existe ~/.local/bin/Xephyr (14-xephyr-warp.sh), se usa ese: es el intento
+# de reenviar el warp del puntero al servidor real (la camara sigue sin
+# validar; ese intento esta aparcado).
 # Para cerrarlo: bash tools/c01bis/16-xephyr-stop.sh
 set -euo pipefail
 
@@ -103,6 +104,17 @@ kill_old_xephyr() {
 
 print_ready() {
   echo "$1"
+  # Prueba real: mirar el socket desde el namespace de Xephyr. Sin -r, nsenter
+  # resuelve las rutas con el arbol del host y el socket pareceria visible.
+  if [ -n "${PID:-}" ]; then
+    VIS="$(sudo nsenter -t "$PID" -m -r -- /bin/sh -c \
+          'if [ -S /run/dbus/system_bus_socket ]; then echo SI; else echo NO; fi' \
+          2>/dev/null || true)"
+    case "$VIS" in
+      NO) echo "OK: Xephyr ($PID) no ve el bus del sistema (mount ns)" ;;
+      SI) echo "AVISO: Xephyr ($PID) SI ve el bus del sistema; revisa 19-sin-bus.sh." ;;
+    esac
+  fi
   if [ "$FULLSCREEN" = "1" ]; then
     echo "Pantalla completa. Para salir: bash tools/c01bis/16-xephyr-stop.sh (o Ctrl+Alt+F3)."
   elif [ "$HOST_GRAB" = "1" ]; then
@@ -113,10 +125,9 @@ print_ready() {
     echo "Para cerrar Xephyr: bash tools/c01bis/16-xephyr-stop.sh"
   fi
   if [ "$CAM_FIX" = "1" ]; then
-    echo "Camara: Xephyr parcheado (warp real). Arrastra con el boton derecho."
+    echo "Camara: usando el Xephyr de ~/.local/bin (parche de warp, sin validar)."
   else
-    echo "Camara: si da saltos, compila el Xephyr parcheado:"
-    echo "  bash tools/c01bis/14-xephyr-warp.sh"
+    echo "Camara: Xephyr de pacman; el parche de warp (14) esta aparcado."
   fi
 }
 

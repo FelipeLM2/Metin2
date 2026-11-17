@@ -284,3 +284,27 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
 - Sigue fuera de alcance: `/tmp` compartido, la cookie de `:0` en manos de
   Xephyr y un exploit de kernel. Contra lo último solo hay VM o hardware
   aparte.
+
+## 2026-11-16 — Primera prueba del bus: PELIGRO falso del chequeo
+
+- **El enmascarado funciona.** `dia-cliente-bus.txt` (16/11 18:38) muestra
+  `bus del sistema: enmascarado (mount ns)` y
+  `OK: bus del sistema enmascarado para metin2 (mount ns)`. El cliente arrancó
+  normal (DXVK v3.1.1, GTX 1650) y terminó con código 0: Wine no necesita el bus.
+- **`35` dio un `PELIGRO` falso.** Usaba `nsenter -t PID -m -- test -S ...`.
+  `-m` cambia el namespace de montajes, pero **no** la raíz del proceso: las
+  rutas se siguen resolviendo con el árbol del host, así que veía el socket
+  *del host*, no el del cliente. Lección: para mirar dentro de un mount ns hay
+  que entrar también con `-r` (raíz del destino). Con `-m` solo, el resultado
+  es siempre el del host.
+- **Fallo real encontrado de paso:** el Xephyr que estaba corriendo (PID 4595)
+  lo había arrancado la versión anterior de `15` — su salida no tenía la línea
+  `binario:` ni la del bus. Ese Xephyr **sí** veía el bus, y `35` no lo miraba
+  porque solo comprobaba el cliente. Se cierra el hueco: `35` comprueba
+  **cliente y Xephyr** por separado, y `15` verifica su propio namespace al
+  arrancar (imprime `OK: Xephyr (PID) no ve el bus`).
+- También se añadió `-r` al `ls -l` de diagnóstico: si algún día sale
+  `PELIGRO`, imprime el tipo de archivo que ve ese proceso (socket = mal,
+  `character special file` = enmascarado).
+- **Pendiente:** repetir la sesión desde cero (`90` → `20` → `15` → `30` → `35`)
+  para confirmar las dos líneas `OK` del bus con Xephyr nuevo.

@@ -97,25 +97,38 @@ fi
 
 echo
 echo "== bus del sistema (debe estar fuera de alcance) =="
-# 15 y 30 enmascaran el socket dentro del mount namespace de cada proceso. Por
-# eso se mira el namespace del cliente (o el de Xephyr), no el del host.
-BPID="$(sudo -u "$U" pgrep -f 'metin2client\.exe' 2>/dev/null | head -n 1 || true)"
-if [ -z "$BPID" ]; then
-  BPID="$(pgrep -x Xephyr 2>/dev/null | head -n 1 || true)"
+# 15 y 30 enmascaran el socket dentro del mount namespace de cada proceso. Se
+# mira el namespace del proceso, no el del host.
+#
+# OJO con nsenter: -m solo cambia el namespace de montajes, pero NO la raiz del
+# proceso. Sin -r, las rutas se resuelven con el arbol del host y el socket
+# parece visible siempre (falso PELIGRO). -r entra con la raiz del destino.
+bus_en_proceso() {
+  local etiq="$1" pid="$2" vis
+  vis="$(sudo nsenter -t "$pid" -m -r -- /bin/sh -c \
+        'if [ -S /run/dbus/system_bus_socket ]; then echo SI; else echo NO; fi' \
+        2>/dev/null || true)"
+  case "$vis" in
+    NO) echo "OK: $etiq (PID $pid) no ve el bus del sistema (mount ns)" ;;
+    SI) echo "PELIGRO: $etiq (PID $pid) ve el bus del sistema."
+        echo "  Pudo lanzarse con SIN_BUS=1 o con una version vieja de 15/30."
+        sudo nsenter -t "$pid" -m -r -- ls -l /run/dbus/system_bus_socket 2>&1 \
+          | sed 's/^/  /' ;;
+    *)  echo "INFO: no pude mirar dentro del mount ns de $etiq (PID $pid)." ;;
+  esac
+}
+
+# Se comprueban los dos por separado: el cliente y Xephyr se lanzan en momentos
+# distintos y uno puede estar enmascarado y el otro no.
+CPID="$(sudo -u "$U" pgrep -f 'metin2client\.exe' 2>/dev/null | head -n 1 || true)"
+XPID="$(pgrep -x Xephyr 2>/dev/null | head -n 1 || true)"
+if [ -n "$CPID" ]; then
+  bus_en_proceso "metin2client.exe" "$CPID"
 fi
-# Si no puedo entrar en su namespace (proceso ya muerto, permisos), no es un
-# PELIGRO: simplemente no hay nada que comprobar ahi.
-if [ -n "$BPID" ] && ! sudo nsenter -t "$BPID" -m -- true 2>/dev/null; then
-  echo "INFO: no pude entrar en el mount ns del proceso $BPID; sigo con el host."
-  BPID=""
+if [ -n "$XPID" ]; then
+  bus_en_proceso "Xephyr" "$XPID"
 fi
-if [ -n "$BPID" ]; then
-  if sudo nsenter -t "$BPID" -m -- /bin/sh -c 'test -S /run/dbus/system_bus_socket'; then
-    echo "PELIGRO: el proceso $BPID ve el bus del sistema (¿lanzado con SIN_BUS=1?)."
-  else
-    echo "OK: el proceso $BPID no ve el bus del sistema (mount ns)"
-  fi
-else
+if [ -z "$CPID" ] && [ -z "$XPID" ]; then
   echo "(ni cliente ni Xephyr en marcha; no hay namespace que comprobar)"
   if sudo -u "$U" test -r /run/dbus/system_bus_socket; then
     echo "INFO: $U si puede leerlo desde el host; 15/30 lo enmascaran al lanzar."

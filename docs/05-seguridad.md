@@ -124,8 +124,9 @@ namespace. El montaje vive solo en ese proceso y desaparece al terminar; el host
 no cambia y no hace falta `bubblewrap` ni un binario SUID. Además se borra
 `DBUS_SYSTEM_BUS_ADDRESS` del entorno, para que nadie pueda apuntar el cliente a
 otra dirección. `35-check-usuario.sh` ya no comprueba el host: entra con
-`nsenter` en el mount namespace del cliente (o de Xephyr) y mira ahí, que es
-donde importa.
+`nsenter -m -r` en el mount namespace **y la raíz** del cliente y de Xephyr
+(solo `-m` resolvería las rutas con el árbol del host) y mira ahí, que es donde
+importa.
 
 Siguen fuera de alcance `/tmp` compartido y el hecho de que Xephyr corre como el
 usuario real, con la cookie de `:0` (sin red, pero con acceso a sus archivos y a

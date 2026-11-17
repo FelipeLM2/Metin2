@@ -76,12 +76,18 @@ bash tools/c01bis/15-xephyr.sh 2>&1 | tee salidas/dia-xephyr.txt
 ```
 
 Debe decir `OK: Xephyr listo en :7 dentro de m2xephyr` y abrir una ventana
-titulada **Metin2 (jaula C01-bis)**.
+titulada **Metin2 (jaula C01-bis)**. En la salida tienen que estar también:
 
-- El bus del sistema se enmascara solo en el namespace de Xephyr
-  (`19-sin-bus.sh`): en el log debe aparecer
-  `OK: bus del sistema enmascarado`. Si el montaje no funciona, `15` para en
-  vez de arrancar sin él.
+```
+   binario: /home/deadivine/.local/bin/Xephyr
+   bus del sistema: enmascarado (mount ns)
+OK: Xephyr (NNNN) no ve el bus del sistema (mount ns)
+```
+
+- Si no aparece `binario:`, estás ejecutando una versión vieja de `15` (o el
+  Xephyr que sigue vivo lo arrancó una). Ciérralo con `16-xephyr-stop.sh` y
+  vuelve a lanzar `15`.
+- Si el montaje no funciona, `15` para en vez de arrancar sin él.
 - Por defecto va **en ventana** y no captura el teclado ni el ratón: `Alt+Tab`
   funciona.
 - Si la cámara del juego da saltos, prueba la captura de ratón:
@@ -116,10 +122,11 @@ bash tools/c01/35-check-isolation.sh 2>&1 | tee salidas/dia-aislamiento.txt
 bash tools/c01bis/35-check-usuario.sh 2>&1 | tee salidas/dia-usuario.txt
 ```
 
-Debe salir `OK` en red, home, bus de sesión, **bus del sistema**, audio y
-`m2xephyr`. El bus del sistema se comprueba **dentro** del namespace del
-cliente; si `35` imprime `PELIGRO` ahí, es que el proceso se lanzó con
-`SIN_BUS=1` (mal) o el montaje no se aplicó.
+Debe salir `OK` en red, home, bus de sesión, **bus del sistema** (dos líneas:
+cliente y Xephyr), audio y `m2xephyr`. El bus se comprueba **dentro** del mount
+namespace de cada proceso. Si `35` imprime `PELIGRO` ahí, ese proceso se lanzó
+con `SIN_BUS=1` o sin pasar por `19-sin-bus.sh`; `35` imprime también el
+`ls -l` del socket tal y como lo ve ese proceso.
 
 ---
 

@@ -41,7 +41,8 @@ se niega a correr si `metin2-vm` no está apagada; nunca usa `virsh destroy`.
 |---|---|
 | `vm/m2-server/` | Cadena completa de 7 qcow2 + base de 7,37 G (snapshot `Credenciales-ok`), 8,6 G |
 | `vm/snapshots/` | XML de los snapshots y `snapshot-list` |
-| `vm/*.xml` | `dumpxml` de los 4 dominios + `net-dumpxml` de `virbr-lab` y `default` |
+| `vm/*.xml` | `dumpxml` de los 4 dominios + `net-list --all` |
+| `vm/networks/`, `vm/networks-raw/` | `net-dumpxml` de **todas** las redes (`default`, `metin2lab`, `red-lab`) y copia literal de `/etc/libvirt/qemu/networks/` |
 | `server/server-data.tar.zst` | `/usr/metin2` + `/var/db/mysql` extraídos del qcow2 (si hay `virt-copy-out`) |
 | `sql/README.txt` | Instrucciones para añadir un `mysqldump` lógico después |
 | `client/metin2lab/` | Cliente Wine (19 G) |
@@ -64,7 +65,7 @@ de idea). No se copia `virtio-win-*.iso` (se vuelve a descargar).
 cat /mnt/backup/$(date +%F)/MANIFEST.txt
 grep -i error /mnt/backup/$(date +%F)/logs/qemu-img-check.txt || echo "qcow2 OK"
 zstd -t /mnt/backup/$(date +%F)/server/server-data.tar.zst
-sha256sum -c /mnt/backup/$(date +%F)/MANIFEST.sha256
+LC_ALL=C sha256sum -c /mnt/backup/$(date +%F)/MANIFEST.sha256 2>&1 | grep -vF ': OK' || echo "HASHES OK"
 ```
 
 Y, si puedes, arranca una copia de prueba de `m2-server` desde el SSD con otro
@@ -75,7 +76,8 @@ No borres los originales hasta haber restaurado y verificado.
 
 1. Monta el contenedor: `cryptsetup open ... m2backup` + `mount`.
 2. Copia `vm/m2-server/` a `/var/lib/libvirt/images/m2-server/` y los XML con
-   `virsh define`. Define también `virbr-lab`.
+   `virsh define`. Define las redes desde `vm/networks-raw/` (`default`,
+   `metin2lab` y `red-lab`); no hay ninguna red llamada `virbr-lab`.
 3. Recrea el usuario `metin2` con `client/usuario-metin2.txt`, coloca
    `metin2lab` y `metin2lab-golden` en `/home/metin2`, y `/etc/netns/`.
 4. Coloca `client/Xephyr` en `~/.local/bin/Xephyr` y el repo en su ruta.

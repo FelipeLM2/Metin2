@@ -12,6 +12,7 @@
 
 set -Eeuo pipefail
 shopt -s nullglob
+export LC_ALL=C   # salidas y sha256sum en inglés: los filtros '-vF ": OK"' funcionan
 
 MODO="${1:-}"
 DEST_ROOT="/mnt/backup"
@@ -29,6 +30,7 @@ die()  { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 warn() { printf 'AVISO: %s\n' "$*" | tee -a "$MANIFEST" >&2; }
 log()  { printf '%s\n' "$*" | tee -a "$MANIFEST"; }
 cmd()  { log "\$ $*"; }
+arreglar_duenos() { $SUDO chown -R "$USER_NAME:$GROUP_NAME" "$DST"; }
 
 # ---------------------------------------------------------------------------
 # Preflight (no escribimos nada hasta aquí)
@@ -61,9 +63,23 @@ copiar_metadatos() {
   for d in m2-server metin2-vm Metin2-Client win10; do
     $SUDO virsh dumpxml "$d" > "$DST/vm/$d.xml" 2>/dev/null || warn "no se pudo dumpxml $d"
   done
-  for n in virbr-lab default; do
-    $SUDO virsh net-dumpxml "$n" > "$DST/vm/$n.xml" 2>/dev/null || true
+  # No asumir nombres: en este equipo son default, metin2lab y red-lab.
+  $SUDO mkdir -p "$DST/vm/networks" "$DST/vm/networks-raw"
+  local n tmp
+  for n in $($SUDO virsh net-list --all --name 2>/dev/null || true); do
+    tmp="$(mktemp)"
+    $SUDO virsh net-dumpxml "$n" > "$tmp" 2>/dev/null || true
+    if [[ -s "$tmp" ]]; then
+      install -m 644 "$tmp" "$DST/vm/networks/$n.xml"
+    else
+      warn "net-dumpxml $n devolvió un archivo vacío; se usa la copia raw"
+    fi
+    rm -f "$tmp"
   done
+  if [[ -d /etc/libvirt/qemu/networks ]]; then
+    cmd "cp -a /etc/libvirt/qemu/networks/. -> vm/networks-raw/"
+    $SUDO cp -a /etc/libvirt/qemu/networks/. "$DST/vm/networks-raw/"
+  fi
   $SUDO virsh net-list --all > "$DST/vm/net-list.txt" 2>/dev/null || true
   $SUDO virsh snapshot-list m2-server > "$DST/vm/snapshots/m2-server-list.txt" 2>/dev/null || true
   $SUDO virsh domblklist m2-server > "$DST/vm/m2-server-domblklist.txt" 2>/dev/null || true
@@ -81,6 +97,7 @@ copiar_servidor() {
   cmd "rsync $src/ -> $DST/vm/m2-server/"
   $SUDO rsync -aHAX --numeric-ids --info=progress2 "$src/" "$DST/vm/m2-server/"
 
+  arreglar_duenos
   log "-- qemu-img check de cada capa --"
   : > "$DST/logs/qemu-img-check.txt"
   local img
@@ -174,6 +191,7 @@ copiar_vm_fria() {
   [[ -f "$img" ]] || die "no existe $img"
   cmd "rsync $img -> vm/metin2-vm.qcow2"
   $SUDO rsync -aHAX --numeric-ids --info=progress2 "$img" "$DST/vm/"
+  arreglar_duenos
   $SUDO qemu-img check "$DST/vm/metin2-vm.qcow2" >> "$DST/logs/qemu-img-check.txt" 2>&1 \
     || warn "qemu-img check falló en metin2-vm.qcow2"
 
@@ -190,6 +208,7 @@ copiar_vm_fria() {
 }
 
 finalizar() {
+  arreglar_duenos
   log "== Verificación final =="
   local z
   for z in "$DST"/*.zst "$DST"/server/*.zst "$DST"/sql/*.zst; do
@@ -199,7 +218,6 @@ finalizar() {
   find "$DST" -type f ! -name 'MANIFEST*' -size -10M -print0 2>/dev/null \
     | sort -z | xargs -0 -r sha256sum > "$DST/MANIFEST.sha256" || true
   du -sh "$DST"/* 2>/dev/null | sort -h >> "$MANIFEST" || true
-  $SUDO chown -R "$USER_NAME:$GROUP_NAME" "$DST"
 
   if [[ "$MODO" != "--vm-fria" ]]; then
     log ""

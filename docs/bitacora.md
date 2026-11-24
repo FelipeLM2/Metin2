@@ -308,3 +308,31 @@ demás documentos), sino **qué se decidió, qué falló y por qué**.
   `character special file` = enmascarado).
 - **Pendiente:** repetir la sesión desde cero (`90` → `20` → `15` → `30` → `35`)
   para confirmar las dos líneas `OK` del bus con Xephyr nuevo.
+
+## 2026-11-23 — Backup C02 terminado y verificado; guía de reinstalación
+
+- Fase A y B completas. El `rsync` de `metin2-vm.qcow2` llegó al 100 %
+  (42.956.488.704 bytes, idénticos en origen y copia); el `sudo` expiró justo
+  después, en el `chown`, así que se terminó a mano sin recopiar nada.
+- Verificación: 8 qcow2 (7 de `m2-server` + `metin2-vm`) con
+  `No errors were found on the image.`, `HASHES OK`, 88 G usados y 11 G libres
+  en el contenedor de 98 G. `sdc` quedó con **una sola partición** ext4
+  `M2BACKUP` montada en `/mnt/backupdisk`.
+- **Prueba real de arranque**: se copió la cadena de `m2-server` del backup a
+  `/var/lib/libvirt/images/m2-server-test/`, se generó un XML con otro nombre,
+  sin UUID y con todas las rutas `source file` reescritas, y `virsh create`
+  arrancó la VM. La consola serie sale en blanco (FreeBSD no la usa), pero
+  `virsh screenshot` mostró el `login:` de FreeBSD. Backup funciona de verdad.
+- El `XML` original trae **todas** las rutas de la cadena de backing en
+  absoluto: hay que reemplazar `s#/var/lib/libvirt/images/m2-server/#...#g` en
+  todas, no solo en la primera. `libvirt-qemu` no puede leer los qcow2 del
+  backup directamente (permisos/rutas), de ahí la copia temporal.
+- `virt-copy-out` sigue sin estar instalado: no hay `server-data.tar.zst` ni
+  copia pequeña de OpenCode, pero la DB (`/var/db/mysql`) y el historial están
+  dentro de los qcow2, que es lo importante.
+- **Decisión**: no hace falta SSH a la FreeBSD para la prueba; con el arranque
+  y el screenshot basta. Camera del warp sigue aparcada, sin cambios.
+- Escrito `docs/07-reinstall-y-restore.md`: 6 pasos (frase + header en sitios
+  separados, preparación, instalación de CachyOS, Hyprland → DMS, montaje del
+  backup y restauración ordenada) para seguir durante el formateo de `sda`.
+

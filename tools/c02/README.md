@@ -84,3 +84,7 @@ No borres los originales hasta haber restaurado y verificado.
 5. Arranca `m2-server`, comprueba login y DB. Solo entonces da por buena la copia.
 
 Nada de esto se ejecuta automáticamente: el script solo copia y verifica.
+
+Para el paso a paso completo de reinstalación (incluye cómo guardar la frase y
+el header LUKS fuera del SSD, Hyprland → DankMaterialShell y la restauración
+ordenada), ver `docs/07-reinstall-y-restore.md`.

@@ -21,8 +21,11 @@ de FreeBSD. No vuelvas a correr `backup-hdd.sh`: recopiaría 43 G otra vez.
 Dentro del contenedor cifrado (`/mnt/backup`) está la carpeta
 `/mnt/backup/2026-11-23/` con el backup completo.
 
-> Regla de oro: **no borres los originales de `sda` hasta haber restaurado y
-> verificado desde el backup**. Si algo falla, el original sigue ahí.
+> Regla de oro: **`sda` se formatea sí o sí** al instalar CachyOS (es el disco
+> del sistema). Lo que **no se toca** es `sdc` (el backup cifrado) y `sdb` (tus
+> vídeos). Por eso es imprescindible tener el backup verificado **antes** de
+> arrancar el instalador: cuando `sda` se borre, no habrá vuelta atrás en ese
+> disco. No borres nada a mano en `sdc` ni en `sdb`.
 
 ---
 
@@ -30,55 +33,69 @@ Dentro del contenedor cifrado (`/mnt/backup`) está la carpeta
 
 El `luksHeaderBackup` **no sustituye** a la frase contraseña: sin la frase no
 se puede abrir el contenedor aunque tengas el header. Necesitas **las dos
-cosas**, y en **sitios distintos** del SSD de 128 G (si el SSD muere, no puedes
-guardar la copia en el SSD).
+cosas**, en **sitios distintos** y **fuera del SSD de 128 G** (si el SSD muere,
+no puedes guardar la copia en el SSD).
+
+Tu sitio seguro es **tu carpeta personal de Google Drive**. Úsala, pero con una
+regla: **la frase y el header no van juntos**. Si alguien entra en tu Drive y
+ve los dos en la misma carpeta, tiene la caja y la llave. Sepáralos:
+
+- **Header** → tu carpeta personal de Drive (la que quieres sí o sí).
+- **Frase** → papel a mano y/o gestor de contraseñas / nota en **otra** carpeta
+  o dispositivo (móvil). Nunca en la misma carpeta que el header.
+
+Si al final solo guardas una cosa, **guarda la frase**: el contenedor original
+conserva su header, así que con la frase basta para abrirlo.
 
 ### 1a. La frase contraseña
 
 - Escríbela a mano en un papel y guárdala donde no se pierda.
-- O guárdala en un gestor de contraseñas **en otro dispositivo** (móvil, otro
-  PC, externo de 1 T), nunca dentro de `M2BACKUP`.
-- No la pongas en un `.txt` dentro del contenedor cifrado: sería como dejar la
-  llave dentro de la caja.
+- O guárdala en un gestor de contraseñas en otro dispositivo (móvil, otro PC).
+- **No** la pongas en un `.txt` dentro de `M2BACKUP` ni en la misma carpeta de
+  Drive que el header.
 
-### 1b. Copiar el header a otro sitio
+### 1b. Subir el header a tu carpeta de Drive
 
 El header ya existe en `/mnt/backupdisk/metin2-luks-header.img` (dentro del
-SSD de 128 G). Cópialo **al externo de 1 T** cuando lo conectes, y a otro sitio
-si puedes:
+SSD de 128 G). Súbelo a Drive.
+
+**Opción A — con `rclone` ya configurado:**
 
 ```bash
-# Conecta el externo de 1 T y comprueba su nombre (puede ser sdd1, sde1...)
-lsblk -o NAME,SIZE,FSTYPE,LABEL,MOUNTPOINTS
+# Ajusta "drive" al nombre de tu remote y "MiCarpetaPersonal" a la real
+rclone copy /mnt/backupdisk/metin2-luks-header.img drive:MiCarpetaPersonal/ --progress
+
+# Verifica que llegó íntegro: los dos hashes deben coincidir
+sha256sum /mnt/backupdisk/metin2-luks-header.img
+rclone cat drive:MiCarpetaPersonal/metin2-luks-header.img | sha256sum
+rclone ls drive:MiCarpetaPersonal/metin2-luks-header.img
 ```
 
-Suponiendo que aparece como `/dev/sdd1` y ya está montado en `/mnt/externo`:
+**Opción B — sin `rclone` (la fácil):**
 
-```bash
-sudo mkdir -p /mnt/externo
-sudo mount /dev/sdd1 /mnt/externo                 # ajusta sdd1 al real
-sudo cp -av /mnt/backupdisk/metin2-luks-header.img /mnt/externo/
-sudo cp -av /mnt/backupdisk/metin2-luks-header.img /mnt/externo/metin2-luks-header-$(date +%F).img
-sha256sum /mnt/backupdisk/metin2-luks-header.img /mnt/externo/metin2-luks-header.img
-sync
-sudo umount /mnt/externo
-```
+1. Abre Drive en el navegador.
+2. Arrastra `/mnt/backupdisk/metin2-luks-header.img` a tu carpeta personal.
+3. Desde el **móvil**, abre esa carpeta y confirma que el archivo está ahí y se
+   puede descargar.
 
-Comprueba que los dos SHA256 son **idénticos**. Si el externo aún no está
-formateado, formatéalo solo cuando confirmes su nombre con `lsblk` (¡no
-adivines `/dev/sdd`!).
+> No hace falta ningún `/dev/sdd1` ni `/mnt/externo`: el externo de 1 T ya no
+> es obligatorio. Drive es tu copia fuera del SSD. Si más adelante conectas el
+> externo, puedes copiar el header allí también como tercera copia.
 
 ### 1c. Comprobación de que la frase funciona
 
-Sin abrir nada nuevo, prueba la frase contra el header guardado:
+Sin abrir nada nuevo, prueba la frase contra el header original:
 
 ```bash
-sudo cryptsetup luksOpen --test-passphrase /mnt/externo/metin2-luks-header.img
+sudo cryptsetup luksOpen --test-passphrase /mnt/backupdisk/metin2-luks-header.img
 ```
 
-(Con el externo desmontado, prueba el original:
-`sudo cryptsetup luksOpen --test-passphrase /mnt/backupdisk/metin2-luks-header.img`.)
-Si acepta la frase, está bien. **No sigas hasta que esto funcione.**
+Si acepta la frase, está bien. **No sigas hasta que esto funcione.** Después de
+formatear, cuando hayas descargado el header de Drive, podrás probarlo con:
+
+```bash
+sudo cryptsetup luksOpen --test-passphrase /ruta/al/metin2-luks-header.img
+```
 
 ---
 
@@ -254,19 +271,21 @@ Checklist antes de darlo por terminado:
 - [ ] `metin2lab` y `metin2lab-golden` existen en `/home/metin2`.
 - [ ] Redes `default`, `metin2lab` y `red-lab` activas.
 
-Solo con todo eso verde da por buena la restauración. Entonces, y solo
-entonces, puedes plantearte borrar los originales viejos de `sda`.
+Solo con todo eso verde da por buena la restauración. Recuerda: `sda` ya se
+formateó en el paso 3, así que aquí no hay originales viejos que borrar; lo que
+queda es decidir si conservas o limpias el backup de `sdc` (y solo cuando tú
+quieras).
 
 ---
 
 ## Si algo falla
 
-- No borres nada. El backup sigue intacto en `sdc` y los originales en `sda`
-  hasta que decidas lo contrario.
+- No borres nada en `sdc` ni en `sdb`. El backup sigue intacto en `sdc` y solo
+  se formateó `sda` (paso 3), que es lo esperado.
 - Para volver a montar: repetir el paso 5.
 - Para probar un qcow2 sin arrancar el original, se puede hacer un overlay
   delgado (`qemu-img create -b ...`) como se hizo con `m2-server-test`.
-- Si la frase no abre, usa el header del paso 1 con
-  `cryptsetup luksOpen --header /mnt/externo/metin2-luks-header.img ...`.
+- Si la frase no abre, descarga el header de Drive (paso 1b) y usa
+  `sudo cryptsetup luksOpen --header /ruta/al/metin2-luks-header.img /mnt/backupdisk/metin2-backup.img m2backup`.
 - Si Hyprland/DMS no arranca, entra en Plasma y sigue por terminal; la
   restauración no depende del escritorio.
